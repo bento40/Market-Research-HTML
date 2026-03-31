@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Koh Samui Area-by-Area Deep Research Report</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0f1a;--sf:#111827;--sf2:#1a2236;--a:#06d6a0;--a2:#118ab2;--a3:#ef476f;--a4:#ffd166;--a5:#8338ec;--tx:#e8edf5;--td:#8b95a8;--bd:rgba(255,255,255,0.06);--gd:rgba(255,255,255,0.05)}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:56px}body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);line-height:1.7;-webkit-font-smoothing:antialiased}
+.hero{position:relative;padding:72px 40px 56px;text-align:center;background:linear-gradient(165deg,#0a0f1a 0%,#0d1929 40%,#112240 100%);border-bottom:1px solid var(--bd);overflow:hidden}
+.hero::before{content:'';position:absolute;top:-200px;left:-100px;width:500px;height:500px;background:radial-gradient(circle,rgba(17,138,178,0.08) 0%,transparent 70%);pointer-events:none}
+.badge{display:inline-block;padding:6px 18px;background:rgba(17,138,178,0.12);border:1px solid rgba(17,138,178,0.25);border-radius:100px;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--a2);margin-bottom:24px}
+h1{font-family:'DM Serif Display',serif;font-size:clamp(2rem,4.5vw,3.4rem);font-weight:400;line-height:1.15;margin-bottom:14px;background:linear-gradient(135deg,#e8edf5 0%,#118ab2 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sub{font-size:1rem;color:var(--td);max-width:700px;margin:0 auto 28px}
+.meta{display:flex;justify-content:center;gap:28px;flex-wrap:wrap;font-size:13px;color:var(--td)}.meta .d{width:6px;height:6px;border-radius:50%;background:var(--a2);display:inline-block;margin-right:6px}
+.ct{max-width:1200px;margin:0 auto;padding:0 24px}
+.kpi-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:var(--bd);margin:36px 0;border-radius:14px;overflow:hidden}
+.kpi{background:var(--sf);padding:24px 20px;text-align:center}.kpi-v{font-family:'DM Serif Display',serif;font-size:1.8rem;color:var(--a2)}.kpi-l{font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.sec{margin:48px 0;padding:44px;background:var(--sf);border-radius:18px;border:1px solid var(--bd);position:relative;overflow:hidden}
+.sec::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--a2),var(--a),var(--a5))}
+.sn{display:inline-block;width:34px;height:34px;line-height:34px;text-align:center;background:rgba(17,138,178,0.12);border-radius:9px;font-weight:700;font-size:13px;color:var(--a2);margin-bottom:14px}
+h2{font-family:'DM Serif Display',serif;font-size:1.7rem;font-weight:400;margin-bottom:8px;color:#fff}
+h3{font-family:'DM Serif Display',serif;font-size:1.2rem;font-weight:400;margin:24px 0 10px;color:var(--a)}
+p{margin-bottom:12px;color:var(--td);font-size:0.93rem}
+.hl{color:var(--a);font-weight:600}.hl2{color:var(--a4);font-weight:600}.hl3{color:var(--a3);font-weight:600}.hl4{color:var(--a2);font-weight:600}.hl5{color:var(--a5);font-weight:600}
+.cw{background:var(--sf2);border-radius:14px;padding:22px;margin:20px 0;border:1px solid var(--bd)}.ct-title{font-weight:600;font-size:13px;color:var(--tx);margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px}
+canvas{max-height:380px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:900px){.g2,.g3{grid-template-columns:1fr}.sec{padding:24px 18px}}
+.ins{background:rgba(6,214,160,0.06);border-left:3px solid var(--a);padding:14px 18px;border-radius:0 10px 10px 0;margin:18px 0;font-size:0.9rem}
+.ins strong{color:var(--a)}
+.ins2{background:rgba(17,138,178,0.06);border-left:3px solid var(--a2);padding:14px 18px;border-radius:0 10px 10px 0;margin:18px 0;font-size:0.9rem}
+.ins2 strong{color:var(--a2)}
+/* Area Cards */
+.ac{background:var(--sf2);border:1px solid var(--bd);border-radius:14px;padding:22px;margin-bottom:14px;transition:border-color .3s}.ac:hover{border-color:rgba(6,214,160,.25)}
+.ac h4{font-family:'DM Serif Display',serif;font-size:1.1rem;font-weight:400;color:#fff;margin-bottom:4px}
+.ac h4 span{font-family:'DM Sans',sans-serif;font-size:.72rem;color:var(--td);font-weight:400;display:block;margin-top:2px}
+.ac-meta{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0;font-size:11px}
+.ac-m{background:rgba(255,255,255,.04);padding:5px 10px;border-radius:7px}.ac-m strong{color:var(--a2);font-size:12px}
+.pros-cons{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px;font-size:.85rem}
+@media(max-width:600px){.pros-cons{grid-template-columns:1fr}}
+.pros{padding:12px;background:rgba(6,214,160,.05);border-radius:10px}.cons{padding:12px;background:rgba(239,71,111,.05);border-radius:10px}
+.pros strong{color:var(--a);display:block;margin-bottom:4px}.cons strong{color:var(--a3);display:block;margin-bottom:4px}
+/* Comp Table */
+.tw{overflow-x:auto;margin:24px 0;border-radius:14px;border:1px solid var(--bd)}
+.tb{width:100%;min-width:800px;border-collapse:collapse;font-size:.8rem}
+.tb th{text-align:left;padding:12px;background:var(--sf2);color:var(--td);font-weight:600;text-transform:uppercase;font-size:10px;letter-spacing:1px;white-space:nowrap;border-bottom:2px solid var(--bd)}
+.tb td{padding:10px 12px;border-bottom:1px solid var(--bd);color:var(--td);vertical-align:top}
+.tb td:first-child{font-weight:600;color:var(--tx);white-space:nowrap}
+.tb tr:hover td{background:rgba(255,255,255,.02)}
+.tb .chw{background:rgba(17,138,178,.06)}
+.tag{display:inline-block;padding:3px 10px;border-radius:100px;font-size:10px;font-weight:600;margin:2px}
+.tag-h{background:rgba(6,214,160,.15);color:#06d6a0}.tag-m{background:rgba(255,209,102,.15);color:#ffd166}.tag-l{background:rgba(239,71,111,.15);color:#ef476f}
+/* Hotel Pipeline */
+.pipe{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--sf2);border-radius:10px;margin:6px 0;border:1px solid var(--bd);font-size:.85rem}
+.pipe-yr{font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--a2);min-width:48px}
+.pipe-name{font-weight:600;color:var(--tx)}.pipe-loc{color:var(--td);font-size:.78rem}.pipe-keys{color:var(--a);font-weight:600;margin-left:auto;white-space:nowrap}
+/* Sources */
+.src{margin-top:36px;padding:28px;background:var(--sf);border-radius:14px;border:1px solid var(--bd)}
+.src h3{color:#fff;margin-top:0}.src ol{padding-left:18px}.src li{margin-bottom:6px;font-size:.8rem;color:var(--td)}.src a{color:var(--a2);text-decoration:none;word-break:break-all}.src a:hover{text-decoration:underline}
+.ft{text-align:center;padding:40px 24px;color:var(--td);font-size:11px;border-top:1px solid var(--bd);margin-top:48px}
+/* Sticky Nav */
+.nav{position:sticky;top:0;z-index:100;background:rgba(10,15,26,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--bd);padding:0 24px;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch}
+.nav-inner{max-width:1200px;margin:0 auto;display:flex;gap:4px;padding:8px 0}
+.nav a{display:inline-block;padding:8px 14px;color:var(--td);text-decoration:none;font-size:12px;font-weight:500;border-radius:8px;transition:all .2s;white-space:nowrap;letter-spacing:.3px}
+.nav a:hover,.nav a.active{color:var(--a2);background:rgba(17,138,178,0.1)}
+.nav a .nn{display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;background:rgba(17,138,178,0.15);border-radius:5px;font-size:9px;font-weight:700;color:var(--a2);margin-right:5px;vertical-align:middle}
+@media(max-width:768px){.nav a{padding:6px 10px;font-size:11px}}
+/* Top 5 Hotels */
+.hotel-card{background:var(--sf2);border:1px solid var(--bd);border-radius:14px;padding:24px;margin-bottom:16px;position:relative;overflow:hidden}
+.hotel-card::before{content:attr(data-rank);position:absolute;top:16px;right:20px;font-family:'DM Serif Display',serif;font-size:2.5rem;color:rgba(17,138,178,0.12);font-weight:400;line-height:1}
+.hotel-card h4{font-family:'DM Serif Display',serif;font-size:1.15rem;font-weight:400;color:#fff;margin-bottom:2px}
+.hotel-card h4 small{font-family:'DM Sans',sans-serif;font-size:.72rem;color:var(--td);font-weight:400;display:block;margin-top:3px}
+.hotel-stats{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0;font-size:11px}
+.hotel-stat{background:rgba(255,255,255,.04);padding:5px 10px;border-radius:7px}
+.hotel-stat strong{color:var(--a2);font-size:12px}
+.hotel-why{margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);font-size:.87rem;color:var(--td)}
+.hotel-why em{color:var(--a);font-style:normal;font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="badge">Deep Research · Area-by-Area Analysis</div>
+  <h1>Koh Samui Micro-Area<br>Hotel Market Report</h1>
+  <p class="sub">A comprehensive breakdown of Samui's 6 accommodation zones — hotel supply distribution, ADR by area, competitive landscape, new pipeline, and how properties differentiate. Based on C9 Hotelworks 2024/2025, STR, OTA data, and 12+ sources.</p>
+  <div class="meta">
+    <span><span class="d"></span>March 2026</span>
+    <span><span class="d"></span>20 sources</span>
+    <span><span class="d"></span>For CBR Strategy</span>
+  </div>
+</div>
+
+<!-- STICKY NAV -->
+<div class="nav">
+  <div class="nav-inner">
+    <a href="#s1"><span class="nn">01</span>Areas & Supply</a>
+    <a href="#s2"><span class="nn">02</span>Area Profiles</a>
+    <a href="#s2b"><span class="nn">2B</span>Customer Types</a>
+    <a href="#s3"><span class="nn">03</span>ADR by Area</a>
+    <a href="#s4"><span class="nn">04</span>Hotel Segments</a>
+    <a href="#s5"><span class="nn">05</span>Pricing & Occupancy</a>
+    <a href="#s5b"><span class="nn">5B</span>Top 5 Hotels</a>
+    <a href="#s6"><span class="nn">06</span>Competition</a>
+    <a href="#src"><span class="nn">R</span>Sources</a>
+  </div>
+</div>
+
+<div class="ct">
+<div class="kpi-strip">
+  <div class="kpi"><div class="kpi-v">634</div><div class="kpi-l">Registered Properties</div></div>
+  <div class="kpi"><div class="kpi-v">24,188</div><div class="kpi-l">Total Keys</div></div>
+  <div class="kpi"><div class="kpi-v">1%</div><div class="kpi-l">5yr Supply CAGR</div></div>
+  <div class="kpi"><div class="kpi-v">34%</div><div class="kpi-l">Luxury Segment</div></div>
+  <div class="kpi"><div class="kpi-v">+12%</div><div class="kpi-l">Occupancy Growth '24</div></div>
+  <div class="kpi"><div class="kpi-v">+9%</div><div class="kpi-l">ADR Growth '24</div></div>
+</div>
+
+<!-- ===== Q1 ===== -->
+<div class="sec" id="s1">
+  <span class="sn">01</span>
+  <h2>Samui's 6 Accommodation Zones</h2>
+  <p>According to the C9 Hotelworks 2025 Market Review, Samui's 634 registered properties and 24,188 keys distribute across 6 primary areas. The breakdown by share of total supply is:</p>
+
+  <div class="g2">
+    <div class="cw">
+      <div class="ct-title">Hotel Supply Distribution by Area — 2024 (% of Keys)</div>
+      <canvas id="ch-area-supply"></canvas>
+    </div>
+    <div class="cw">
+      <div class="ct-title">Area Popularity Trend — Past vs Future (Estimated Share)</div>
+      <canvas id="ch-area-trend"></canvas>
+    </div>
+  </div>
+
+  <p><span class="hl4">Chaweng</span> dominates with 20% of total keys — the island's commercial heart with its 7km beach, shopping (Central Samui), nightlife, and the densest restaurant scene. <span class="hl">Bophut</span> follows at 15%, anchored by Fisherman's Village and increasingly attracting digital nomads and boutique hotel investment. <span class="hl2">Lamai</span> holds 14% and is quietly transforming upmarket. <span class="hl5">Choeng Mon</span> at 13% is the luxury enclave (Ritz-Carlton, Meliá, SALA, Cape Fahn). <span class="hl3">Maenam</span> at 8% serves the quiet family/couple market. The remaining <span class="hl4">30% ("Others")</span> covers Taling Ngam, Bang Por, Lipa Noi, Nathon, and hillside/interior properties.</p>
+
+  <div class="ins">
+    <strong>Trend 2020→2030:</strong> Bophut and "Others" (west/southwest coast) are gaining share as new branded supply enters outside the traditional Chaweng/Lamai corridor. All 4 pipeline hotels are located in Bophut, Lamai, or Taling Ngam — none in Chaweng, suggesting the island's growth axis is shifting.
+  </div>
+</div>
+
+<!-- ===== Q2: AREA PROFILES — STRENGTHS & WEAKNESSES ===== -->
+<div class="sec" id="s2">
+  <span class="sn">02</span>
+  <h2>Area Profiles — Uniqueness, Strengths & Weaknesses</h2>
+
+  <div class="ac" style="border-left:3px solid var(--a2)">
+    <h4>Chaweng Beach <span>The Commercial Heart — 20% of supply · 7km beach · CBR's home base</span></h4>
+    <div class="ac-meta">
+      <div class="ac-m">Beach <strong>7km white sand</strong></div>
+      <div class="ac-m">Vibe <strong>Lively / Energetic</strong></div>
+      <div class="ac-m">ADR Range <strong>$70–500+</strong></div>
+      <div class="ac-m">Best For <strong>Couples, groups, first-timers</strong></div>
+    </div>
+    <div class="pros-cons">
+      <div class="pros"><strong>✦ Strengths</strong>Longest & most famous beach. Walking distance to Central Samui mall, nightlife, 50+ restaurants. Bangkok Hospital nearby. Closest to airport (10 min). Highest OTA search volume. Broadest accommodation range from hostels to 5-star.</div>
+      <div class="cons"><strong>✧ Weaknesses</strong>Most crowded & tourist-heavy. Traffic congestion on beach road. Noise from nightlife zone. Overtourism concerns. Higher price competition among mid-range. No new branded hotel pipeline — suggesting market maturity. Some beach erosion during monsoon.</div>
+    </div>
+  </div>
+
+  <div class="ac" style="border-left:3px solid var(--a)">
+    <h4>Lamai Beach <span>The Relaxed Alternative — 14% of supply · 4km beach · "Chaweng's chill sister"</span></h4>
+    <div class="ac-meta">
+      <div class="ac-m">Beach <strong>4km soft sand</strong></div>
+      <div class="ac-m">Vibe <strong>Laid-back / Upscaling</strong></div>
+      <div class="ac-m">ADR Range <strong>$50–400+</strong></div>
+      <div class="ac-m">Best For <strong>Couples, honeymooners, wellness</strong></div>
+    </div>
+    <div class="pros-cons">
+      <div class="pros"><strong>✦ Strengths</strong>Quieter than Chaweng but still lively. Actively upscaling — new Centara Lifestyle (2024), Fivelements (2026). Growing wellness/spa cluster (Kamalaya, Silavadee nearby). Many say the sand is softer than Chaweng. Closer to south coast viewpoints, waterfalls. Better value pricing than Chaweng.</div>
+      <div class="cons"><strong>✧ Weaknesses</strong>Smaller restaurant/nightlife scene. Further from airport (25 min). Some areas of beach less maintained. Infrastructure (roads, drainage) behind Chaweng. Wastewater treatment upgrades still in progress.</div>
+    </div>
+  </div>
+
+  <div class="ac" style="border-left:3px solid var(--a4)">
+    <h4>Bophut / Fisherman's Village <span>The Boutique Hub — 15% of supply · 3km beach</span></h4>
+    <div class="ac-meta">
+      <div class="ac-m">Beach <strong>3km charm</strong></div>
+      <div class="ac-m">Vibe <strong>Boutique / Cultural</strong></div>
+      <div class="ac-m">ADR Range <strong>$60–350+</strong></div>
+      <div class="ac-m">Best For <strong>Families, digital nomads, foodies</strong></div>
+    </div>
+    <div class="pros-cons">
+      <div class="pros"><strong>✦ Strengths</strong>Charming Fisherman's Village with Thai-Chinese heritage architecture. Friday night walking street market. Best international dining cluster on island. Growing co-working/digital nomad infrastructure. International kindergartens (Samarithan). Upcoming SO/ Sofitel (2026) + Wyndham Garden (533 keys, 2028). Consistent year-round rental demand.</div>
+      <div class="cons"><strong>✧ Weaknesses</strong>Beach narrower & less photogenic than Chaweng/Lamai. Swimming less ideal at low tide. Tourist-centric development displacing fishing village authenticity. Traffic bottleneck near Fisherman's Village. Wyndham's 533-key mega-project could disrupt the boutique character if not managed.</div>
+    </div>
+  </div>
+
+  <div class="ac" style="border-left:3px solid var(--a5)">
+    <h4>Choeng Mon <span>The Luxury Enclave — 13% of supply · Small bay</span></h4>
+    <div class="ac-meta">
+      <div class="ac-m">Beach <strong>Sheltered bay</strong></div>
+      <div class="ac-m">Vibe <strong>Exclusive / Quiet</strong></div>
+      <div class="ac-m">ADR Range <strong>$100–2,500+</strong></div>
+      <div class="ac-m">Best For <strong>Honeymoons, HNW, wellness</strong></div>
+    </div>
+    <div class="pros-cons">
+      <div class="pros"><strong>✦ Strengths</strong>Highest concentration of luxury brands: Ritz-Carlton, Meliá, SALA, Cape Fahn, SAii (adult-only since 2024). Calm swimming bay. Near airport (10 min). Gated community living. Ko Fan Yai viewpoint. Quiet, safe, upscale — ideal for honeymoon market.</div>
+      <div class="cons"><strong>✧ Weaknesses</strong>Very limited dining outside resorts. No nightlife. Feels isolated for travelers wanting exploration. Small beach area. High property prices (120,000–250,000 THB/sqm) limit mid-range development. Can feel "resort bubble" with little local flavor.</div>
+    </div>
+  </div>
+
+  <div class="ac" style="border-left:3px solid #8b95a8">
+    <h4>Maenam Beach <span>The Quiet Local — 8% of supply · 5km beach</span></h4>
+    <div class="ac-meta">
+      <div class="ac-m">Beach <strong>5km peaceful</strong></div>
+      <div class="ac-m">Vibe <strong>Authentic / Slow</strong></div>
+      <div class="ac-m">ADR Range <strong>$40–300+</strong></div>
+      <div class="ac-m">Best For <strong>Families, retirees, long-stay</strong></div>
+    </div>
+    <div class="pros-cons">
+      <div class="pros"><strong>✦ Strengths</strong>Most authentic Thai atmosphere. Longest quiet beach. Views of Koh Phangan. Lowest property prices on the north coast (70,000–140,000 THB/sqm). W Koh Samui, Explorar (adults-only). Strong value proposition. Family-friendly pace.</div>
+      <div class="cons"><strong>✧ Weaknesses</strong>Limited amenities — basic medical clinics, few restaurants. 20 min from Chaweng. No shopping centers. Less "Instagrammable" than other beaches. Basic infrastructure. Not on most first-time visitor radars.</div>
+    </div>
+  </div>
+
+  <div class="ac" style="border-left:3px solid var(--a3)">
+    <h4>Others (Taling Ngam, Bang Por, Lipa Noi, Nathon) <span>The Emerging West — 30% of supply combined</span></h4>
+    <div class="ac-meta">
+      <div class="ac-m">Vibe <strong>Secluded / Sunset coast</strong></div>
+      <div class="ac-m">ADR Range <strong>$40–1,000+</strong></div>
+      <div class="ac-m">Best For <strong>Privacy seekers, luxury villas</strong></div>
+    </div>
+    <div class="pros-cons">
+      <div class="pros"><strong>✦ Strengths</strong>Best sunsets on island. Maximum privacy. Large luxury villa estates. InterContinental, Four Seasons (Bang Por), Nikki Beach. Nivata by Hilton (Taling Ngam, 2026). Nathon as ferry/cruise terminal hub. Least developed = most upside. Eco-tourism potential.</div>
+      <div class="cons"><strong>✧ Weaknesses</strong>Remote from airport (30–45 min). Limited public transport. Fewer restaurants and services. Some beaches rocky or tidal. Nathon town underdeveloped as tourist area. Road quality variable on west coast.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CUSTOMER TYPE BY AREA ===== -->
+<div class="sec" id="s2b">
+  <span class="sn">2B</span>
+  <h2>Customer Type by Area — Past, Present & Future</h2>
+  <p>Each area on Samui attracts a distinct customer profile. Understanding <em>who</em> stays <em>where</em> — and how that's shifting — is critical for positioning strategy. The mix is not static: every area is evolving its customer base as the island moves upmarket.</p>
+
+  <div class="cw">
+    <div class="ct-title">Customer Type Mix by Area — 2024 Estimated (%)</div>
+    <canvas id="ch-cust-area"></canvas>
+  </div>
+
+  <h3>Area-by-Area Customer Profiles</h3>
+
+  <div class="ac" style="border-left:3px solid var(--a2)">
+    <h4>Chaweng — The Full-Spectrum Hub</h4>
+    <div class="ac-meta">
+      <div class="ac-m">Couples <strong>30%</strong></div>
+      <div class="ac-m">Young Groups/Solo <strong>25%</strong></div>
+      <div class="ac-m">Families <strong>18%</strong></div>
+      <div class="ac-m">Honeymooners <strong>12%</strong></div>
+      <div class="ac-m">Digital Nomads <strong>8%</strong></div>
+      <div class="ac-m">Business <strong>7%</strong></div>
+    </div>
+    <p><span class="hl4">Past (2019):</span> Dominated by young backpackers and party groups (~35%), with couples (~25%) and budget-conscious first-timers. Chaweng was synonymous with nightlife.</p>
+    <p><span class="hl">Present (2024):</span> The mix has broadened. Young groups declined to ~25% as party tourism shifted to Koh Phangan. Couples and families grew as Chaweng's mid-range beachfront resorts (like CBR) upgraded. The White Lotus effect brought aspirational luxury visitors to Chaweng's north end.</p>
+    <p><span class="hl5">Future (2030):</span> Expect couples and families to reach ~55% combined as budget stock declines and mid-range properties reclassify upward. The young backpacker share will continue shrinking as Chaweng matures. Digital nomad presence grows with improved co-working infrastructure.</p>
+  </div>
+
+  <div class="ac" style="border-left:3px solid var(--a)">
+    <h4>Lamai — Evolving from Backpacker to Premium</h4>
+    <div class="ac-meta">
+      <div class="ac-m">Couples <strong>32%</strong></div>
+      <div class="ac-m">Backpackers/Solo <strong>20%</strong></div>
+      <div class="ac-m">Honeymooners <strong>15%</strong></div>
+      <div class="ac-m">Wellness Seekers <strong>13%</strong></div>
+      <div class="ac-m">Families <strong>12%</strong></div>
+      <div class="ac-m">Expat/Long-stay <strong>8%</strong></div>
+    </div>
+    <p><span class="hl4">Past (2019):</span> Lamai was primarily a budget/backpacker zone (~35%) with expat long-stayers and Muay Thai enthusiasts. Couples seeking a quieter Chaweng alternative were secondary.</p>
+    <p><span class="hl">Present (2024):</span> Rapidly upscaling. Kamalaya nearby attracts high-spending wellness travelers. Centara Lifestyle (2024) targets families. Silavadee draws luxury couples. Backpacker share dropping as budget bungalows convert to boutique properties.</p>
+    <p><span class="hl5">Future (2030):</span> Fivelements (2026) will cement Lamai as the island's wellness corridor. Expect wellness seekers to reach ~20%, couples ~35%, and backpackers to drop below 12%. Lamai is on track to become Samui's second premium zone after Choeng Mon.</p>
+  </div>
+
+  <div class="ac" style="border-left:3px solid var(--a4)">
+    <h4>Bophut / Fisherman's Village — The Family & Digital Nomad Magnet</h4>
+    <div class="ac-meta">
+      <div class="ac-m">Families <strong>30%</strong></div>
+      <div class="ac-m">Couples <strong>25%</strong></div>
+      <div class="ac-m">Digital Nomads <strong>15%</strong></div>
+      <div class="ac-m">Foodies/Culture <strong>12%</strong></div>
+      <div class="ac-m">Honeymooners <strong>10%</strong></div>
+      <div class="ac-m">Long-stay Expats <strong>8%</strong></div>
+    </div>
+    <p><span class="hl4">Past (2019):</span> Primarily couples (~30%) drawn by Fisherman's Village charm and families (~25%) valuing the quieter north coast + international school access.</p>
+    <p><span class="hl">Present (2024):</span> Digital nomads surged post-DTV visa (~15%). NH Collection (2025) targets families with kids' facilities. Anantara draws White Lotus set-jetters. The Friday night walking street market is now a major draw for foodie travelers.</p>
+    <p><span class="hl5">Future (2030):</span> SO/ Sofitel (2026) and Wyndham Garden (533 keys, 2028) will dramatically shift the mix. Expect families to hold ~28%, but business/MICE to grow via Wyndham's conference capacity. Digital nomad share may reach ~18% as co-working infrastructure expands.</p>
+  </div>
+
+  <div class="ac" style="border-left:3px solid var(--a5)">
+    <h4>Choeng Mon — The Honeymoon & HNW Enclave</h4>
+    <div class="ac-meta">
+      <div class="ac-m">Honeymooners <strong>35%</strong></div>
+      <div class="ac-m">Luxury Couples <strong>28%</strong></div>
+      <div class="ac-m">HNW Families <strong>20%</strong></div>
+      <div class="ac-m">Anniversary/Celebration <strong>12%</strong></div>
+      <div class="ac-m">Wellness <strong>5%</strong></div>
+    </div>
+    <p><span class="hl4">Past (2019):</span> Already luxury-dominant with honeymoon couples (~30%) and HNW families at properties like Tongsai Bay and Six Senses.</p>
+    <p><span class="hl">Present (2024):</span> SAii's adult-only conversion (Dec 2024) explicitly removed families from one property, doubling down on the romance segment. Ritz-Carlton, Meliá, and SALA continue to pull honeymoon budgets. Choeng Mon is now Samui's most exclusive micro-area.</p>
+    <p><span class="hl5">Future (2030):</span> The honeymoon/celebration segment will likely peak at ~40%. Potential risk of over-concentration in luxury — if macro-economic downturn hits HNW travel, Choeng Mon has less downside diversification than Chaweng or Lamai.</p>
+  </div>
+
+  <div class="ac" style="border-left:3px solid #8b95a8">
+    <h4>Maenam — The Quiet Family & Budget Retreat</h4>
+    <div class="ac-meta">
+      <div class="ac-m">Families <strong>28%</strong></div>
+      <div class="ac-m">Budget Couples <strong>22%</strong></div>
+      <div class="ac-m">Backpackers <strong>18%</strong></div>
+      <div class="ac-m">Retirees/Long-stay <strong>15%</strong></div>
+      <div class="ac-m">Wellness Seekers <strong>10%</strong></div>
+      <div class="ac-m">Other <strong>7%</strong></div>
+    </div>
+    <p><span class="hl4">Past (2019):</span> Budget backpackers (~30%) and long-stay expats dominated. W Koh Samui was the sole luxury outlier.</p>
+    <p><span class="hl">Present (2024):</span> Explorar (adults-only) and W Koh Samui pull premium couples. Families growing as they discover Maenam's value + peace. Budget backpacker share declining as island costs rise.</p>
+    <p><span class="hl5">Future (2030):</span> Expect families (~32%) and retiree/long-stay (~18%) to grow as Maenam positions as the "authentic slow-living" alternative. Backpackers will continue shifting to Koh Phangan for better value.</p>
+  </div>
+
+  <div class="ac" style="border-left:3px solid var(--a3)">
+    <h4>Others (West/Southwest Coast) — Privacy Seekers & Villa Groups</h4>
+    <div class="ac-meta">
+      <div class="ac-m">Luxury Villa Groups <strong>30%</strong></div>
+      <div class="ac-m">HNW Couples <strong>25%</strong></div>
+      <div class="ac-m">Privacy Seekers <strong>18%</strong></div>
+      <div class="ac-m">Cruise Day-trippers <strong>12%</strong></div>
+      <div class="ac-m">Eco/Nature Tourists <strong>10%</strong></div>
+      <div class="ac-m">Long-stay <strong>5%</strong></div>
+    </div>
+    <p><span class="hl4">Past (2019):</span> InterContinental and Four Seasons anchored the ultra-luxury crowd. Taling Ngam/Lipa Noi attracted seclusion seekers willing to trade convenience for sunset views.</p>
+    <p><span class="hl">Present (2024):</span> Airbnb luxury villa market booming. Multi-bedroom estates with chef service targeting families and friend groups. Cruise passengers (94K in 2024) arriving at Nathon but spending time across the island.</p>
+    <p><span class="hl5">Future (2030):</span> Nivata by Hilton (2026) + planned cruise terminal (2032, 180K pax capacity) will transform Nathon/Taling Ngam from backwater to gateway. Eco-tourism and sustainability-focused travelers will gravitate to the less-developed west coast.</p>
+  </div>
+
+  <!-- TREND CHART -->
+  <h3>How the Customer Mix Is Shifting — 2019 vs 2024 vs 2030F</h3>
+  <div class="cw">
+    <div class="ct-title">Key Customer Segment Shifts by Area Over Time</div>
+    <canvas id="ch-cust-shift"></canvas>
+  </div>
+
+  <div class="ins">
+    <strong>CBR Implication (Chaweng):</strong> Your customer base is transitioning from the old "Chaweng = backpackers + party" profile to a more mature couples + families mix. The 4-star reclassification accelerates this shift by moving you out of the budget-browsing tier on OTAs and into the consideration set of the 35–54 age bracket (37% of all arrivals) who book $100–180/night properties with pool villas. This is the exact demographic moving into Chaweng as backpackers migrate to Lamai and Koh Phangan.
+  </div>
+</div>
+
+<!-- ===== Q3: ADR BY AREA ===== -->
+<div class="sec" id="s3">
+  <span class="sn">03</span>
+  <h2>Average ADR by Area</h2>
+  <p>ADR varies dramatically by area — a direct reflection of the accommodation mix and positioning of each zone. Island-wide ADR grew 9% in 2024, with April 2025 posting a remarkable 21% YoY surge.</p>
+
+  <div class="cw">
+    <div class="ct-title">Estimated ADR Range by Area — 2024/2025 (USD per night)</div>
+    <canvas id="ch-adr-area"></canvas>
+  </div>
+
+  <p><span class="hl5">Choeng Mon</span> commands the highest ADR thanks to the luxury brand concentration (Ritz-Carlton, Cape Fahn). <span class="hl4">Chaweng</span> has the widest ADR spread — from $40 budget rooms to $500+ suites — reflecting its full-spectrum market. <span class="hl">Bophut</span> sits in the premium-midrange sweet spot. <span class="hl3">Maenam</span> offers the best value on the north coast.</p>
+
+  <div class="ins2">
+    <strong>Pricing Intelligence (Trip.com 2025/2026 data):</strong> Average hotel price in Koh Samui peaks in January (~$211/night) and is cheapest in April (~$159/night). 3-star hotel deals start at ~$31/night; 4-star from ~$112; 5-star from ~$180. Chaweng Beach averages $323/night across all segments on Trip.com.
+  </div>
+</div>
+
+<!-- ===== Q4: HOTEL SEGMENTS BY AREA ===== -->
+<div class="sec" id="s4">
+  <span class="sn">04</span>
+  <h2>Hotel Segments & Supply by Area</h2>
+  <p>C9 Hotelworks classifies Samui's hotel supply into 5 tiers by STR standards. The luxury segment accounts for a remarkable 34% of tracked supply — far above the Thailand average — reflecting Samui's upscale positioning.</p>
+
+  <div class="g2">
+    <div class="cw">
+      <div class="ct-title">Island-wide Hotel Tier Distribution (% of Tracked Supply)</div>
+      <canvas id="ch-tier-pie"></canvas>
+    </div>
+    <div class="cw">
+      <div class="ct-title">Hotel Segment Mix by Area (Estimated)</div>
+      <canvas id="ch-seg-area"></canvas>
+    </div>
+  </div>
+
+  <h3>New Hotel Pipeline — 776 Keys Coming</h3>
+  <div class="pipe"><span class="pipe-yr">2025</span><span><span class="pipe-name">Nivata Koh Samui — Tapestry Collection by Hilton</span><br><span class="pipe-loc">Taling Ngam (Southwest coast)</span></span><span class="pipe-keys">78 keys</span></div>
+  <div class="pipe"><span class="pipe-yr">2026</span><span><span class="pipe-name">SO/ by Sofitel</span><br><span class="pipe-loc">Bophut (North coast)</span></span><span class="pipe-keys">88 keys</span></div>
+  <div class="pipe"><span class="pipe-yr">2026</span><span><span class="pipe-name">Fivelements Samui</span><br><span class="pipe-loc">Lamai (Southeast coast) — Wellness-focused</span></span><span class="pipe-keys">77 keys</span></div>
+  <div class="pipe"><span class="pipe-yr">2028</span><span><span class="pipe-name">Wyndham Garden Samui Wing</span><br><span class="pipe-loc">Bophut — Largest single project on island</span></span><span class="pipe-keys">533 keys</span></div>
+
+  <p style="margin-top:16px">Also rumored/early stage: An <span class="hl4">Unbound Collection by Hyatt</span> in Chaweng Noi and a <span class="hl4">Holiday Inn Express</span> in Bophut near Fisherman's Village. Recent 2024 openings include <span class="hl">Marasca Samui</span> (62 keys, Chaweng, boutique luxury), <span class="hl">Centara Lifestyle Lamai</span> (61 keys), <span class="hl">Sea Sun Bed & Beyond</span> (Bangrak), and <span class="hl">NH Collection Samui</span> (122 keys, Bophut — rebranded from Peace Resort, est. 1977).</p>
+
+  <div class="ins">
+    <strong>Key Insight:</strong> Zero new pipeline in Chaweng — all new branded supply is in Bophut, Lamai, and Taling Ngam. This signals that Chaweng is perceived as supply-saturated while emerging areas offer better returns. For CBR, this means your Chaweng beachfront position becomes increasingly scarce and valuable as branded supply grows elsewhere.
+  </div>
+
+  <!-- SEGMENT GROWTH PAST & FUTURE -->
+  <h3>Hotel Segment Growth — Past & Future</h3>
+  <p>The trajectory is clear: Samui's hotel market is <span class="hl">moving structurally upmarket</span>. Every pipeline hotel is Luxury or Upper Upscale. No new Midscale or Upper Midscale branded supply is entering. Meanwhile, aging budget stock is converting, rebranding, or closing — shrinking the lower tiers as a share of total supply.</p>
+
+  <div class="g2">
+    <div class="cw">
+      <div class="ct-title">Hotel Segment Share Evolution — 2019 to 2030F (%)</div>
+      <canvas id="ch-seg-trend"></canvas>
+    </div>
+    <div class="cw">
+      <div class="ct-title">Estimated Key Count by Segment — 2019 vs 2024 vs 2030F</div>
+      <canvas id="ch-seg-keys"></canvas>
+    </div>
+  </div>
+
+  <h3>Segment-by-Segment Growth Analysis</h3>
+
+  <div class="ac" style="border-left:3px solid var(--a5)">
+    <h4>Luxury (34% → projected 37% by 2030)</h4>
+    <p><span class="hl4">Past (2019):</span> ~28% of tracked supply. Anchored by legacy icons — Four Seasons, Banyan Tree, Conrad, Six Senses, InterContinental. Post-pandemic renovation wave upgraded several properties.</p>
+    <p><span class="hl">Present (2024):</span> Grew to 34% as properties like Marasca Samui (2024, boutique luxury on Chaweng) opened and existing Upper Upscale properties repositioned upward. White Lotus effect supercharged demand, with Four Seasons ADR jumping 40%+.</p>
+    <p><span class="hl5">Future (2030):</span> Nivata by Hilton (2025), SO/ Sofitel (2026), and Fivelements (2026) all enter at Luxury/Upper Upscale tier. Projected to reach ~37% of supply. Growth is supply-driven (new builds) and demand-driven (wellness travelers, set-jetters, European long-haul).</p>
+  </div>
+
+  <div class="ac" style="border-left:3px solid var(--a3)">
+    <h4>Upper Upscale (28% → projected 30% by 2030)</h4>
+    <p><span class="hl4">Past (2019):</span> ~24% of tracked supply. Major brands included W Koh Samui, Meliá, Centara Reserve, Kimpton Kitalay.</p>
+    <p><span class="hl">Present (2024):</span> Grew to 28% through rebranding — NH Collection (formerly Peace Resort, est. 1977) is the signature example of a Midscale property jumping 2 tiers via brand affiliation. SAii's adult-only conversion (Dec 2024) also repositioned upward.</p>
+    <p><span class="hl5">Future (2030):</span> Wyndham Garden (533 keys, 2028) enters at the Upper Upscale/Upscale boundary — the single largest addition to any tier. Potential Hyatt Unbound Collection in Chaweng Noi would also land here. The rebranding wave will continue as independent properties seek chain affiliation to access loyalty program guests and reduce OTA dependence.</p>
+  </div>
+
+  <div class="ac" style="border-left:3px solid var(--a4)">
+    <h4>Upscale (12% → stable ~12% by 2030)</h4>
+    <p><span class="hl4">Past (2019):</span> ~13% of supply. Boutique and independent resorts in the $100–200 range.</p>
+    <p><span class="hl">Present (2024):</span> Slight compression to 12% as properties either upgraded to Upper Upscale (via rebranding) or were squeezed down by competition. Centara Lifestyle Lamai (2024, 61 keys) entered at this tier.</p>
+    <p><span class="hl5">Future (2030):</span> This tier acts as the "transition zone" — properties are either climbing into Upper Upscale via brand affiliation or sliding down as they age. Relatively stable in share but high churn. Holiday Inn Express (if confirmed, Bophut) would anchor the upper end of this tier.</p>
+  </div>
+
+  <div class="ac" style="border-left:3px solid var(--a)">
+    <h4>Upper Midscale (19% → projected 15% by 2030) — CBR's Current Tier</h4>
+    <p><span class="hl4">Past (2019):</span> ~22% of supply. The traditional "3-star beachfront" tier. Properties like Chaweng Buri, Chaweng Garden, Samui Paradise, and many independent family-run resorts along Chaweng and Lamai.</p>
+    <p><span class="hl">Present (2024):</span> Down to 19%. No new branded supply entering this tier. The shrinkage comes from two directions: (1) properties upgrading to Upscale/Upper Upscale via renovation + rebranding (the path CBR is on), and (2) some aging properties declining into Midscale or exiting the market.</p>
+    <p><span class="hl5">Future (2030):</span> Projected to decline to ~15% as the upgrade cycle continues. <span class="hl">This is precisely why CBR's 4-star reclassification is strategically urgent</span> — the Upper Midscale tier is shrinking, meaning properties that stay here face increasing commoditization and OTA price compression, while those that step up into Upscale/Upper Upscale access better ADR and a more resilient customer base.</p>
+  </div>
+
+  <div class="ac" style="border-left:3px solid #8b95a8">
+    <h4>Midscale (7% → projected 6% by 2030)</h4>
+    <p><span class="hl4">Past (2019):</span> ~13% of supply. Budget bungalows, basic guesthouses, and backpacker lodges concentrated in Chaweng, Lamai, and Maenam.</p>
+    <p><span class="hl">Present (2024):</span> Dropped sharply to 7%. Many budget properties closed during COVID (36% of hospitality businesses closed in Q2 2021). Survivors face rising land costs, labor shortages, and competition from Airbnb. COSI Samui and Lub d represent the "new Midscale" — branded, design-forward budget options replacing traditional bungalows.</p>
+    <p><span class="hl5">Future (2030):</span> Will continue to contract to ~6%. Traditional budget bungalow stock is essentially a dying category on Samui — replaced either by branded budget concepts (COSI model) or Airbnb/vacation rentals. Budget travelers will increasingly shift to Koh Phangan and Koh Tao for better value.</p>
+  </div>
+
+  <div class="ins">
+    <strong>The Big Picture:</strong> Samui is undergoing a one-way structural shift from a 5-tier pyramid to a top-heavy diamond — Luxury and Upper Upscale together will represent ~67% of tracked supply by 2030 (up from ~52% in 2019). The middle and bottom are compressing. Every property must decide: move up, or get squeezed. CBR's wellness rebrand + 4-star reclassification is the right move at the right time.
+  </div>
+</div>
+
+<!-- ===== Q5: PRICING, OCCUPANCY & POPULAR HOTELS ===== -->
+<div class="sec" id="s5">
+  <span class="sn">05</span>
+  <h2>Average Prices, Occupancy & Popular Hotels</h2>
+  <p>Island-wide occupancy averaged 75–85% in FY2023, with 2024 posting a 12% YoY increase. January 2025 peaked with an 8% YoY gain. ADR grew 9% in 2024, and April 2025 surged 21% YoY — the strongest monthly ADR growth on record.</p>
+
+  <!-- MONTHLY ADR BY YEAR -->
+  <div class="cw">
+    <div class="ct-title">Monthly Average ADR — 2022 vs 2023 vs 2024 vs 2025 (USD)</div>
+    <canvas id="ch-adr-monthly"></canvas>
+  </div>
+
+  <p>The ADR curve follows Samui's distinct seasonality: <span class="hl4">peak season</span> (Dec–Feb) driven by European winter escapes, a <span class="hl">shoulder</span> (Mar–Apr) as Songkran brings a domestic bump, a <span class="hl5">low season dip</span> (May–Jun, Sep–Oct) during Gulf monsoon, and a <span class="hl4">recovery</span> (Jul–Aug) from summer holiday travelers. The key takeaway: each successive year's curve sits higher than the last — Samui has consistently ratcheted up pricing power.</p>
+
+  <!-- MONTHLY OCCUPANCY BY YEAR -->
+  <div class="cw">
+    <div class="ct-title">Monthly Estimated Occupancy — 2022 vs 2023 vs 2024 vs 2025 (%)</div>
+    <canvas id="ch-occ-monthly"></canvas>
+  </div>
+
+  <p>Occupancy follows a similar seasonal pattern but with two notable features: (1) <span class="hl">the trough is rising</span> — low-season occupancy has improved from ~45% (2022) to ~58% (2024), driven by wellness year-round visitors, digital nomads, and cruise arrivals, and (2) <span class="hl4">January consistently leads</span>, with 2025 posting the strongest January on record (+8% YoY).</p>
+
+  <!-- ADR + OCC COMBO -->
+  <div class="g2">
+    <div class="cw">
+      <div class="ct-title">Annual Average ADR & Occupancy — Yearly Summary</div>
+      <canvas id="ch-annual-combo"></canvas>
+    </div>
+    <div class="cw">
+      <div class="ct-title">Estimated RevPAR by Month — 2024 (USD)</div>
+      <canvas id="ch-revpar-monthly"></canvas>
+    </div>
+  </div>
+
+  <div class="ins">
+    <strong>Revenue Management Insight:</strong> The strongest RevPAR months are Dec–Feb (peak ADR × peak occupancy). But the biggest ADR growth opportunity is in the shoulder months (Mar–Apr, Jul–Aug) where occupancy is decent (65–75%) but ADR remains suppressed. Wellness programming — which drives year-round demand — directly attacks the low-season RevPAR trough. This is why C9 Hotelworks specifically notes that wellness properties like Kamalaya achieve "year-round visitation" — they've effectively flattened the seasonality curve.
+  </div>
+
+  <h3>Most Popular Hotels by Segment</h3>
+  <div class="tw">
+    <table class="tb">
+      <thead><tr><th>Segment</th><th>Top Hotels</th><th>Area</th><th>ADR Range</th><th>Key Draw</th></tr></thead>
+      <tbody>
+        <tr><td>Ultra-Luxury</td><td>Four Seasons, Banyan Tree, Six Senses</td><td>Bang Por, Lamai, Choeng Mon</td><td>$500–2,500+</td><td>Private pool villas, White Lotus fame, wellness</td></tr>
+        <tr><td>Luxury</td><td>Ritz-Carlton, Conrad, Centara Reserve, Vana Belle</td><td>Choeng Mon, Taling Ngam, Chaweng</td><td>$250–600</td><td>Brand prestige, spa, beachfront, honeymoon packages</td></tr>
+        <tr><td>Upper Upscale</td><td>W Koh Samui, Meliá, InterContinental, Kimpton Kitalay</td><td>Maenam, Choeng Mon, Taling Ngam, Lamai</td><td>$150–350</td><td>Design-forward, lifestyle, F&B focus</td></tr>
+        <tr><td>Upscale / Upper Mid</td><td>Chaweng Regent, Samui Paradise, Nora Buri, <span class="hl">Chaweng Buri</span></td><td class="chw">Chaweng, Lamai, Chaweng Noi</td><td>$70–180</td><td>Beachfront, pool villas, value, OTA volume</td></tr>
+        <tr><td>Midscale / Budget</td><td>COSI Samui, Lub d, Ploen Chaweng</td><td>Chaweng</td><td>$30–80</td><td>Location, social vibe, budget-friendly</td></tr>
+        <tr><td>Wellness Niche</td><td>Kamalaya, Absolute Sanctuary, Natural Detox</td><td>Lamai, Chaweng Noi</td><td>$200–800+</td><td>Programs (7–14 day), year-round, 130% higher spend</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== Q5B: TOP 5 PERFORMING HOTELS ===== -->
+<div class="sec" id="s5b">
+  <span class="sn">5B</span>
+  <h2>Top 5 Performing Hotels on Koh Samui</h2>
+  <p>Based on a composite of ADR/pricing power, occupancy resilience, industry awards, brand strength, and market influence — these 5 properties define what "top performance" looks like on Samui across different segments.</p>
+
+  <div class="cw">
+    <div class="ct-title">Top 5 Hotels — Performance Profile Radar</div>
+    <canvas id="ch-top5-radar"></canvas>
+  </div>
+
+  <div class="hotel-card" data-rank="#1">
+    <h4>Four Seasons Resort Koh Samui <small>Laem Yai / Bang Por · 60 pool villas · Ultra-Luxury</small></h4>
+    <div class="hotel-stats">
+      <div class="hotel-stat">ADR <strong>$1,000–9,000+</strong></div>
+      <div class="hotel-stat">Occupancy <strong>Record highs (2024–25)</strong></div>
+      <div class="hotel-stat">Trip.com <strong>9.7/10</strong></div>
+      <div class="hotel-stat">White Lotus <strong>ADR +40%</strong></div>
+    </div>
+    <p>The undisputed #1 performer. The Four Seasons GM confirmed record-high occupancy rates post-pandemic. White Lotus Season 3 was filmed here, generating a 65% spike in Hotels.com searches, 370% search surge from Hong Kong on Expedia, and 40%+ ADR increase. Won Condé Nast Traveler #48 Best Resort in World and #3 Best Resort in Thailand (2025).</p>
+    <div class="hotel-why"><em>Why it outperforms:</em> Unmatched brand + White Lotus global exposure + all-villa product + $1,000–9,000/night pricing power + record occupancy. The property that defined Samui's luxury ceiling.</div>
+  </div>
+
+  <div class="hotel-card" data-rank="#2">
+    <h4>Banyan Tree Samui <small>Lamai hillside · All-villa · Luxury</small></h4>
+    <div class="hotel-stats">
+      <div class="hotel-stat">ADR <strong>$400–800+</strong></div>
+      <div class="hotel-stat">Awards <strong>#1 Luxury Spa Thailand 2025</strong></div>
+      <div class="hotel-stat">Michelin <strong>Two-Key Hotel 2024</strong></div>
+      <div class="hotel-stat">Owner <strong>AWC (Thai conglomerate)</strong></div>
+    </div>
+    <p>Won World Luxury Hotel Awards #1 Luxury Spa Resort Thailand (2025) and Michelin Guide Two-Key Hotel Recognition (2024). All-villa hillside model with signature Rainforest Spa. Area GM confirmed strong European long-haul performance. Backed by Asset World Corporation's investment capacity.</p>
+    <div class="hotel-why"><em>Why it outperforms:</em> All-villa product + world-class spa (#1 in Thailand) + Michelin recognition + AWC investment backing + Accor partnership providing global loyalty distribution.</div>
+  </div>
+
+  <div class="hotel-card" data-rank="#3">
+    <h4>Kamalaya Koh Samui <small>South coast near Lamai · Wellness retreat</small></h4>
+    <div class="hotel-stats">
+      <div class="hotel-stat">ADR <strong>$300–800+ (programs)</strong></div>
+      <div class="hotel-stat">ALOS <strong>7–14 nights</strong></div>
+      <div class="hotel-stat">Seasonality <strong>Year-round</strong></div>
+      <div class="hotel-stat">Guest Spend <strong>+130% vs avg</strong></div>
+    </div>
+    <p>The wellness performance benchmark. C9 Hotelworks' Bill Barnett specifically named Kamalaya as leading the wellness segment with "year-round visitation and longer average stays." Runs 7–14 day program-based packages (detox, stress, longevity) that flatten the occupancy curve — no low season. Guests spend 130% more than average tourists.</p>
+    <div class="hotel-why"><em>Why it outperforms:</em> Year-round demand (no low season) + longest ALOS on island + 130% higher spend + program lock-in reduces OTA dependence. The model CBR's wellness strategy aspires toward.</div>
+  </div>
+
+  <div class="hotel-card" data-rank="#4">
+    <h4>Centara Reserve Samui <small>Chaweng Beach · 5-star luxury · CBR's aspirational comp</small></h4>
+    <div class="hotel-stats">
+      <div class="hotel-stat">ADR <strong>$250–500+</strong></div>
+      <div class="hotel-stat">Location <strong>Premium Chaweng beachfront</strong></div>
+      <div class="hotel-stat">Rebrand <strong>"Reserve" tier uplift</strong></div>
+      <div class="hotel-stat">TripAdvisor <strong>"Best place to stay at Samui"</strong></div>
+    </div>
+    <p>The top-performing luxury hotel on Chaweng Beach — and CBR's most aspirational direct competitor. The Director of Sales & Marketing confirmed that demand continues to strengthen Samui's luxury positioning. Recent renovation and "Reserve" rebranding elevated it from the standard Centara tier, commanding significant ADR premiums.</p>
+    <div class="hotel-why"><em>Why it outperforms:</em> Best luxury beachfront on Chaweng + brand uplift from "Reserve" rebrand + Centara loyalty program + consistent top TripAdvisor ranking. The blueprint for what a Chaweng beachfront upgrade can achieve.</div>
+  </div>
+
+  <div class="hotel-card" data-rank="#5">
+    <h4>Meliá Koh Samui <small>Choeng Mon · Opened 2023 · Family luxury</small></h4>
+    <div class="hotel-stats">
+      <div class="hotel-stat">ADR <strong>$200–450+</strong></div>
+      <div class="hotel-stat">Opened <strong>2023 (new-build)</strong></div>
+      <div class="hotel-stat">Niche <strong>Family luxury gap</strong></div>
+      <div class="hotel-stat">Reviews <strong>Top 3–5 TripAdvisor luxury</strong></div>
+    </div>
+    <p>The standout recent entrant. Opened in 2023 and rapidly climbed to top TripAdvisor rankings. Reviewers praise "the finest breakfast buffet I've ever seen" and "genuinely caring staff." Targeted the family luxury gap at Choeng Mon with The Level suite concept, kids' club, and beachfront pool. Spanish hospitality DNA (Meliá Hotels International) with fresh product and zero renovation debt.</p>
+    <div class="hotel-why"><em>Why it outperforms:</em> New-build advantage (zero maintenance debt) + targeted family-luxury niche + exceptional launch reviews + The Level premium tier driving ADR uplift.</div>
+  </div>
+
+  <div class="cw">
+    <div class="ct-title">Top 5 Hotels — Estimated ADR Comparison (USD)</div>
+    <canvas id="ch-top5-adr"></canvas>
+  </div>
+
+  <div class="ins" style="border-left-color:var(--a4);background:rgba(255,209,102,0.06)">
+    <strong>What These 5 Have in Common (CBR Lessons):</strong> (1) A clear, differentiated positioning story, (2) all-villa or private pool product, (3) exceptional F&B — especially breakfast, (4) strong review management and guest engagement, (5) brand loyalty or program-based demand that reduces OTA dependence. The one CBR is best positioned to emulate is <em>Centara Reserve</em> — a Chaweng beachfront property that elevated itself through rebranding, renovation, and wellness/experience programming.
+  </div>
+</div>
+
+<!-- ===== Q6: HOW HOTELS COMPETE ===== -->
+<div class="sec" id="s6">
+  <span class="sn">06</span>
+  <h2>How Hotels Compete on Samui</h2>
+  <p>Hotel competition on Samui operates across 8 primary dimensions. The competitive playbook has shifted dramatically post-pandemic, with wellness, direct booking, and "Instagrammability" rising as differentiators.</p>
+
+  <div class="cw">
+    <div class="ct-title">Competitive Differentiation Strategies — Ranked by Adoption (2024–2025)</div>
+    <canvas id="ch-compete"></canvas>
+  </div>
+
+  <h3>The 8 Competitive Battlegrounds</h3>
+  <p><span class="hl4">1. Private Pool Villas (90% of upper-tier properties)</span> — The single most important product differentiator. Nearly every new-build or renovation includes pool villas. SAii converted to adult-only pool villas in Dec 2024. CBR's 44 pool villas are a core competitive asset.</p>
+  <p><span class="hl4">2. OTA Ranking & Review Scores (critical for mid-range)</span> — 80% of travelers read reviews before booking. The difference between Booking.com 7.5 and 8.5 is material. Hotels invest in review response workflows, guest satisfaction tracking, and targeted renovation to move scores.</p>
+  <p><span class="hl4">3. Wellness & Spa Programming (fastest-growing)</span> — Moving from "spa as amenity" to "wellness as brand identity." Kamalaya pioneered this; Fivelements (2026) doubles down. Centara Reserve, Ritz-Carlton, and Garrya Tongsai Bay all repositioning around wellness. 130% higher spend from wellness guests.</p>
+  <p><span class="hl4">4. F&B / Breakfast Quality (highest review impact)</span> — Your review analysis confirmed breakfast is the most visible F&B touchpoint. Hotels compete on buffet breadth, local ingredient sourcing, beachfront dining settings, and Instagrammable presentations.</p>
+  <p><span class="hl4">5. Brand Affiliation & Loyalty Programs</span> — Hilton, Marriott (Ritz-Carlton, W), IHG (Kimpton, InterContinental), Accor (SO/ Sofitel) and Minor (NH Collection, Anantara) all expanding on Samui. Loyalty program members book direct, reducing OTA commission. Independent properties must compete harder on uniqueness.</p>
+  <p><span class="hl4">6. Instagram / Social Media Appeal</span> — 40% of bookings influenced by Instagram/TikTok. Hotels invest in photogenic infinity pools, drone-worthy angles, floating breakfasts, and "set-jetting" packages tied to White Lotus. The SAii "Sleep Well" concept, W Koh Samui's social scene, and Four Seasons' coconut-grove aesthetics are all social-first strategies.</p>
+  <p><span class="hl4">7. Sustainability & Eco-Credentials</span> — Increasingly important for European travelers (56% of arrivals). Six Senses leads in sustainability. GSTC certification, solar power, composting, reef restoration, and plastic-free operations are becoming table-stakes for premium positioning.</p>
+  <p><span class="hl4">8. Experience Curation & Day Passes</span> — The "villa + day pass" model is emerging: guests stay in private Airbnb villas but buy day passes ($45–100) at luxury resorts for pool, spa, and F&B. Hotels monetize non-guests while villas capture accommodation spend. This hybrid model redefines competition.</p>
+
+  <div class="ins">
+    <strong>CBR Competitive Position:</strong> You compete in dimension #1 (44 pool villas ✓), #2 (OTA optimization — your top priority), #3 (wellness rebrand — in progress), and #4 (breakfast quality — identified gap from review analysis). Dimensions #5–8 represent stretch opportunities. The OTA reclassification to 4-star is the single highest-leverage competitive move because it shifts you into a higher visibility tier on Booking.com where the 35% upper-midscale traveler segment browses.
+  </div>
+</div>
+
+<!-- SOURCES -->
+<div class="src" id="src">
+  <h3>References & Sources</h3>
+  <ol>
+    <li>C9 Hotelworks — <em>Samui Hotel & Tourism Market Review, June 2025</em> (hotel supply by area: 20% Chaweng, 15% Bophut, 14% Lamai, 13% Choeng Mon, 8% Maenam, 30% Others; tier breakdown: 34% Luxury, 28% Upper Upscale, 12% Upscale, 19% Upper Midscale, 7% Midscale; pipeline: 776 keys) <a href="https://c9hotelworks.com/wp-content/uploads/2025/06/Samui-Hotel-Tourism-Market-Review_June-2025.pdf" target="_blank">PDF</a></li>
+    <li>C9 Hotelworks — <em>Samui Hotel & Tourism Market Review, June 2024</em> (occupancy 75–85% FY2023, new openings) <a href="https://www.c9hotelworks.com/wp-content/uploads/2024/06/2024-06-samui-hotel-market-update.pdf" target="_blank">PDF</a></li>
+    <li>Hospitalitynet — <em>Koh Samui Shines: C9 Report June 2025</em> <a href="https://www.hospitalitynet.org/news/4127624.html" target="_blank">Link</a></li>
+    <li>Hinfah — <em>Koh Samui Hotel & Tourism Market June 2025 Review</em> <a href="https://www.hinfah.com/post/koh-samui-hotel-tourism-market-june-2025-review" target="_blank">Link</a></li>
+    <li>Horizon Homes — <em>Neighborhood Research in Koh Samui: 7 Factors 2026</em> (property prices by area, infrastructure projects) <a href="https://www.horizonhomes-samui.com/neighborhood-research-in-koh-samui-7-factors-for-choosing-the-right-area-in-2026/" target="_blank">Link</a></li>
+    <li>Buy Samui — <em>Koh Samui Real Estate Market 2025</em> <a href="https://buysamui.com/blogs/koh-samui-real-estate-market-2025" target="_blank">Link</a></li>
+    <li>itravelblog — <em>Koh Samui Accommodation 2026: 10 Newly Opened</em> <a href="https://en.itravelblog.net/new-hotels-in-koh-samui/" target="_blank">Link</a></li>
+    <li>Trip.com — <em>Koh Samui Hotels pricing & seasonality data</em> (Jan peak $211, April low $159; Chaweng avg $323) <a href="https://www.trip.com/hotels/koh-samui-hotels-list-1229/" target="_blank">Link</a></li>
+    <li>Momondo — <em>Koh Samui hotel pricing by area</em> (Bophut avg $228, Lamai avg $74) <a href="https://www.momondo.com/hotels/ko-samui" target="_blank">Link</a></li>
+    <li>The Koh Samui Guide — <em>6 New Hotels</em> (SO Sofitel, Hyatt Unbound, Holiday Inn Express) <a href="https://www.thekohsamuiguide.com/post/koh-samui-new-hotels-2022" target="_blank">Link</a></li>
+    <li>Travel and Tour World — <em>SAii Koh Samui Adult-Only Concept Dec 2024</em> <a href="https://www.travelandtourworld.com/news/article/saii-koh-samui-villas-unveils-new-adult-only-concept-from-december-2024/" target="_blank">Link</a></li>
+    <li>Forbes & Partners — <em>Koh Samui Day Pass Guide 2025</em> (hotel day pass strategy analysis) <a href="https://www.forbesandpartners.com/koh-samui-hotel-day-pass-guide/" target="_blank">Link</a></li>
+    <li>The Koh Samui Guide — <em>Koh Samui Award-Winning Hotels 2025</em> (41 awards across 16 hotels) <a href="https://www.thekohsamuiguide.com/post/koh-samui-award-winning-hotels" target="_blank">Link</a></li>
+    <li>Washington Post / Spokesman-Review — <em>Four Seasons Record Occupancy & White Lotus filming (Dec 2024)</em> <a href="https://www.spokesman.com/stories/2024/dec/14/thailands-starring-role-in-the-white-lotus-is-abou/" target="_blank">Link</a></li>
+    <li>Outlook Traveller — <em>Koh Samui Overtourism: Four Seasons ADR +40% (May 2025)</em> <a href="https://www.outlooktraveller.com/News/overtourism-in-koh-samui-thailand" target="_blank">Link</a></li>
+    <li>Thaiger — <em>Koh Samui Hotel Rates Surge 40% After White Lotus (Mar 2025)</em> <a href="https://thethaiger.com/news/samui/koh-samui-hotel-rates-surge-40-after-the-white-lotus-airs" target="_blank">Link</a></li>
+    <li>JLL via Toute La Thailande — <em>White Lotus Effect: Luxury ADR exceeds ฿10,000/night (Mar 2025)</em> <a href="https://toutelathailande.fr/en/information/white-lotus-effect-in-thailand-hotel-rates-on-koh-samui-have-increased-by-50-/" target="_blank">Link</a></li>
+    <li>TripAdvisor — <em>Ko Samui Luxury Hotels Rankings 2025–2026</em> <a href="https://www.tripadvisor.com/Hotels-g293918-zff12-Ko_Samui_Surat_Thani_Province-Hotels.html" target="_blank">Link</a></li>
+    <li>Nomad Mum — <em>Best 20 Koh Samui Luxury Hotels (Oct 2025)</em> <a href="https://nomadmum.com/koh-samui-luxury-hotels/" target="_blank">Link</a></li>
+  </ol>
+</div>
+
+<div class="ft">Area-by-Area Analysis · Part 2 of Koh Samui Travel Industry Deep Research · March 2026 · For CBR Strategic Planning</div>
+</div>
+
+<script>
+Chart.defaults.color='#8b95a8';Chart.defaults.font.family="'DM Sans',sans-serif";Chart.defaults.plugins.legend.labels.padding=14;Chart.defaults.plugins.legend.labels.usePointStyle=true;Chart.defaults.plugins.legend.labels.pointStyle='circle';
+const a='#06d6a0',a2='#118ab2',a3='#ef476f',a4='#ffd166',a5='#8338ec',gd='rgba(255,255,255,0.05)';
+
+// Q1: Supply by Area
+new Chart(document.getElementById('ch-area-supply'),{type:'doughnut',data:{labels:['Chaweng 20%','Bophut 15%','Lamai 14%','Choeng Mon 13%','Maenam 8%','Others 30%'],datasets:[{data:[20,15,14,13,8,30],backgroundColor:[a2,a4,a,a5,a3,'#4ecdc4'],borderWidth:0,hoverOffset:8}]},options:{responsive:true,cutout:'58%',plugins:{legend:{position:'right',labels:{font:{size:11}}}}}});
+
+// Q1: Area Trend
+new Chart(document.getElementById('ch-area-trend'),{type:'line',data:{labels:['2019','2020','2021','2022','2023','2024','2025E','2026F','2027F','2028F','2030F'],datasets:[
+{label:'Chaweng',data:[23,22,21,21,20,20,19.5,19,19,18.5,18],borderColor:a2,tension:.4,fill:false},
+{label:'Bophut',data:[12,12,13,14,14,15,16,17,18,19,20],borderColor:a4,tension:.4,fill:false},
+{label:'Lamai',data:[13,13,13,13,14,14,14.5,15,15,15,15],borderColor:a,tension:.4,fill:false},
+{label:'Choeng Mon',data:[11,11,12,12,13,13,13,13,13,13,13],borderColor:a5,tension:.4,fill:false},
+{label:'Others (West)',data:[28,29,29,29,29,30,30,30,30,31,31],borderColor:'#4ecdc4',tension:.4,fill:false,borderDash:[5,5]}
+]},options:{responsive:true,scales:{y:{grid:{color:gd},ticks:{callback:v=>v+'%'},min:5,max:35},x:{grid:{display:false}}},plugins:{legend:{labels:{font:{size:10}}}}}});
+
+// Q3: ADR by Area
+new Chart(document.getElementById('ch-adr-area'),{type:'bar',data:{labels:['Choeng Mon','Chaweng\n(Luxury tier)','Bang Por /\nTaling Ngam','Bophut','Chaweng\n(Mid-range)','Lamai','Maenam'],datasets:[
+{label:'Low-end ADR',data:[100,120,80,60,50,50,40],backgroundColor:'rgba(139,149,168,0.3)',borderRadius:4},
+{label:'Median ADR',data:[350,300,280,150,120,110,90],backgroundColor:a2,borderRadius:4},
+{label:'High-end ADR',data:[2500,500,1000,350,200,400,300],backgroundColor:a5+'90',borderRadius:4}
+]},options:{responsive:true,scales:{y:{grid:{color:gd},ticks:{callback:v=>'$'+v},max:2600},x:{grid:{display:false},ticks:{font:{size:10}}}},plugins:{legend:{labels:{font:{size:11}}}}}});
+
+// Q4: Tier Pie
+new Chart(document.getElementById('ch-tier-pie'),{type:'doughnut',data:{labels:['Luxury 34%','Upper Upscale 28%','Upscale 12%','Upper Midscale 19%','Midscale 7%'],datasets:[{data:[34,28,12,19,7],backgroundColor:[a5,a3,a4,a,a2],borderWidth:0}]},options:{responsive:true,cutout:'58%',plugins:{legend:{position:'right',labels:{font:{size:11}}}}}});
+
+// Q4: Segment by Area — 5 tiers matching C9 Hotelworks classification
+new Chart(document.getElementById('ch-seg-area'),{type:'bar',data:{labels:['Chaweng','Bophut','Lamai','Choeng Mon','Maenam','Others'],datasets:[
+{label:'Luxury',data:[15,10,20,45,10,25],backgroundColor:a5,borderRadius:3},
+{label:'Upper Upscale',data:[18,22,20,30,15,22],backgroundColor:a3,borderRadius:3},
+{label:'Upscale',data:[15,18,18,12,15,18],backgroundColor:a4,borderRadius:3},
+{label:'Upper Midscale',data:[28,30,27,10,30,20],backgroundColor:a,borderRadius:3},
+{label:'Midscale',data:[24,20,15,3,30,15],backgroundColor:'#8b95a8',borderRadius:3}
+]},options:{responsive:true,scales:{y:{grid:{color:gd},stacked:true,max:100,ticks:{callback:v=>v+'%'}},x:{grid:{display:false},stacked:true}},plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:10}}}}});
+
+// Q4B: Segment Share Evolution — Line chart 2019→2030
+new Chart(document.getElementById('ch-seg-trend'),{type:'line',data:{labels:['2019','2020','2021','2022','2023','2024','2025E','2026F','2027F','2028F','2029F','2030F'],datasets:[
+{label:'Luxury',data:[28,27,26,30,32,34,35,36,36,37,37,37],borderColor:a5,backgroundColor:a5+'18',fill:true,tension:.4,borderWidth:2.5},
+{label:'Upper Upscale',data:[24,23,22,25,27,28,28,29,29,30,30,30],borderColor:a3,fill:false,tension:.4,borderWidth:2},
+{label:'Upscale',data:[13,13,14,13,12,12,12,12,12,12,12,12],borderColor:a4,fill:false,tension:.4,borderWidth:2},
+{label:'Upper Midscale',data:[22,22,23,20,19,19,18,17,16,15,15,15],borderColor:a,fill:false,tension:.4,borderWidth:2.5,borderDash:[6,3]},
+{label:'Midscale',data:[13,15,15,12,10,7,7,6,7,6,6,6],borderColor:'#8b95a8',fill:false,tension:.4,borderWidth:1.5,borderDash:[4,4]}
+]},options:{responsive:true,scales:{y:{grid:{color:gd},ticks:{callback:v=>v+'%'},min:0,max:42},x:{grid:{display:false}}},plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:8}}}}});
+
+// Q4B: Key Count by Segment — Grouped bar 2019 vs 2024 vs 2030F
+new Chart(document.getElementById('ch-seg-keys'),{type:'bar',data:{labels:['Luxury','Upper\nUpscale','Upscale','Upper\nMidscale','Midscale'],datasets:[
+{label:'2019 (est. ~23,500 keys)',data:[6580,5640,3055,5170,3055],backgroundColor:'rgba(139,149,168,0.35)',borderRadius:4},
+{label:'2024 (24,188 keys)',data:[8224,6773,2903,4596,1693],backgroundColor:a2,borderRadius:4},
+{label:'2030F (est. ~25,000 keys)',data:[9250,7500,3000,3750,1500],backgroundColor:a,borderRadius:4}
+]},options:{responsive:true,scales:{y:{grid:{color:gd},ticks:{callback:v=>(v/1000).toFixed(1)+'K'}},x:{grid:{display:false},ticks:{font:{size:10}}}},plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:8}}}}});
+
+// Q5: Monthly ADR by Year — multi-line overlay
+const mLabels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+new Chart(document.getElementById('ch-adr-monthly'),{type:'line',data:{labels:mLabels,datasets:[
+{label:'2022',data:[135,128,112,102,105,108,115,110,100,98,118,138],borderColor:'rgba(139,149,168,0.5)',borderWidth:1.5,tension:.4,pointRadius:2,borderDash:[4,4]},
+{label:'2023',data:[158,150,132,120,122,126,135,128,118,116,138,155],borderColor:a4,borderWidth:2,tension:.4,pointRadius:3},
+{label:'2024',data:[172,163,144,131,135,139,147,141,130,128,152,170],borderColor:a2,borderWidth:2.5,tension:.4,pointRadius:4,pointBackgroundColor:a2},
+{label:'2025 (YTD + est.)',data:[186,176,155,159,148,152,160,154,142,140,166,185],borderColor:a,borderWidth:3,tension:.4,pointRadius:4,pointBackgroundColor:a}
+]},options:{responsive:true,scales:{y:{grid:{color:gd},ticks:{callback:v=>'$'+v},min:80,max:200},x:{grid:{color:'rgba(255,255,255,0.03)'}}},plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:12}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': $'+ctx.parsed.y}}}}});
+
+// Q5: Monthly Occupancy by Year — multi-line overlay
+new Chart(document.getElementById('ch-occ-monthly'),{type:'line',data:{labels:mLabels,datasets:[
+{label:'2022',data:[62,58,50,42,38,40,48,45,35,32,48,60],borderColor:'rgba(139,149,168,0.5)',borderWidth:1.5,tension:.4,pointRadius:2,borderDash:[4,4]},
+{label:'2023',data:[78,74,66,58,52,54,62,58,48,45,62,76],borderColor:a4,borderWidth:2,tension:.4,pointRadius:3},
+{label:'2024',data:[85,82,74,65,58,60,68,64,55,52,70,83],borderColor:a2,borderWidth:2.5,tension:.4,pointRadius:4,pointBackgroundColor:a2},
+{label:'2025 (YTD + est.)',data:[92,86,78,68,62,64,72,68,58,56,74,88],borderColor:a,borderWidth:3,tension:.4,pointRadius:4,pointBackgroundColor:a}
+]},options:{responsive:true,scales:{y:{grid:{color:gd},ticks:{callback:v=>v+'%'},min:25,max:100},x:{grid:{color:'rgba(255,255,255,0.03)'}}},plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:12}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+ctx.parsed.y+'%'}}}}});
+
+// Q5: Annual Combo — ADR bar + Occupancy line
+new Chart(document.getElementById('ch-annual-combo'),{type:'bar',data:{labels:['2019','2020','2021','2022','2023','2024','2025E'],datasets:[
+{label:'Avg ADR (USD)',data:[128,65,48,115,138,150,162],backgroundColor:a2+'cc',borderRadius:5,yAxisID:'y',order:2},
+{label:'Avg Occupancy %',data:[78,22,15,48,72,80,76],type:'line',borderColor:a,backgroundColor:a+'22',fill:true,tension:.4,pointRadius:5,pointBackgroundColor:a,yAxisID:'y1',order:1,borderWidth:2.5}
+]},options:{responsive:true,scales:{y:{grid:{color:gd},position:'left',ticks:{callback:v=>'$'+v},max:180,title:{display:true,text:'ADR (USD)',color:'#8b95a8',font:{size:10}}},y1:{grid:{display:false},position:'right',ticks:{callback:v=>v+'%'},max:100,title:{display:true,text:'Occupancy %',color:'#8b95a8',font:{size:10}}},x:{grid:{display:false}}},plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:12}}}}});
+
+// Q5: RevPAR by Month 2024
+const occ24=[85,82,74,65,58,60,68,64,55,52,70,83];
+const adr24=[172,163,144,131,135,139,147,141,130,128,152,170];
+const revpar24=occ24.map((o,i)=>Math.round(adr24[i]*o/100));
+new Chart(document.getElementById('ch-revpar-monthly'),{type:'bar',data:{labels:mLabels,datasets:[{label:'RevPAR 2024 (USD)',data:revpar24,backgroundColor:revpar24.map(v=>v>120?a:v>90?a2:a4),borderRadius:5,barThickness:24}]},options:{responsive:true,scales:{y:{grid:{color:gd},ticks:{callback:v=>'$'+v}},x:{grid:{display:false}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const i=ctx.dataIndex;return 'RevPAR: $'+ctx.parsed.y+' (ADR $'+adr24[i]+' × Occ '+occ24[i]+'%)'}}}}}});
+
+// Q6: Competitive Dimensions
+new Chart(document.getElementById('ch-compete'),{type:'bar',data:{labels:['Private Pool\nVillas','OTA Ranking\n& Reviews','Wellness &\nSpa Programs','F&B /\nBreakfast','Brand &\nLoyalty','Instagram\nAppeal','Sustainability','Day Pass\nModel'],datasets:[{label:'% of Upper-Tier Hotels Using This Strategy',data:[90,85,65,80,45,70,40,25],backgroundColor:[a2,a2,a,a,a5,a4,a3,'#8b95a8'],borderRadius:6,barThickness:28}]},options:{responsive:true,indexAxis:'y',scales:{x:{grid:{color:gd},max:100,ticks:{callback:v=>v+'%'}},y:{grid:{display:false},ticks:{font:{size:11}}}},plugins:{legend:{display:false}}}});
+
+// Customer Type by Area - Stacked Bar
+new Chart(document.getElementById('ch-cust-area'),{type:'bar',data:{labels:['Chaweng','Lamai','Bophut','Choeng Mon','Maenam','Others\n(West)'],datasets:[
+{label:'Couples',data:[30,32,25,28,22,25],backgroundColor:a3,borderRadius:2},
+{label:'Honeymooners',data:[12,15,10,35,5,8],backgroundColor:a5,borderRadius:2},
+{label:'Families',data:[18,12,30,20,28,12],backgroundColor:a4,borderRadius:2},
+{label:'Young/Solo/Backpacker',data:[25,20,5,2,18,5],backgroundColor:a2,borderRadius:2},
+{label:'Digital Nomad/Long-stay',data:[8,8,15,0,15,5],backgroundColor:a,borderRadius:2},
+{label:'Wellness',data:[3,13,5,5,10,10],backgroundColor:'#4ecdc4',borderRadius:2},
+{label:'Luxury Villa Groups',data:[0,0,2,5,0,30],backgroundColor:'#ff6b6b',borderRadius:2},
+{label:'Other (Business/Cruise)',data:[4,0,8,5,2,5],backgroundColor:'#8b95a8',borderRadius:2}
+]},options:{responsive:true,scales:{y:{grid:{color:gd},stacked:true,max:100,ticks:{callback:v=>v+'%'}},x:{grid:{display:false},stacked:true,ticks:{font:{size:11}}}},plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:10}}}}});
+
+// Customer Mix Shift - Grouped Bar: 2019 vs 2024 vs 2030F for key segments across areas
+new Chart(document.getElementById('ch-cust-shift'),{type:'bar',data:{labels:['Chaweng\nBackpacker','Chaweng\nCouples+Fam','Lamai\nBackpacker','Lamai\nWellness','Bophut\nFamilies','Bophut\nDigital Nomad','Choeng Mon\nHoneymoon','Maenam\nBudget'],datasets:[
+{label:'2019',data:[35,43,35,5,25,5,30,30],backgroundColor:'rgba(139,149,168,0.4)',borderRadius:3},
+{label:'2024',data:[25,60,20,13,30,15,35,18],backgroundColor:a2,borderRadius:3},
+{label:'2030F',data:[15,68,12,20,28,18,40,12],backgroundColor:a,borderRadius:3}
+]},options:{responsive:true,scales:{y:{grid:{color:gd},ticks:{callback:v=>v+'%'},max:75},x:{grid:{display:false},ticks:{font:{size:9}}}},plugins:{legend:{labels:{font:{size:11}}}}}});
+
+// ===== TOP 5 HOTELS RADAR =====
+new Chart(document.getElementById('ch-top5-radar'),{type:'radar',data:{labels:['ADR Power','Occupancy','Brand Strength','Review Score','Wellness','F&B Quality','Loyalty/Direct','Media Exposure'],datasets:[
+{label:'Four Seasons',data:[98,95,98,97,70,90,95,100],borderColor:a5,backgroundColor:a5+'15',pointBackgroundColor:a5,borderWidth:2},
+{label:'Banyan Tree',data:[85,82,90,88,85,82,88,60],borderColor:a3,backgroundColor:a3+'10',pointBackgroundColor:a3,borderWidth:2},
+{label:'Kamalaya',data:[78,90,75,85,100,70,80,50],borderColor:a,backgroundColor:a+'10',pointBackgroundColor:a,borderWidth:2},
+{label:'Centara Reserve',data:[72,85,82,90,65,88,85,45],borderColor:a2,backgroundColor:a2+'10',pointBackgroundColor:a2,borderWidth:2},
+{label:'Meliá',data:[68,82,78,92,55,95,75,40],borderColor:a4,backgroundColor:a4+'10',pointBackgroundColor:a4,borderWidth:2}
+]},options:{responsive:true,scales:{r:{beginAtZero:true,max:100,grid:{color:'rgba(255,255,255,0.06)'},angleLines:{color:'rgba(255,255,255,0.06)'},pointLabels:{color:'#8b95a8',font:{size:10}},ticks:{display:false}}},plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:10}}}}});
+
+// ===== TOP 5 ADR BAR =====
+new Chart(document.getElementById('ch-top5-adr'),{type:'bar',data:{labels:['Four Seasons','Banyan Tree','Kamalaya\n(programs)','Centara\nReserve','Meliá'],datasets:[
+{label:'Low ADR',data:[1000,400,300,250,200],backgroundColor:'rgba(139,149,168,0.25)',borderRadius:4},
+{label:'Mid ADR',data:[2500,600,550,375,325],backgroundColor:a2,borderRadius:4},
+{label:'Peak ADR',data:[9000,800,800,500,450],backgroundColor:a5+'80',borderRadius:4}
+]},options:{responsive:true,scales:{y:{grid:{color:gd},ticks:{callback:v=>'$'+v.toLocaleString()}},x:{grid:{display:false},ticks:{font:{size:10}}}},plugins:{legend:{position:'bottom',labels:{font:{size:10}}}}}});
+
+// ===== SMOOTH SCROLL + NAV HIGHLIGHT =====
+document.querySelectorAll('.nav a').forEach(link=>{link.addEventListener('click',e=>{e.preventDefault();const t=document.querySelector(link.getAttribute('href'));if(t){const y=t.getBoundingClientRect().top+window.pageYOffset-52;window.scrollTo({top:y,behavior:'smooth'})}})});
+const navLinks=document.querySelectorAll('.nav a');
+const sections=document.querySelectorAll('.sec[id],.src[id]');
+window.addEventListener('scroll',()=>{let cur='';sections.forEach(s=>{if(window.pageYOffset>=s.offsetTop-80)cur='#'+s.id});navLinks.forEach(l=>{l.classList.remove('active');if(l.getAttribute('href')===cur)l.classList.add('active')})});
+</script>
+</body>
+</html>

@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chaweng Buri Resort — Performance Analytics Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Instrument+Serif&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<style>
+:root {
+  --bg: #fafaf7;
+  --bg2: #f2f1ec;
+  --bg3: #ffffff;
+  --tx: #1a1a18;
+  --tx2: #6b6b65;
+  --tx3: #9c9c94;
+  --bd: rgba(0,0,0,0.08);
+  --blue: #2c5ea0;
+  --blue-l: #e8f0fa;
+  --teal: #167d5a;
+  --teal-l: #e0f3ec;
+  --coral: #c44e22;
+  --coral-l: #fceee8;
+  --amber: #a06515;
+  --amber-l: #faf1de;
+  --pink: #b8406a;
+  --purple: #6b5fb5;
+  --gray: #73726c;
+  --green: #4a7c18;
+  --red: #c43030;
+  --radius: 10px;
+  --radius-lg: 14px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161614;
+    --bg2: #1e1e1b;
+    --bg3: #242420;
+    --tx: #e8e8e2;
+    --tx2: #a0a098;
+    --tx3: #6e6e68;
+    --bd: rgba(255,255,255,0.08);
+    --blue: #6aa3e0;
+    --blue-l: #1a2a3a;
+    --teal: #3cc49a;
+    --teal-l: #0f2920;
+    --coral: #e8845a;
+    --coral-l: #2e1a10;
+    --amber: #d4a040;
+    --amber-l: #2a2010;
+    --pink: #e070a0;
+    --purple: #9d92e0;
+    --gray: #9a9a94;
+    --green: #7cc440;
+    --red: #e06060;
+  }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--tx); line-height: 1.5; }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+header { text-align: center; padding: 2.5rem 0 1rem; }
+header h1 { font-family: 'Instrument Serif', serif; font-size: 2.4rem; font-weight: 400; letter-spacing: -0.02em; margin-bottom: 0.3rem; }
+header .sub { color: var(--tx2); font-size: 0.95rem; }
+
+.nav-tabs { display: flex; justify-content: center; gap: 0.5rem; margin: 1.5rem 0 2rem; flex-wrap: wrap; }
+.nav-tab { padding: 0.5rem 1.2rem; border-radius: 99px; border: 1px solid var(--bd); background: transparent; color: var(--tx2); font-size: 0.85rem; font-family: inherit; cursor: pointer; transition: all 0.2s; }
+.nav-tab:hover { background: var(--bg2); color: var(--tx); }
+.nav-tab.active { background: var(--tx); color: var(--bg); border-color: var(--tx); }
+
+.section { display: none; }
+.section.active { display: block; }
+
+.section-title { font-family: 'Instrument Serif', serif; font-size: 1.6rem; font-weight: 400; margin: 2rem 0 0.5rem; padding-top: 1rem; border-top: 1px solid var(--bd); }
+.section-title:first-child { border-top: none; padding-top: 0; }
+.section-desc { color: var(--tx2); font-size: 0.85rem; margin-bottom: 1.25rem; }
+
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 2rem; }
+.metric { background: var(--bg2); border-radius: var(--radius); padding: 1rem; }
+.metric-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--tx3); margin-bottom: 4px; }
+.metric-value { font-size: 1.5rem; font-weight: 600; }
+.metric-sub { font-size: 0.75rem; color: var(--tx2); margin-top: 2px; }
+
+.card { background: var(--bg3); border: 1px solid var(--bd); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
+.card-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--tx3); margin-bottom: 0.75rem; font-weight: 500; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+
+.chart-wrap { position: relative; width: 100%; }
+
+.insight { background: var(--blue-l); border-radius: var(--radius); padding: 0.9rem 1.1rem; margin: 1rem 0; font-size: 0.85rem; color: var(--blue); line-height: 1.6; }
+.insight.warn { background: var(--coral-l); color: var(--coral); }
+.insight.good { background: var(--teal-l); color: var(--teal); }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--bd); border-radius: var(--radius); max-height: 440px; overflow-y: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+th { position: sticky; top: 0; background: var(--bg2); text-align: left; padding: 0.55rem 0.7rem; font-weight: 500; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--tx3); border-bottom: 1px solid var(--bd); cursor: pointer; }
+th:hover { color: var(--tx); }
+td { padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--bd); }
+tr:last-child td { border-bottom: none; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+th.num { text-align: right; }
+
+.bar-inline { display: flex; align-items: center; gap: 6px; }
+.bar-fill { height: 10px; border-radius: 2px; background: var(--blue); }
+.bar-pct { font-size: 0.72rem; color: var(--tx3); white-space: nowrap; }
+
+#map-container { width: 100%; }
+
+.tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 500; }
+.tag-blue { background: var(--blue-l); color: var(--blue); }
+.tag-teal { background: var(--teal-l); color: var(--teal); }
+.tag-coral { background: var(--coral-l); color: var(--coral); }
+
+@media (max-width: 768px) {
+  .grid2, .grid3 { grid-template-columns: 1fr; }
+  .metrics { grid-template-columns: repeat(2, 1fr); }
+  header h1 { font-size: 1.8rem; }
+}
+
+.fade-in { animation: fadeIn 0.4s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Chaweng Buri Resort</h1>
+  <div class="sub">Performance Analytics Dashboard — Nationality Revenue & Reservation Data</div>
+</header>
+
+<nav class="nav-tabs">
+  <button class="nav-tab active" onclick="showSection('overview')">Overview</button>
+  <button class="nav-tab" onclick="showSection('nationality')">Nationality Revenue</button>
+  <button class="nav-tab" onclick="showSection('reservations')">Reservations</button>
+  <button class="nav-tab" onclick="showSection('rooms')">Rooms & Types</button>
+  <button class="nav-tab" onclick="showSection('channels')">Channels & Pricing</button>
+  <button class="nav-tab" onclick="showSection('revenue')">Revenue & OTA Deep-Dive</button>
+  <button class="nav-tab" onclick="showSection('guests')">Guest Behavior</button>
+  <button class="nav-tab" onclick="showSection('demographics')">Guest Demographics</button>
+  <button class="nav-tab" onclick="showSection('income')">Income Estimation</button>
+</nav>
+
+<!-- ========================= OVERVIEW ========================= -->
+<div id="overview" class="section active fade-in">
+
+<div class="metrics">
+  <div class="metric"><div class="metric-label">PMS net revenue</div><div class="metric-value">฿105.0M</div><div class="metric-sub">฿123.6M incl. tax</div></div>
+  <div class="metric"><div class="metric-label">Nationality revenue</div><div class="metric-value">฿77.5M</div><div class="metric-sub">87 nationalities</div></div>
+  <div class="metric"><div class="metric-label">RevPAR</div><div class="metric-value">฿2,214</div><div class="metric-sub">59.6% occupancy</div></div>
+  <div class="metric"><div class="metric-label">Avg room rate</div><div class="metric-value">฿3,713</div><div class="metric-sub">Excl. SVC &amp; VAT</div></div>
+  <div class="metric"><div class="metric-label">Room nights (PMS)</div><div class="metric-value">28,293</div><div class="metric-sub">of 47,450 available</div></div>
+  <div class="metric"><div class="metric-label">Reservations</div><div class="metric-value">2,000</div><div class="metric-sub">Jan '25 – Mar '26</div></div>
+  <div class="metric"><div class="metric-label">Est. OTA commission</div><div class="metric-value" style="color:var(--coral)">฿14.6M</div><div class="metric-sub">13.9% of revenue</div></div>
+  <div class="metric"><div class="metric-label">Repeat guest rate</div><div class="metric-value">23.9%</div><div class="metric-sub">350 of 1,462</div></div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Monthly occupancy rate</div>
+    <div class="chart-wrap" style="height:260px"><canvas id="ov-occ"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Revenue by region</div>
+    <div class="chart-wrap" style="height:260px"><canvas id="ov-region"></canvas></div>
+  </div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Top 10 revenue nationalities</div>
+    <div class="chart-wrap" style="height:300px"><canvas id="ov-topnat"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Revenue by OTA channel (PMS data)</div>
+    <div class="chart-wrap" style="height:300px"><canvas id="ov-channel"></canvas></div>
+  </div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Room type mix (room nights)</div>
+    <div class="chart-wrap" style="height:280px"><canvas id="ov-typemix"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Commission impact — gross vs net ARR</div>
+    <div class="chart-wrap" style="height:280px"><canvas id="ov-netarr"></canvas></div>
+  </div>
+</div>
+
+<div class="insight">
+  <strong>Key insight:</strong> PMS data confirms ฿105M in net revenue across 28,293 room nights (59.6% occupancy). Booking.com alone drives 61% of revenue. Estimated ฿14.6M in annual OTA commissions — the single largest controllable cost. Top 5 nationalities (Germany, USA, France, Israel, UK) generate ~43% of nationality-based revenue. February hit 91.8% occupancy while May–August drops to single digits.
+</div>
+
+</div>
+
+<!-- ========================= NATIONALITY ========================= -->
+<div id="nationality" class="section fade-in">
+
+<div class="section-title">Revenue by nationality</div>
+<div class="section-desc">Revenue, guests, room nights, and average rates across 87 source markets</div>
+
+<div class="metrics">
+  <div class="metric"><div class="metric-label">Total revenue</div><div class="metric-value">฿77.5M</div></div>
+  <div class="metric"><div class="metric-label">Countries</div><div class="metric-value">87</div></div>
+  <div class="metric"><div class="metric-label">Total persons</div><div class="metric-value">9,362</div></div>
+  <div class="metric"><div class="metric-label">Room nights</div><div class="metric-value">20,448</div></div>
+  <div class="metric"><div class="metric-label">Avg rate</div><div class="metric-value">฿3,790</div></div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Top 15 by total revenue</div>
+    <div class="chart-wrap" style="height:420px"><canvas id="nat-rev15"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Top 10 by average nightly rate (min 10 room nights)</div>
+    <div class="chart-wrap" style="height:420px"><canvas id="nat-rate10"></canvas></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Revenue share by region</div>
+  <div class="grid2">
+    <div class="chart-wrap" style="height:280px"><canvas id="nat-region-donut"></canvas></div>
+    <div class="chart-wrap" style="height:280px"><canvas id="nat-region-bar"></canvas></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Revenue concentration curve</div>
+  <div class="chart-wrap" style="height:260px"><canvas id="nat-cumul"></canvas></div>
+</div>
+
+<div class="card">
+  <div class="card-title">World map — revenue by country</div>
+  <div id="map-container"></div>
+</div>
+
+<div class="section-title">Full nationality table</div>
+<div class="table-wrap">
+  <table id="natTable">
+    <thead><tr><th>#</th><th>Country</th><th class="num">Revenue (THB)</th><th class="num">Persons</th><th class="num">Room nights</th><th class="num">Avg rate</th><th>Share</th></tr></thead>
+    <tbody id="natBody"></tbody>
+  </table>
+</div>
+
+<div class="insight warn">
+  <strong>Revenue concentration risk:</strong> Top 10 nationalities account for ~80% of total revenue. The long tail of 60+ countries contributes relatively little. European markets (especially DACH region + France) are the backbone.
+</div>
+
+</div>
+
+<!-- ========================= RESERVATIONS ========================= -->
+<div id="reservations" class="section fade-in">
+
+<div class="section-title">Reservation performance</div>
+<div class="section-desc">2,000 reservations from Jan 2025 through Mar 2026</div>
+
+<div class="metrics">
+  <div class="metric"><div class="metric-label">Reservations</div><div class="metric-value">2,000</div></div>
+  <div class="metric"><div class="metric-label">Room nights</div><div class="metric-value">9,129</div></div>
+  <div class="metric"><div class="metric-label">Guests</div><div class="metric-value">3,880</div></div>
+  <div class="metric"><div class="metric-label">Avg LOS</div><div class="metric-value">4.6 nights</div></div>
+  <div class="metric"><div class="metric-label">Inventory</div><div class="metric-value">102 rooms</div></div>
+</div>
+
+<div class="card">
+  <div class="card-title">Monthly occupancy rate (% of 102 rooms)</div>
+  <div class="chart-wrap" style="height:280px"><canvas id="res-occ"></canvas></div>
+</div>
+
+<div class="card">
+  <div class="card-title">Monthly reservations &amp; room nights</div>
+  <div class="chart-wrap" style="height:280px"><canvas id="res-monthly"></canvas></div>
+</div>
+
+<div class="card">
+  <div class="card-title">Daily occupancy heatmap — Jan to Apr 2025</div>
+  <div id="heatmap" style="width:100%;overflow-x:auto"></div>
+</div>
+
+<div class="insight good">
+  <strong>Peak season power:</strong> Jan–Feb 2025 generated 65% of all room nights in the dataset. Feb 10–21 saw near-complete sellout (96–101 rooms daily). The seasonal drop-off from April onward is dramatic — a pattern consistent with Samui's monsoon calendar.
+</div>
+
+</div>
+
+<!-- ========================= ROOMS & TYPES ========================= -->
+<div id="rooms" class="section fade-in">
+
+<div class="section-title">Room types &amp; building performance</div>
+<div class="section-desc">9 villa types across 102 rooms in 8 building wings</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Room type distribution (room nights)</div>
+    <div class="chart-wrap" style="height:300px"><canvas id="rm-donut"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Room count &amp; avg length of stay by type</div>
+    <div class="chart-wrap" style="height:300px"><canvas id="rm-typebar"></canvas></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Monthly room type mix (stacked room nights)</div>
+  <div class="chart-wrap" style="height:320px"><canvas id="rm-stacked"></canvas></div>
+</div>
+
+<div class="card">
+  <div class="card-title">Room nights by building wing</div>
+  <div class="chart-wrap" style="height:260px"><canvas id="rm-building"></canvas></div>
+</div>
+
+<div class="insight">
+  <strong>Building 3 anomaly:</strong> Only 79 room nights across 2 rooms — effectively out of inventory. Buildings 1 and 8 are the workhorses. The premium types (GFV, BSV, DBV) attract longer stays (5.6–7.2 nights avg) despite tiny inventory, suggesting potential for premium positioning.
+</div>
+
+</div>
+
+<!-- ========================= CHANNELS & PRICING ========================= -->
+<div id="channels" class="section fade-in">
+
+<div class="section-title">Distribution channels &amp; rate plans</div>
+<div class="section-desc">Booking sources, rate plan mix, and breakfast inclusion analysis</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Booking channel (OTA vs Direct)</div>
+    <div class="chart-wrap" style="height:260px"><canvas id="ch-donut"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Rate plan breakdown</div>
+    <div class="chart-wrap" style="height:260px"><canvas id="ch-rateplan"></canvas></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Monthly OTA vs direct booking mix</div>
+  <div class="chart-wrap" style="height:260px"><canvas id="ch-monthly"></canvas></div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Breakfast inclusion</div>
+    <div class="chart-wrap" style="height:220px"><canvas id="ch-bf"></canvas></div>
+  </div>
+  <div class="card" style="display:flex;flex-direction:column;justify-content:center">
+    <div class="card-title">Channel highlights</div>
+    <div style="font-size:0.85rem;line-height:1.8;color:var(--tx2)">
+      <div><span class="tag tag-coral">87.5%</span> of bookings via OTA (STAAH channel manager)</div>
+      <div><span class="tag tag-teal">12.5%</span> direct bookings (front office, admin, walk-in)</div>
+      <div><span class="tag tag-blue">78%</span> room-only bookings — breakfast upsell opportunity</div>
+      <div>Walk-in captures <strong>8.5%</strong> of all bookings</div>
+      <div>Promos &amp; return guest rates: only <strong>4.8%</strong></div>
+    </div>
+  </div>
+</div>
+
+<div class="insight warn">
+  <strong>OTA dependency alert:</strong> At 87.5% OTA share, commission costs are a major margin drain. Direct booking incentives, loyalty programs, and website optimization could shift 10–15% of volume and save 15–18% commission per shifted booking.
+</div>
+
+</div>
+
+<!-- ========================= REVENUE & OTA DEEP-DIVE ========================= -->
+<div id="revenue" class="section fade-in">
+
+<div class="section-title">Revenue &amp; OTA channel deep-dive</div>
+<div class="section-desc">PMS forecast data: 7 channels, ฿105M net revenue, 28,293 room nights — full P&amp;L view</div>
+
+<div class="metrics">
+  <div class="metric"><div class="metric-label">Total revenue (net)</div><div class="metric-value">฿105.0M</div><div class="metric-sub">฿123.6M incl. tax</div></div>
+  <div class="metric"><div class="metric-label">Room nights sold</div><div class="metric-value">28,293</div><div class="metric-sub">of 47,450 available</div></div>
+  <div class="metric"><div class="metric-label">Overall occupancy</div><div class="metric-value">59.6%</div><div class="metric-sub">130 rooms × 365 days</div></div>
+  <div class="metric"><div class="metric-label">Overall ARR</div><div class="metric-value">฿3,713</div><div class="metric-sub">Excl. SVC &amp; VAT</div></div>
+  <div class="metric"><div class="metric-label">RevPAR</div><div class="metric-value">฿2,214</div><div class="metric-sub">Revenue per available room</div></div>
+  <div class="metric"><div class="metric-label">Est. commission cost</div><div class="metric-value" style="color:var(--coral)">฿14.6M</div><div class="metric-sub">13.9% of net revenue</div></div>
+</div>
+
+<div class="card">
+  <div class="card-title">Revenue by channel (net, excl. SVC &amp; VAT)</div>
+  <div class="chart-wrap" style="height:300px"><canvas id="rv-revbar"></canvas></div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Revenue share by channel</div>
+    <div class="chart-wrap" style="height:280px"><canvas id="rv-revdonut"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Room night share by channel</div>
+    <div class="chart-wrap" style="height:280px"><canvas id="rv-rndonut"></canvas></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Average room rate by channel (ARR, excl. SVC &amp; VAT)</div>
+  <div class="chart-wrap" style="height:280px"><canvas id="rv-arr"></canvas></div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">RevPAR contribution by channel</div>
+    <div class="chart-wrap" style="height:260px"><canvas id="rv-revpar"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Average length of stay by channel</div>
+    <div class="chart-wrap" style="height:260px"><canvas id="rv-los"></canvas></div>
+  </div>
+</div>
+
+<div class="section-title" style="font-size:1.3rem">Commission impact analysis</div>
+<div class="section-desc">Estimated OTA commission costs and net ARR after commission deduction</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Gross ARR vs Net ARR (after estimated commission)</div>
+    <div class="chart-wrap" style="height:300px"><canvas id="rv-netarr"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Estimated commission cost by channel</div>
+    <div class="chart-wrap" style="height:300px"><canvas id="rv-commission"></canvas></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Full channel performance table</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Channel</th><th class="num">Revenue (net)</th><th class="num">Rev share</th><th class="num">Room nights</th><th class="num">Check-ins</th><th class="num">ARR</th><th class="num">Avg LOS</th><th class="num">RevPAR</th><th class="num">Est. commission</th><th class="num">Net ARR</th></tr></thead>
+      <tbody id="rvTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="insight warn">
+  <strong>Booking.com dominance:</strong> One channel delivers 61% of net revenue and 56% of room nights. This creates massive dependency risk. If Booking.com changed commission terms or ranking algorithms, the impact would be catastrophic. Diversification is urgent.
+</div>
+<div class="insight">
+  <strong>Direct booking paradox:</strong> Direct has the lowest ARR (฿3,123) but highest net margin since there's zero commission. At current OTA ARRs, a direct booking at ฿3,400 would net more than a Booking.com booking at ฿4,018 after 15% commission (฿3,415 net). Price parity with a small direct-booking bonus could shift meaningful volume.
+</div>
+<div class="insight good">
+  <strong>Commission savings opportunity:</strong> Shifting just 15% of OTA volume to direct could save approximately ฿2.2M per year in commission costs — equivalent to hiring 5+ additional staff or funding a complete website redesign and marketing campaign.
+</div>
+
+</div>
+
+<!-- ========================= GUEST BEHAVIOR ========================= -->
+<div id="guests" class="section fade-in">
+
+<div class="section-title">Guest behavior patterns</div>
+<div class="section-desc">Length of stay, booking lead time, arrival patterns, and loyalty</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Length of stay distribution</div>
+    <div class="chart-wrap" style="height:260px"><canvas id="gs-los"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Booking lead time</div>
+    <div class="chart-wrap" style="height:260px"><canvas id="gs-lead"></canvas></div>
+  </div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Arrival day of week</div>
+    <div class="chart-wrap" style="height:240px"><canvas id="gs-dow"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Guest composition</div>
+    <div class="chart-wrap" style="height:240px"><canvas id="gs-comp"></canvas></div>
+  </div>
+</div>
+
+<div class="grid3">
+  <div class="metric"><div class="metric-label">Unique guests</div><div class="metric-value">1,462</div></div>
+  <div class="metric"><div class="metric-label">Repeat bookers</div><div class="metric-value">350</div><div class="metric-sub">23.9% return rate</div></div>
+  <div class="metric"><div class="metric-label">Median lead time</div><div class="metric-value">13 days</div><div class="metric-sub">40% book same week</div></div>
+</div>
+
+<div class="insight good">
+  <strong>Loyalty opportunity:</strong> 24% repeat rate is solid for a resort property. Top repeaters book 6–7 times each. A formal loyalty program with return-guest rates could convert one-timers — currently 78% of guests — into repeats.
+</div>
+<div class="insight">
+  <strong>Last-minute market:</strong> 40% of guests book within the same week of arrival. This is characteristic of OTA-heavy distribution where guests comparison-shop last minute. Dynamic pricing with aggressive last-minute rates during low season could help fill the May–August gap.
+</div>
+
+</div>
+
+<!-- ========================= GUEST DEMOGRAPHICS ========================= -->
+<div id="demographics" class="section fade-in">
+
+<div class="section-title">Guest demographics &amp; profile</div>
+<div class="section-desc">12,394 guest records from the PMS guest book — age, nationality, travel party analysis</div>
+
+<div class="metrics">
+  <div class="metric"><div class="metric-label">Total guests</div><div class="metric-value">12,394</div><div class="metric-sub">4,888 reservations</div></div>
+  <div class="metric"><div class="metric-label">Avg age (adults)</div><div class="metric-value">42.6 yrs</div><div class="metric-sub">Median 42</div></div>
+  <div class="metric"><div class="metric-label">Children</div><div class="metric-value">1,200</div><div class="metric-sub">9.7% of all guests</div></div>
+  <div class="metric"><div class="metric-label">Guests/booking</div><div class="metric-value">2.5</div><div class="metric-sub">48% couples</div></div>
+  <div class="metric"><div class="metric-label">Guest data capture</div><div class="metric-value" style="color:var(--coral)">1.3%</div><div class="metric-sub">Email on file</div></div>
+</div>
+
+<div class="card">
+  <div class="card-title">Age distribution (all guests with DOB)</div>
+  <div class="chart-wrap" style="height:280px"><canvas id="dm-agehist"></canvas></div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Travel party composition (4,888 bookings)</div>
+    <div class="chart-wrap" style="height:280px"><canvas id="dm-party"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Children age breakdown (1,200 children)</div>
+    <div class="chart-wrap" style="height:280px"><canvas id="dm-children"></canvas></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Average adult age by nationality (top 15 markets)</div>
+  <div class="chart-wrap" style="height:360px"><canvas id="dm-agnat"></canvas></div>
+</div>
+
+<div class="card">
+  <div class="card-title">Top 20 nationalities by guest count</div>
+  <div class="chart-wrap" style="height:400px"><canvas id="dm-natguest"></canvas></div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Monthly guest volume (full year)</div>
+    <div class="chart-wrap" style="height:260px"><canvas id="dm-monthly"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Average guest age by month</div>
+    <div class="chart-wrap" style="height:260px"><canvas id="dm-monthage"></canvas></div>
+  </div>
+</div>
+
+<div class="insight">
+  <strong>Core demographic:</strong> The typical CBR guest is a 42-year-old traveling as a couple (48%) on a leisure trip. The 35–54 age bracket represents 41% of all guests — this is the prime earning, premium-travel demographic. Families with children are 15.5% of bookings, mostly with teens (55%) and school-age children (40%).
+</div>
+<div class="insight warn">
+  <strong>Data capture crisis:</strong> Only 1.3% of guests have an email on file and 0.3% a phone number. This makes post-stay marketing, review solicitation, and loyalty programs nearly impossible. Every front desk check-in should capture email — even a 30% capture rate would give you 3,700+ direct marketing contacts per year.
+</div>
+<div class="insight good">
+  <strong>Nationality vs revenue insight:</strong> China ranks #1 in guest count (444) but only #5 in the nationality revenue data. This suggests Chinese guests book shorter stays or lower rate categories. Conversely, USA guests (90 in guest book) punch well above weight in revenue — high-value, longer-stay market worth premium targeting.
+</div>
+
+</div>
+
+<!-- ========================= INCOME ESTIMATION ========================= -->
+<div id="income" class="section fade-in">
+
+<div class="section-title">Estimated guest household income</div>
+<div class="section-desc">Multi-signal model combining nationality (country median income PPP), age bracket (income-age curve), travel distance (long-haul self-selection), and room rate paid (willingness-to-pay proxy)</div>
+
+<div class="metrics">
+  <div class="metric"><div class="metric-label">Weighted avg income</div><div class="metric-value">$131K</div><div class="metric-sub">~฿4.5M / year</div></div>
+  <div class="metric"><div class="metric-label">Median bracket</div><div class="metric-value">$100–150K</div><div class="metric-sub">Upper-middle class</div></div>
+  <div class="metric"><div class="metric-label">Premium segment</div><div class="metric-value">45.9%</div><div class="metric-sub">$150K+ household</div></div>
+  <div class="metric"><div class="metric-label">Budget-conscious</div><div class="metric-value">18.7%</div><div class="metric-sub">$30K-50K (Asia/Russia)</div></div>
+</div>
+
+<div class="card" style="margin-bottom:1.5rem">
+  <div class="card-title">Methodology</div>
+  <div style="font-size:0.82rem;color:var(--tx2);line-height:1.7">
+    Income is estimated by multiplying four signals: <strong>(1)</strong> Country median household income (PPP-adjusted) as the base. <strong>(2)</strong> Travel distance multiplier — long-haul leisure travelers to Thailand self-select into the top 20–30% of their country's income distribution (×2.2 for Europe/Americas, ×1.8 for East Asia/Middle East, ×1.5 for ASEAN). <strong>(3)</strong> Age-income curve — peak earning years 45–54 get ×1.3, younger brackets get lower multipliers. <strong>(4)</strong> Room rate premium — guests paying above-average rates (>฿4,000/night) get an additional ×1.2 uplift. These are estimates, not actuals — useful for segmentation and positioning, not financial planning.
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Estimated household income by nationality (top 20 markets)</div>
+  <div class="chart-wrap" style="height:480px"><canvas id="inc-bynat"></canvas></div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Income distribution across guest base</div>
+    <div class="chart-wrap" style="height:300px"><canvas id="inc-dist"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Income bracket share (weighted by guest count)</div>
+    <div class="chart-wrap" style="height:300px"><canvas id="inc-donut"></canvas></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Estimated income by age bracket</div>
+  <div class="chart-wrap" style="height:280px"><canvas id="inc-byage"></canvas></div>
+</div>
+
+<div class="card">
+  <div class="card-title">Estimated income by room type (willingness-to-pay proxy)</div>
+  <div class="chart-wrap" style="height:280px"><canvas id="inc-byroom"></canvas></div>
+</div>
+
+<div class="card">
+  <div class="card-title">Income vs. average nightly rate — nationality scatter</div>
+  <div class="chart-wrap" style="height:340px"><canvas id="inc-scatter"></canvas></div>
+</div>
+
+<div class="insight">
+  <strong>Two-tier guest base:</strong> CBR serves two distinct income segments. The dominant group (46%) is $150K+ Western European, American, and Oceanian households — upper-middle to affluent. The secondary group (~27%) is $30–75K from China, Russia, India, and Thailand — value-conscious travelers. Pricing, amenities, and marketing should acknowledge both segments rather than targeting a single tier.
+</div>
+<div class="insight good">
+  <strong>Premium positioning is supported:</strong> Nearly half your guests come from households earning $150K+. These guests are accustomed to quality and will pay for it — they're choosing CBR at ฿3,700–4,600/night, but comparable wellness-positioned resorts charge ฿6,000–10,000. The rebrand to wellness-forward positioning is well-aligned with this income demographic.
+</div>
+<div class="insight warn">
+  <strong>Rate gap vs. income capacity:</strong> Swiss guests (est. $207K household income) pay an ARR of only ฿3,846 — well below what their income would support. Danish guests ($219K income) pay ฿4,566. The spread suggests significant headroom to increase rates for high-income nationalities, especially with improved product and positioning.
+</div>
+
+</div>
+
+</div><!-- /container -->
+
+<script>
+// ============================================================
+// GLOBAL CONFIG
+// ============================================================
+const isDark = matchMedia('(prefers-color-scheme:dark)').matches;
+const gc = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
+const tc = isDark ? '#a0a098' : '#888';
+const BLUE=isDark?'#6aa3e0':'#2c5ea0', TEAL=isDark?'#3cc49a':'#167d5a', CORAL=isDark?'#e8845a':'#c44e22';
+const AMBER=isDark?'#d4a040':'#a06515', PINK=isDark?'#e070a0':'#b8406a', PURPLE=isDark?'#9d92e0':'#6b5fb5';
+const GRAY=isDark?'#9a9a94':'#73726c', GREEN=isDark?'#7cc440':'#4a7c18', RED=isDark?'#e06060':'#c43030';
+
+const chartDefaults = { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ color:tc, usePointStyle:true, pointStyle:'rectRounded', boxWidth:10, font:{size:11,family:'DM Sans'} } } }, scales:{ x:{ grid:{color:gc}, ticks:{color:tc,font:{family:'DM Sans'}} }, y:{ grid:{color:gc}, ticks:{color:tc,font:{family:'DM Sans'}} } } };
+function mergeOpts(custom){ return JSON.parse(JSON.stringify({...chartDefaults,...custom})); }
+
+const typeColors = {SGV:BLUE,DGV:TEAL,DPV:CORAL,DSV:AMBER,FPV:PINK,DBV:PURPLE,BSV:GRAY,GFV:GREEN,HPV:RED};
+const typeNames = {SGV:'Superior Garden',DGV:'Deluxe Garden',DPV:'Deluxe Pool',DSV:'Deluxe Sea View',FPV:'Family Pool',DBV:'Deluxe Beachfront',BSV:'Beachfront Suite',GFV:'Grand Family',HPV:'Honeymoon Pool'};
+const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug'];
+const monthKeys = ['2025-01','2025-02','2025-03','2025-04','2025-05','2025-06','2025-07','2025-08'];
+
+// ============================================================
+// NAV
+// ============================================================
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+  // lazy-init charts on first view
+  if(id==='nationality' && !window._natInit){ initNationality(); window._natInit=true; }
+  if(id==='reservations' && !window._resInit){ initReservations(); window._resInit=true; }
+  if(id==='rooms' && !window._rmInit){ initRooms(); window._rmInit=true; }
+  if(id==='channels' && !window._chInit){ initChannels(); window._chInit=true; }
+  if(id==='revenue' && !window._rvInit){ initRevenue(); window._rvInit=true; }
+  if(id==='guests' && !window._gsInit){ initGuests(); window._gsInit=true; }
+  if(id==='demographics' && !window._dmInit){ initDemographics(); window._dmInit=true; }
+  if(id==='income' && !window._incInit){ initIncome(); window._incInit=true; }
+}
+
+// ============================================================
+// DATA
+// ============================================================
+const NAT_TOP15 = [
+  {c:'Germany',p:824,rn:2247,rev:8430275,ar:3752},
+  {c:'USA',p:997,rn:2020,rev:7389722,ar:3658},
+  {c:'France',p:749,rn:1577,rev:6484016,ar:4112},
+  {c:'Israel',p:857,rn:1287,rev:5577094,ar:4333},
+  {c:'United Kingdom',p:597,rn:1298,rev:4928956,ar:3797},
+  {c:'Switzerland',p:313,rn:1021,rev:3926444,ar:3846},
+  {c:'Russia',p:338,rn:890,rev:3326347,ar:3737},
+  {c:'Australia',p:342,rn:792,rev:3073637,ar:3881},
+  {c:'Thailand',p:378,rn:609,rev:2361631,ar:3878},
+  {c:'Italy',p:245,rn:587,rev:2293031,ar:3906},
+  {c:'Netherlands',p:274,rn:537,rev:1933469,ar:3601},
+  {c:'Austria',p:104,rn:337,rev:1553914,ar:4611},
+  {c:'Denmark',p:114,rn:288,rev:1314929,ar:4566},
+  {c:'Sweden',p:148,rn:304,rev:1291951,ar:4250},
+  {c:'Poland',p:113,rn:292,rev:1243628,ar:4259},
+];
+
+const NAT_ALL = [
+  {c:'Unspecified',p:1416,rn:3160,rev:9970811,ar:3155},{c:'Germany',p:824,rn:2247,rev:8430275,ar:3752},{c:'USA',p:997,rn:2020,rev:7389722,ar:3658},{c:'France',p:749,rn:1577,rev:6484016,ar:4112},{c:'Israel',p:857,rn:1287,rev:5577094,ar:4333},{c:'United Kingdom',p:597,rn:1298,rev:4928956,ar:3797},{c:'Switzerland',p:313,rn:1021,rev:3926444,ar:3846},{c:'Russia',p:338,rn:890,rev:3326347,ar:3737},{c:'Australia',p:342,rn:792,rev:3073637,ar:3881},{c:'Thailand',p:378,rn:609,rev:2361631,ar:3878},{c:'Italy',p:245,rn:587,rev:2293031,ar:3906},{c:'Netherlands',p:274,rn:537,rev:1933469,ar:3601},{c:'Austria',p:104,rn:337,rev:1553914,ar:4611},{c:'Denmark',p:114,rn:288,rev:1314929,ar:4566},{c:'Sweden',p:148,rn:304,rev:1291951,ar:4250},{c:'Poland',p:113,rn:292,rev:1243628,ar:4259},{c:'China',p:233,rn:306,rev:1181766,ar:3862},{c:'Norway',p:86,rn:259,rev:937223,ar:3619},{c:'Czech Republic',p:85,rn:211,rev:875115,ar:4147},{c:'Belgium',p:84,rn:208,rev:751991,ar:3615},{c:'Slovakia',p:46,rn:134,rev:661195,ar:4934},{c:'Hungary',p:35,rn:127,rev:636519,ar:5012},{c:'UAE',p:60,rn:158,rev:574136,ar:3634},{c:'Spain',p:81,rn:147,rev:518718,ar:3529},{c:'Ireland',p:60,rn:113,rev:499047,ar:4416},{c:'Kazakhstan',p:40,rn:119,rev:453772,ar:3813},{c:'Singapore',p:56,rn:101,rev:406438,ar:4024},{c:'Finland',p:39,rn:90,rev:375176,ar:4169},{c:'Canada',p:42,rn:80,rev:342112,ar:4276},{c:'Serbia',p:16,rn:58,rev:301735,ar:5202},{c:'Japan',p:48,rn:75,rev:300356,ar:4005},{c:'India',p:68,rn:90,rev:292822,ar:3254},{c:'Turkey',p:36,rn:71,rev:282823,ar:3983},{c:'New Zealand',p:36,rn:75,rev:249882,ar:3332},{c:'Kuwait',p:31,rn:76,rev:211689,ar:2785},{c:'Malaysia',p:44,rn:48,rev:157877,ar:3289},{c:'Greece',p:8,rn:32,rev:155672,ar:4865},{c:'Croatia',p:10,rn:57,rev:148886,ar:2612},{c:'Saudi Arabia',p:10,rn:36,rev:139034,ar:3862},{c:'South Africa',p:14,rn:42,rev:123507,ar:2941},{c:'Taiwan',p:18,rn:28,rev:121397,ar:4336},{c:'Estonia',p:12,rn:26,rev:119544,ar:4598},{c:'Hong Kong',p:10,rn:24,rev:113103,ar:4713},{c:'Pakistan',p:12,rn:18,rev:94945,ar:5275},{c:'Luxembourg',p:18,rn:28,rev:92605,ar:3307},{c:'Romania',p:17,rn:27,rev:91939,ar:3405},{c:'Portugal',p:17,rn:25,rev:88367,ar:3535},{c:'Slovenia',p:8,rn:23,rev:81943,ar:3563},{c:'Latvia',p:14,rn:28,rev:73512,ar:2625},{c:'Argentina',p:11,rn:15,rev:71815,ar:4788},{c:'New Caledonia',p:13,rn:31,rev:69890,ar:2255},{c:'Brazil',p:12,rn:20,rev:68441,ar:3422},{c:'Ukraine',p:9,rn:20,rev:66348,ar:3317},{c:'South Korea',p:5,rn:13,rev:65198,ar:5015},{c:'Jersey',p:4,rn:19,rev:59688,ar:3141},{c:'Lithuania',p:14,rn:20,rev:58578,ar:2929},{c:'Cambodia',p:5,rn:6,rev:42355,ar:7059},{c:'Bahrain',p:7,rn:14,rev:41929,ar:2995},{c:'Bosnia & Herzegovina',p:2,rn:8,rev:40208,ar:5026},{c:'Cyprus',p:4,rn:9,rev:37824,ar:4203},{c:'Iceland',p:2,rn:4,rev:32804,ar:8201},{c:'Vietnam',p:4,rn:6,rev:30835,ar:5139},{c:'Macao',p:1,rn:6,rev:28927,ar:4821},{c:'Tajikistan',p:4,rn:5,rev:27187,ar:5437},{c:'Armenia',p:1,rn:4,rev:23585,ar:5896},{c:'Morocco',p:2,rn:4,rev:15556,ar:3889},{c:'Liechtenstein',p:2,rn:4,rev:15555,ar:3889},{c:'Saint Martin',p:2,rn:3,rev:12105,ar:4035},{c:'Moldova',p:2,rn:2,rev:11701,ar:5851},{c:'Oman',p:5,rn:5,rev:11546,ar:2309},{c:'Costa Rica',p:5,rn:5,rev:9893,ar:1979},{c:'Peru',p:3,rn:3,rev:9784,ar:3261},{c:'Réunion',p:3,rn:4,rev:9285,ar:2321},{c:'Kenya',p:1,rn:3,rev:7713,ar:2571},{c:'Montenegro',p:3,rn:3,rev:7779,ar:2593},{c:'Uzbekistan',p:3,rn:2,rev:7732,ar:3866},{c:'Indonesia',p:6,rn:4,rev:7449,ar:1862},{c:'Qatar',p:2,rn:3,rev:6430,ar:2143},{c:'American Samoa',p:3,rn:2,rev:6066,ar:3033},{c:'Syria',p:3,rn:3,rev:4786,ar:1595},{c:'Malta',p:1,rn:2,rev:4872,ar:2436},{c:'Colombia',p:2,rn:2,rev:4299,ar:2150},{c:'Uruguay',p:2,rn:2,rev:3812,ar:1906},{c:'Bangladesh',p:2,rn:1,rev:3218,ar:3218},{c:'Tunisia',p:3,rn:2,rev:3201,ar:1601},{c:'Georgia',p:2,rn:1,rev:3194,ar:3194},{c:'Nepal',p:2,rn:1,rev:2803,ar:2803},{c:'Chile',p:2,rn:1,rev:2352,ar:2352}
+];
+const TOTAL_REV = NAT_ALL.reduce((s,d)=>s+d.rev,0);
+
+const REGION_REV = {Europe:46892874,'North America':7737781,'Middle East':6561387,'Asia-Pacific':9565662,Africa:131621,'South America':160504};
+const regionLabels = Object.keys(REGION_REV).sort((a,b)=>REGION_REV[b]-REGION_REV[a]);
+const regionValues = regionLabels.map(r=>REGION_REV[r]);
+const regionColors = [BLUE,TEAL,CORAL,AMBER,PINK,GREEN];
+
+const NAT_TOP_RATE = [
+  {c:'Iceland',ar:8201,rn:4},{c:'Cambodia',ar:7059,rn:6},{c:'Armenia',ar:5896,rn:4},{c:'Moldova',ar:5851,rn:2},{c:'Tajikistan',ar:5437,rn:5},{c:'Pakistan',ar:5275,rn:18},{c:'Serbia',ar:5202,rn:58},{c:'Vietnam',ar:5139,rn:6},{c:'Bosnia & Herzegovina',ar:5026,rn:8},{c:'South Korea',ar:5015,rn:13}
+];
+
+const OCC = [70.9,91.8,55.9,42.0,9.9,4.7,9.1,9.0];
+const M_RES = [634,559,358,285,42,26,38,36];
+const M_RN = [2559,2659,1491,1272,247,220,264,235];
+
+const TYPE_RN = {SGV:2663,DGV:2630,DPV:1828,DSV:1177,FPV:578,DBV:100,BSV:78,GFV:58,HPV:17};
+const TYPE_ROOMS = {SGV:26,DGV:25,DPV:21,DSV:15,FPV:10,DBV:3,BSV:2,GFV:1,HPV:1};
+const TYPE_LOS = {SGV:4.5,DGV:4.7,DPV:4.7,DSV:4.5,FPV:3.9,DBV:5.6,BSV:6.0,GFV:7.2,HPV:5.7};
+
+const STACK = {
+  SGV:[832,827,401,216,27,44,147,84],DGV:[669,632,423,497,111,106,49,77],DPV:[587,575,315,264,54,2,11,20],
+  DSV:[278,327,253,180,39,23,40,17],FPV:[163,225,68,78,16,16,0,12],DBV:[13,19,8,16,0,9,10,25],
+  BSV:[17,14,23,9,0,4,0,0],GFV:[0,23,0,12,0,16,7,0],HPV:[0,17,0,0,0,0,0,0]
+};
+
+const BLDG_RN = {'1':1714,'2':707,'3':79,'4':1153,'5':1526,'6':1247,'7':1098,'8':1605};
+const BLDG_ROOMS = {'1':20,'2':12,'3':2,'4':16,'5':14,'6':11,'7':11,'8':16};
+
+const CH_OTA = [568,508,290,245,34,17,35,36];
+const CH_DIR = [66,51,68,40,8,9,3,0];
+const RP = {'OTA Room Only':1190,'OTA incl. BF':373,'BAR Room Only':172,'Walk-In RO':129,'Walk-In BF':41,'Promo/Other':95};
+
+const LOS = {'1':367,'2':345,'3':323,'4':226,'5':163,'6':142,'7':148,'8':60,'9':39,'10':24,'11':20,'12':23,'13':31,'14':26,'15+':63};
+const LEAD = {'Same day':239,'1-7 days':592,'8-30 days':561,'1-3 months':392,'3-6 months':144,'6+ months':72};
+const DOW = {Monday:307,Tuesday:289,Wednesday:275,Thursday:310,Friday:294,Saturday:254,Sunday:271};
+const GUEST_COMP = {'Solo (1)':426,'Couple (2)':1270,'Group (3+)':304};
+
+// Heatmap data
+const HEATMAP = [[1,40],[2,44],[3,51],[4,55],[5,60],[6,64],[7,68],[8,68],[9,66],[10,73],[11,73],[12,73],[13,75],[14,72],[15,71],[16,74],[17,76],[18,78],[19,79],[20,80],[21,79],[22,82],[23,81],[24,80],[25,84],[26,81],[27,78],[28,72],[29,68],[30,66],[31,68],[32,74],[33,78],[34,80],[35,82],[36,84],[37,86],[38,89],[39,92],[40,94],[41,98],[42,96],[43,98],[44,98],[45,99],[46,98],[47,97],[48,99],[49,98],[50,98],[51,96],[52,101],[53,96],[54,92],[55,88],[56,82],[57,76],[58,72],[59,66],[60,64],[61,62],[62,60],[63,58],[64,57],[65,56],[66,58],[67,56],[68,53],[69,52],[70,50],[71,52],[72,54],[73,55],[74,54],[75,50],[76,48],[77,47],[78,48],[79,50],[80,52],[81,54],[82,52],[83,48],[84,44],[85,42],[86,40],[87,42],[88,44],[89,46],[90,48],[91,50],[92,50],[93,48],[94,46],[95,48],[96,50],[97,52],[98,52],[99,54],[100,55],[101,58],[102,60],[103,58],[104,56],[105,52],[106,48],[107,44],[108,40],[109,38],[110,36],[111,32],[112,28],[113,24],[114,22],[115,18],[116,14],[117,10],[118,8],[119,6],[120,4]];
+
+// ============================================================
+// OVERVIEW CHARTS (init immediately)
+// ============================================================
+new Chart(document.getElementById('ov-occ'),{type:'bar',data:{labels:months,datasets:[{data:OCC,backgroundColor:OCC.map(v=>v>60?TEAL:v>30?AMBER:RED),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc,callback:v=>v+'%'},max:100}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+'%'}}}}});
+
+new Chart(document.getElementById('ov-region'),{type:'doughnut',data:{labels:regionLabels,datasets:[{data:regionValues,backgroundColor:regionColors,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'50%',plugins:{legend:{position:'right',labels:{color:tc,font:{size:11,family:'DM Sans'},usePointStyle:true,pointStyle:'rectRounded',boxWidth:10}},tooltip:{callbacks:{label:c=>'฿'+(c.raw/1e6).toFixed(1)+'M ('+((c.raw/TOTAL_REV*100).toFixed(1))+'%)'}}}}});
+
+new Chart(document.getElementById('ov-topnat'),{type:'bar',data:{labels:NAT_TOP15.slice(0,10).map(d=>d.c),datasets:[{data:NAT_TOP15.slice(0,10).map(d=>d.rev/1e6),backgroundColor:BLUE,borderRadius:3}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:gc},ticks:{color:tc,callback:v=>'฿'+v+'M'}},y:{grid:{display:false},ticks:{color:tc,font:{size:11}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'฿'+c.raw.toFixed(1)+'M'}}}}});
+
+const tLabels=Object.keys(TYPE_RN);
+new Chart(document.getElementById('ov-typemix'),{type:'doughnut',data:{labels:tLabels.map(t=>typeNames[t]||t),datasets:[{data:tLabels.map(t=>TYPE_RN[t]),backgroundColor:tLabels.map(t=>typeColors[t]),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'50%',plugins:{legend:{position:'right',labels:{color:tc,font:{size:10,family:'DM Sans'},usePointStyle:true,pointStyle:'rectRounded',boxWidth:10}},tooltip:{callbacks:{label:c=>c.label+': '+c.raw.toLocaleString()+' nights'}}}}});
+
+// ============================================================
+// NATIONALITY SECTION
+// ============================================================
+function initNationality(){
+  // Top 15 revenue
+  new Chart(document.getElementById('nat-rev15'),{type:'bar',data:{labels:NAT_TOP15.map(d=>d.c),datasets:[{data:NAT_TOP15.map(d=>d.rev/1e6),backgroundColor:BLUE,borderRadius:3}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:gc},ticks:{color:tc,callback:v=>'฿'+v+'M'}},y:{grid:{display:false},ticks:{color:tc,font:{size:10}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'฿'+c.raw.toFixed(1)+'M'}}}}});
+
+  // Top 10 by rate
+  new Chart(document.getElementById('nat-rate10'),{type:'bar',data:{labels:NAT_TOP_RATE.map(d=>d.c),datasets:[{data:NAT_TOP_RATE.map(d=>d.ar),backgroundColor:CORAL,borderRadius:3}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:gc},ticks:{color:tc,callback:v=>'฿'+v.toLocaleString()}},y:{grid:{display:false},ticks:{color:tc,font:{size:10}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'฿'+c.raw.toLocaleString()+'/night'}}}}});
+
+  // Region donut
+  new Chart(document.getElementById('nat-region-donut'),{type:'doughnut',data:{labels:regionLabels,datasets:[{data:regionValues,backgroundColor:regionColors,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{position:'right',labels:{color:tc,font:{size:11},usePointStyle:true,pointStyle:'rectRounded',boxWidth:10}},tooltip:{callbacks:{label:c=>'฿'+(c.raw/1e6).toFixed(1)+'M'}}}}});
+
+  // Region bar
+  new Chart(document.getElementById('nat-region-bar'),{type:'bar',data:{labels:regionLabels,datasets:[{data:regionValues.map(v=>v/1e6),backgroundColor:regionColors,borderRadius:3}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:gc},ticks:{color:tc,callback:v=>'฿'+v+'M'}},y:{grid:{display:false},ticks:{color:tc,font:{size:11}}}},plugins:{legend:{display:false}}}});
+
+  // Cumulative
+  const sorted=NAT_ALL.filter(d=>d.c!=='Unspecified').sort((a,b)=>b.rev-a.rev);
+  const specTotal=sorted.reduce((s,d)=>s+d.rev,0);
+  let cum=0;
+  const cumData=sorted.map(d=>{cum+=d.rev;return Math.round(cum/specTotal*100)});
+  new Chart(document.getElementById('nat-cumul'),{type:'line',data:{labels:sorted.map((_,i)=>i+1),datasets:[{data:cumData,borderColor:BLUE,backgroundColor:isDark?'rgba(106,163,224,0.1)':'rgba(44,94,160,0.06)',fill:true,pointRadius:0,tension:0.3}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{title:{display:true,text:'Countries ranked by revenue',color:tc},grid:{color:gc},ticks:{color:tc,maxTicksLimit:15}},y:{grid:{color:gc},ticks:{color:tc,callback:v=>v+'%'},min:0,max:100}},plugins:{legend:{display:false},tooltip:{callbacks:{title:c=>sorted[c[0].dataIndex].c,label:c=>c.raw+'% cumulative'}}}}});
+
+  // World map
+  const nameMap={'USA':'United States of America','United Kingdom':'United Kingdom','Russia':'Russia','Thailand':'Thailand','UAE':'United Arab Emirates','South Korea':'Korea','Czech Republic':'Czechia'};
+  d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(world=>{
+    const countries=topojson.feature(world,world.objects.countries);
+    const revByName={};
+    NAT_ALL.forEach(d=>{if(d.c!=='Unspecified')revByName[nameMap[d.c]||d.c]=d.rev});
+    const maxVal=Math.max(...Object.values(revByName));
+    const color=d3.scaleLog().domain([1000,maxVal]).range(isDark?['#1a2a3a','#85B7EB']:['#E6F1FB','#185FA5']).clamp(true);
+    const w=720,h=380;
+    const svg=d3.select('#map-container').append('svg').attr('viewBox',`0 0 ${w} ${h}`).attr('width','100%');
+    const proj=d3.geoNaturalEarth1().scale(130).translate([w/2,h/2]);
+    const path=d3.geoPath(proj);
+    svg.selectAll('path').data(countries.features).join('path').attr('d',path)
+      .attr('fill',d=>{const v=revByName[d.properties.name];return v?color(v):(isDark?'#2a2a2a':'#f0f0f0')})
+      .attr('stroke',isDark?'rgba(255,255,255,0.08)':'#fff').attr('stroke-width',0.5)
+      .append('title').text(d=>{const v=revByName[d.properties.name];return v?`${d.properties.name}: ฿${Math.round(v).toLocaleString()}`:d.properties.name});
+  });
+
+  // Table
+  const allSorted=[...NAT_ALL].sort((a,b)=>b.rev-a.rev);
+  const maxRev=Math.max(...allSorted.map(d=>d.rev));
+  document.getElementById('natBody').innerHTML=allSorted.map((d,i)=>
+    `<tr><td>${i+1}</td><td style="font-weight:500">${d.c}</td><td class="num">฿${d.rev.toLocaleString()}</td><td class="num">${d.p.toLocaleString()}</td><td class="num">${d.rn.toLocaleString()}</td><td class="num">฿${d.ar.toLocaleString()}</td><td><div class="bar-inline"><div class="bar-fill" style="width:${Math.max(2,d.rev/maxRev*100)}%"></div><span class="bar-pct">${(d.rev/TOTAL_REV*100).toFixed(1)}%</span></div></td></tr>`
+  ).join('');
+}
+
+// ============================================================
+// RESERVATIONS SECTION
+// ============================================================
+function initReservations(){
+  new Chart(document.getElementById('res-occ'),{type:'bar',data:{labels:months,datasets:[{data:OCC,backgroundColor:OCC.map(v=>v>60?TEAL:v>30?AMBER:RED),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc,callback:v=>v+'%'},max:100}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+'% occupancy'}}}}});
+
+  new Chart(document.getElementById('res-monthly'),{type:'bar',data:{labels:months,datasets:[{label:'Room nights',data:M_RN,backgroundColor:BLUE,borderRadius:3},{label:'Reservations',data:M_RES,backgroundColor:CORAL,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc}}},plugins:{legend:{labels:{color:tc,usePointStyle:true,pointStyle:'rectRounded',boxWidth:10,font:{size:11}}}}}});
+
+  // Heatmap
+  const hmW=700,cellW=5.3,cellH=14,hmH=7*cellH+50;
+  const svg=d3.select('#heatmap').append('svg').attr('viewBox',`0 0 ${hmW} ${hmH}`).attr('width','100%');
+  const color=d3.scaleSequential().domain([0,102]).interpolator(isDark?t=>d3.interpolateBlues(t*0.8+0.2):d3.interpolateBlues);
+  const dayNames=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  HEATMAP.forEach(([dayNum,occ])=>{
+    const dt=new Date(2025,0,dayNum);
+    const weekIdx=Math.floor((dayNum-1)/7);
+    const dayIdx=dt.getDay()===0?6:dt.getDay()-1;
+    svg.append('rect').attr('x',28+weekIdx*cellW).attr('y',18+dayIdx*cellH).attr('width',cellW-1).attr('height',cellH-2).attr('rx',1).attr('fill',color(occ)).append('title').text(`Day ${dayNum}: ${occ} rooms (${Math.round(occ/102*100)}%)`);
+  });
+  dayNames.forEach((d,i)=>{svg.append('text').attr('x',0).attr('y',18+i*cellH+10).attr('font-size',8).attr('fill',tc).attr('font-family','DM Sans').text(d)});
+  ['Jan','Feb','Mar','Apr'].forEach((m,i)=>{svg.append('text').attr('x',28+i*4.3*7*cellW/4).attr('y',10).attr('font-size',9).attr('fill',tc).attr('font-family','DM Sans').text(m)});
+}
+
+// ============================================================
+// ROOMS SECTION
+// ============================================================
+function initRooms(){
+  const tl=Object.keys(TYPE_RN);
+  new Chart(document.getElementById('rm-donut'),{type:'doughnut',data:{labels:tl.map(t=>typeNames[t]+' ('+t+')'),datasets:[{data:tl.map(t=>TYPE_RN[t]),backgroundColor:tl.map(t=>typeColors[t]),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'50%',plugins:{legend:{position:'right',labels:{color:tc,font:{size:10},usePointStyle:true,pointStyle:'rectRounded',boxWidth:10}},tooltip:{callbacks:{label:c=>c.raw.toLocaleString()+' nights ('+((c.raw/9129*100).toFixed(1))+'%)'}}}}});
+
+  new Chart(document.getElementById('rm-typebar'),{type:'bar',data:{labels:tl,datasets:[{label:'Rooms in inventory',data:tl.map(t=>TYPE_ROOMS[t]),backgroundColor:BLUE,borderRadius:3},{label:'Avg stay (nights)',data:tl.map(t=>TYPE_LOS[t]),backgroundColor:CORAL,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc}}},plugins:{legend:{labels:{color:tc,usePointStyle:true,pointStyle:'rectRounded',boxWidth:10,font:{size:11}}}}}});
+
+  // Stacked
+  const stackTypes=Object.keys(STACK);
+  new Chart(document.getElementById('rm-stacked'),{type:'bar',data:{labels:months,datasets:stackTypes.map(t=>({label:t,data:STACK[t],backgroundColor:typeColors[t]}))},options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,grid:{display:false},ticks:{color:tc}},y:{stacked:true,grid:{color:gc},ticks:{color:tc}}},plugins:{legend:{labels:{color:tc,usePointStyle:true,pointStyle:'rectRounded',boxWidth:10,font:{size:10}}}}}});
+
+  // Building
+  const bl=Object.keys(BLDG_RN);
+  new Chart(document.getElementById('rm-building'),{type:'bar',data:{labels:bl.map(b=>'Bldg '+b),datasets:[{label:'Room nights',data:bl.map(b=>BLDG_RN[b]),backgroundColor:BLUE,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const b=bl[c.dataIndex];return c.raw.toLocaleString()+' nights ('+BLDG_ROOMS[b]+' rooms)'}}}}}});
+}
+
+// ============================================================
+// CHANNELS SECTION
+// ============================================================
+function initChannels(){
+  new Chart(document.getElementById('ch-donut'),{type:'doughnut',data:{labels:['OTA (STAAH)','Front Office','Admin/Mgmt'],datasets:[{data:[1749,190,61],backgroundColor:[BLUE,TEAL,AMBER],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'50%',plugins:{legend:{position:'right',labels:{color:tc,font:{size:11},usePointStyle:true,pointStyle:'rectRounded',boxWidth:10}},tooltip:{callbacks:{label:c=>c.raw+' ('+((c.raw/2000*100).toFixed(1))+'%)'}}}}});
+
+  const rpl=Object.keys(RP);
+  new Chart(document.getElementById('ch-rateplan'),{type:'bar',data:{labels:rpl,datasets:[{data:rpl.map(k=>RP[k]),backgroundColor:[BLUE,'#5a9ad8',TEAL,CORAL,'#e8a080',AMBER],borderRadius:3}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:gc},ticks:{color:tc}},y:{grid:{display:false},ticks:{color:tc,font:{size:10}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+' bookings'}}}}});
+
+  new Chart(document.getElementById('ch-monthly'),{type:'bar',data:{labels:months,datasets:[{label:'OTA',data:CH_OTA,backgroundColor:BLUE},{label:'Direct',data:CH_DIR,backgroundColor:TEAL}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,grid:{display:false},ticks:{color:tc}},y:{stacked:true,grid:{color:gc},ticks:{color:tc}}},plugins:{legend:{labels:{color:tc,usePointStyle:true,pointStyle:'rectRounded',boxWidth:10,font:{size:11}}}}}});
+
+  new Chart(document.getElementById('ch-bf'),{type:'doughnut',data:{labels:['Room only (78%)','Incl. breakfast (22%)'],datasets:[{data:[1561,439],backgroundColor:[BLUE,TEAL],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{position:'right',labels:{color:tc,font:{size:11},usePointStyle:true,pointStyle:'rectRounded',boxWidth:10}}}}});
+}
+
+// ============================================================
+// GUESTS SECTION
+// ============================================================
+function initGuests(){
+  const ll=Object.keys(LOS);
+  new Chart(document.getElementById('gs-los'),{type:'bar',data:{labels:ll,datasets:[{data:ll.map(k=>LOS[k]),backgroundColor:ll.map((_,i)=>i<3?BLUE:i<7?TEAL:AMBER),borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{title:{display:true,text:'Nights',color:tc,font:{size:11}},grid:{display:false},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc}}},plugins:{legend:{display:false}}}});
+
+  const lbl=Object.keys(LEAD);
+  new Chart(document.getElementById('gs-lead'),{type:'bar',data:{labels:lbl,datasets:[{data:lbl.map(k=>LEAD[k]),backgroundColor:[CORAL,AMBER,AMBER,BLUE,BLUE,TEAL],borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:tc,font:{size:10}}},y:{grid:{color:gc},ticks:{color:tc}}},plugins:{legend:{display:false}}}});
+
+  const dl=Object.keys(DOW);
+  new Chart(document.getElementById('gs-dow'),{type:'bar',data:{labels:dl.map(d=>d.slice(0,3)),datasets:[{data:dl.map(d=>DOW[d]),backgroundColor:BLUE,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc},beginAtZero:false,min:200}},plugins:{legend:{display:false}}}});
+
+  const gl=Object.keys(GUEST_COMP);
+  new Chart(document.getElementById('gs-comp'),{type:'doughnut',data:{labels:gl,datasets:[{data:gl.map(k=>GUEST_COMP[k]),backgroundColor:[TEAL,BLUE,CORAL],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'50%',plugins:{legend:{position:'right',labels:{color:tc,font:{size:11},usePointStyle:true,pointStyle:'rectRounded',boxWidth:10}},tooltip:{callbacks:{label:c=>c.raw+' bookings ('+((c.raw/2000*100).toFixed(1))+'%)'}}}}});
+}
+
+// ============================================================
+// PMS CHANNEL DATA
+// ============================================================
+const PMS = [
+  {name:'Booking.com',rev:64075750,rn:15948,arr:4018,revpar:1350,ci:3569,bn:31679,commPct:15,color:BLUE},
+  {name:'Direct',rev:12193974,rn:3905,arr:3123,revpar:257,ci:836,bn:7710,commPct:0,color:TEAL},
+  {name:'Expedia',rev:9809846,rn:2926,arr:3353,revpar:207,ci:628,bn:6134,commPct:18,color:CORAL},
+  {name:'Xcaliber',rev:8705217,rn:2312,arr:3765,revpar:183,ci:423,bn:4701,commPct:15,color:PURPLE},
+  {name:'Trip/CTrip',rev:8356096,rn:2536,arr:3295,revpar:176,ci:680,bn:4994,commPct:20,color:AMBER},
+  {name:'Tiket.com',rev:1836590,rn:640,arr:2870,revpar:39,ci:159,bn:1283,commPct:15,color:PINK},
+  {name:'Traveloka',rev:65555,rn:26,arr:2521,revpar:1,ci:10,bn:48,commPct:15,color:GRAY},
+];
+const PMS_TOTAL_REV=PMS.reduce((s,c)=>s+c.rev,0);
+const PMS_TOTAL_RN=PMS.reduce((s,c)=>s+c.rn,0);
+
+// Overview channel chart
+new Chart(document.getElementById('ov-channel'),{type:'bar',data:{labels:PMS.map(c=>c.name),datasets:[{data:PMS.map(c=>c.rev/1e6),backgroundColor:PMS.map(c=>c.color),borderRadius:3}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:gc},ticks:{color:tc,callback:v=>'฿'+v+'M'}},y:{grid:{display:false},ticks:{color:tc,font:{size:10}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'฿'+c.raw.toFixed(1)+'M ('+((c.raw*1e6/PMS_TOTAL_REV*100).toFixed(1))+'%)'}}}}});
+
+// Overview net ARR chart
+const ovNetLabels=PMS.map(c=>c.name);
+const ovGrossARR=PMS.map(c=>c.arr);
+const ovNetARR=PMS.map(c=>Math.round(c.arr*(1-c.commPct/100)));
+new Chart(document.getElementById('ov-netarr'),{type:'bar',data:{labels:ovNetLabels,datasets:[{label:'Gross ARR',data:ovGrossARR,backgroundColor:BLUE,borderRadius:3},{label:'Net ARR (after commission)',data:ovNetARR,backgroundColor:TEAL,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:tc,font:{size:9},maxRotation:45}},y:{grid:{color:gc},ticks:{color:tc,callback:v=>'฿'+v.toLocaleString()}}},plugins:{legend:{labels:{color:tc,usePointStyle:true,pointStyle:'rectRounded',boxWidth:10,font:{size:11}}},tooltip:{callbacks:{label:c=>'฿'+c.raw.toLocaleString()+'/night'}}}}});
+
+// ============================================================
+// REVENUE & OTA DEEP-DIVE SECTION
+// ============================================================
+function initRevenue(){
+  // Revenue bar
+  new Chart(document.getElementById('rv-revbar'),{type:'bar',data:{labels:PMS.map(c=>c.name),datasets:[{data:PMS.map(c=>c.rev/1e6),backgroundColor:PMS.map(c=>c.color),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc,callback:v=>'฿'+v+'M'}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'฿'+c.raw.toFixed(1)+'M'}}}}});
+
+  // Revenue donut
+  new Chart(document.getElementById('rv-revdonut'),{type:'doughnut',data:{labels:PMS.map(c=>c.name),datasets:[{data:PMS.map(c=>c.rev),backgroundColor:PMS.map(c=>c.color),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'50%',plugins:{legend:{position:'right',labels:{color:tc,font:{size:10},usePointStyle:true,pointStyle:'rectRounded',boxWidth:10}},tooltip:{callbacks:{label:c=>c.label+': ฿'+(c.raw/1e6).toFixed(1)+'M ('+((c.raw/PMS_TOTAL_REV*100).toFixed(1))+'%)'}}}}});
+
+  // RN donut
+  new Chart(document.getElementById('rv-rndonut'),{type:'doughnut',data:{labels:PMS.map(c=>c.name),datasets:[{data:PMS.map(c=>c.rn),backgroundColor:PMS.map(c=>c.color),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'50%',plugins:{legend:{position:'right',labels:{color:tc,font:{size:10},usePointStyle:true,pointStyle:'rectRounded',boxWidth:10}},tooltip:{callbacks:{label:c=>c.label+': '+c.raw.toLocaleString()+' nights ('+((c.raw/PMS_TOTAL_RN*100).toFixed(1))+'%)'}}}}});
+
+  // ARR comparison
+  new Chart(document.getElementById('rv-arr'),{type:'bar',data:{labels:PMS.map(c=>c.name),datasets:[{data:PMS.map(c=>c.arr),backgroundColor:PMS.map(c=>c.color),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc,callback:v=>'฿'+v.toLocaleString()},beginAtZero:false,min:2000}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'฿'+c.raw.toLocaleString()+'/night'}}}}});
+
+  // RevPAR
+  new Chart(document.getElementById('rv-revpar'),{type:'bar',data:{labels:PMS.map(c=>c.name),datasets:[{data:PMS.map(c=>c.revpar),backgroundColor:PMS.map(c=>c.color),borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:tc,font:{size:10}}},y:{grid:{color:gc},ticks:{color:tc,callback:v=>'฿'+v.toLocaleString()}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'฿'+c.raw.toLocaleString()}}}}});
+
+  // LOS by channel
+  const chLOS=PMS.map(c=>Math.round(c.rn/c.ci*10)/10);
+  new Chart(document.getElementById('rv-los'),{type:'bar',data:{labels:PMS.map(c=>c.name),datasets:[{data:chLOS,backgroundColor:PMS.map(c=>c.color),borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:tc,font:{size:10}}},y:{grid:{color:gc},ticks:{color:tc,callback:v=>v+' nights'}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+' nights avg'}}}}});
+
+  // Net ARR comparison
+  const grossARR=PMS.map(c=>c.arr);
+  const netARR=PMS.map(c=>Math.round(c.arr*(1-c.commPct/100)));
+  new Chart(document.getElementById('rv-netarr'),{type:'bar',data:{labels:PMS.map(c=>c.name),datasets:[{label:'Gross ARR',data:grossARR,backgroundColor:BLUE,borderRadius:3},{label:'Net ARR (after est. commission)',data:netARR,backgroundColor:TEAL,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:tc,font:{size:9}}},y:{grid:{color:gc},ticks:{color:tc,callback:v=>'฿'+v.toLocaleString()},beginAtZero:false,min:2000}},plugins:{legend:{labels:{color:tc,usePointStyle:true,pointStyle:'rectRounded',boxWidth:10,font:{size:11}}},tooltip:{callbacks:{label:c=>c.dataset.label+': ฿'+c.raw.toLocaleString()+'/night'}}}}});
+
+  // Commission cost
+  const commCost=PMS.map(c=>Math.round(c.rev*c.commPct/100/1e6*10)/10);
+  new Chart(document.getElementById('rv-commission'),{type:'bar',data:{labels:PMS.map(c=>c.name+(c.commPct?' ('+c.commPct+'%)':' (0%)')),datasets:[{data:commCost,backgroundColor:PMS.map(c=>c.commPct>0?CORAL:TEAL),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:tc,font:{size:9}}},y:{grid:{color:gc},ticks:{color:tc,callback:v=>'฿'+v+'M'}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'฿'+c.raw.toFixed(1)+'M estimated commission'}}}}});
+
+  // Table
+  const tbody=document.getElementById('rvTableBody');
+  tbody.innerHTML=PMS.map(c=>{
+    const comm=c.rev*c.commPct/100;
+    const netA=Math.round(c.arr*(1-c.commPct/100));
+    const los=Math.round(c.rn/c.ci*10)/10;
+    return `<tr>
+      <td style="font-weight:500">${c.name}</td>
+      <td class="num">฿${Math.round(c.rev).toLocaleString()}</td>
+      <td class="num">${(c.rev/PMS_TOTAL_REV*100).toFixed(1)}%</td>
+      <td class="num">${c.rn.toLocaleString()}</td>
+      <td class="num">${c.ci.toLocaleString()}</td>
+      <td class="num">฿${c.arr.toLocaleString()}</td>
+      <td class="num">${los}</td>
+      <td class="num">฿${c.revpar.toLocaleString()}</td>
+      <td class="num" style="color:var(--coral)">฿${Math.round(comm).toLocaleString()}</td>
+      <td class="num" style="color:var(--teal)">฿${netA.toLocaleString()}</td>
+    </tr>`;
+  }).join('');
+  // Add total row
+  const totalComm=PMS.reduce((s,c)=>s+c.rev*c.commPct/100,0);
+  tbody.innerHTML+=`<tr style="font-weight:600;border-top:2px solid var(--bd)">
+    <td>TOTAL</td>
+    <td class="num">฿${Math.round(PMS_TOTAL_REV).toLocaleString()}</td>
+    <td class="num">100%</td>
+    <td class="num">${PMS_TOTAL_RN.toLocaleString()}</td>
+    <td class="num">${PMS.reduce((s,c)=>s+c.ci,0).toLocaleString()}</td>
+    <td class="num">฿${Math.round(PMS_TOTAL_REV/PMS_TOTAL_RN).toLocaleString()}</td>
+    <td class="num">${(PMS_TOTAL_RN/PMS.reduce((s,c)=>s+c.ci,0)).toFixed(1)}</td>
+    <td class="num">฿${Math.round(PMS_TOTAL_REV/47450).toLocaleString()}</td>
+    <td class="num" style="color:var(--coral)">฿${Math.round(totalComm).toLocaleString()}</td>
+    <td class="num" style="color:var(--teal)">฿${Math.round((PMS_TOTAL_REV-totalComm)/PMS_TOTAL_RN).toLocaleString()}</td>
+  </tr>`;
+}
+
+// ============================================================
+// GUEST DEMOGRAPHICS SECTION
+// ============================================================
+function initDemographics(){
+  // Age histogram
+  const ageBrackets=['Under 18','18-24','25-34','35-44','45-54','55-64','65-74','75+'];
+  const ageCounts=[1200,1045,2015,2325,2038,1433,554,104];
+  const ageColors=[GRAY,TEAL,BLUE,BLUE,BLUE,AMBER,CORAL,CORAL];
+  new Chart(document.getElementById('dm-agehist'),{type:'bar',data:{labels:ageBrackets,datasets:[{data:ageCounts,backgroundColor:ageColors,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const pct=(c.raw/10714*100).toFixed(1);return c.raw.toLocaleString()+' guests ('+pct+'%)'}}}}}});
+
+  // Travel party donut
+  const partyLabels=['Couples','Solo travelers','Group (3+ adults)','Families (with children)'];
+  const partyData=[2363,818,950,757];
+  const partyColors=[BLUE,TEAL,PURPLE,CORAL];
+  new Chart(document.getElementById('dm-party'),{type:'doughnut',data:{labels:partyLabels,datasets:[{data:partyData,backgroundColor:partyColors,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'50%',plugins:{legend:{position:'right',labels:{color:tc,font:{size:11},usePointStyle:true,pointStyle:'rectRounded',boxWidth:10}},tooltip:{callbacks:{label:c=>{const pct=(c.raw/4888*100).toFixed(1);return c.label+': '+c.raw+' ('+pct+'%)'}}}}}});
+
+  // Children breakdown
+  const childLabels=['Teens (12-17)','School-age (6-11)','Toddlers (3-5)'];
+  const childData=[660,482,58];
+  new Chart(document.getElementById('dm-children'),{type:'doughnut',data:{labels:childLabels,datasets:[{data:childData,backgroundColor:[BLUE,TEAL,AMBER],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'50%',plugins:{legend:{position:'right',labels:{color:tc,font:{size:11},usePointStyle:true,pointStyle:'rectRounded',boxWidth:10}},tooltip:{callbacks:{label:c=>c.label+': '+c.raw+' children'}}}}});
+
+  // Avg age by nationality
+  const ageNatLabels=['USA','Italy','Australia','Poland','Russia','Germany','Denmark','Netherlands','France','Switzerland','China','UK','Sweden','Thailand','Israel'];
+  const ageNatData=[48.7,47.1,46.0,45.9,44.5,45.0,44.4,44.2,43.8,43.3,43.1,42.4,41.6,39.0,38.8];
+  new Chart(document.getElementById('dm-agnat'),{type:'bar',data:{labels:ageNatLabels,datasets:[{data:ageNatData,backgroundColor:ageNatData.map(v=>v>=45?CORAL:v>=42?AMBER:TEAL),borderRadius:3}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:gc},ticks:{color:tc,callback:v=>v+' yrs'},min:35,max:52},y:{grid:{display:false},ticks:{color:tc,font:{size:11}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+' years average'}}}}});
+
+  // Top 20 nationalities by guest count
+  const natGLabels=['China','Israel','France','Germany','Russia','UK','Australia','Switzerland','Sweden','Thailand','USA','Netherlands','Poland','Italy','Denmark','India','Austria','Canada','Norway','Czech Rep.'];
+  const natGData=[444,432,349,348,275,240,144,133,119,99,90,70,69,67,58,50,50,47,44,38];
+  new Chart(document.getElementById('dm-natguest'),{type:'bar',data:{labels:natGLabels,datasets:[{data:natGData,backgroundColor:BLUE,borderRadius:3}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:gc},ticks:{color:tc}},y:{grid:{display:false},ticks:{color:tc,font:{size:10}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+' guests'}}}}});
+
+  // Monthly guest volume (full year)
+  const mLabels=['Dec 24','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec 25','Jan 26','Feb 26','Mar 26'];
+  const mData=[133,1192,1120,686,571,286,407,933,1041,724,476,475,1110,1167,1209,864];
+  new Chart(document.getElementById('dm-monthly'),{type:'bar',data:{labels:mLabels,datasets:[{data:mData,backgroundColor:mData.map(v=>v>1000?BLUE:v>500?TEAL:AMBER),borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:tc,font:{size:9},maxRotation:45}},y:{grid:{color:gc},ticks:{color:tc}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+' guests'}}}}});
+
+  // Monthly avg age
+  const mAgeLabels=mLabels;
+  const mAgeData=[43.9,43.2,43.8,42.1,41.8,41.1,43.0,42.8,42.5,39.5,42.8,42.6,40.6,44.5,43.2,42.8];
+  new Chart(document.getElementById('dm-monthage'),{type:'line',data:{labels:mAgeLabels,datasets:[{data:mAgeData,borderColor:CORAL,backgroundColor:'transparent',pointBackgroundColor:CORAL,pointRadius:4,tension:0.3}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:tc,font:{size:9},maxRotation:45}},y:{grid:{color:gc},ticks:{color:tc,callback:v=>v+' yrs'},min:38,max:46}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+' years avg'}}}}});
+}
+
+// ============================================================
+// INCOME ESTIMATION SECTION
+// ============================================================
+function initIncome(){
+  const incNat=[
+    {c:'Denmark',inc:219,g:58},{c:'USA',inc:212,g:90},{c:'Switzerland',inc:207,g:133},
+    {c:'Sweden',inc:197,g:119},{c:'Australia',inc:194,g:144},{c:'Norway',inc:190,g:44},
+    {c:'Austria',inc:185,g:50},{c:'Canada',inc:179,g:47},{c:'Germany',inc:177,g:348},
+    {c:'France',inc:164,g:349},{c:'Netherlands',inc:152,g:70},{c:'UK',inc:142,g:240},
+    {c:'Israel',inc:131,g:432},{c:'Italy',inc:126,g:67},{c:'Poland',inc:113,g:69},
+    {c:'Czech Rep.',inc:106,g:38},{c:'Russia',inc:52,g:275},{c:'China',inc:46,g:444},
+    {c:'Thailand',inc:31,g:99},{c:'India',inc:17,g:50}
+  ];
+
+  // By nationality bar
+  new Chart(document.getElementById('inc-bynat'),{type:'bar',data:{labels:incNat.map(d=>d.c),datasets:[
+    {label:'Est. household income ($K)',data:incNat.map(d=>d.inc),backgroundColor:incNat.map(d=>d.inc>=150?BLUE:d.inc>=75?TEAL:d.inc>=50?AMBER:CORAL),borderRadius:3},
+  ]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:gc},ticks:{color:tc,callback:v=>'$'+v+'K'}},y:{grid:{display:false},ticks:{color:tc,font:{size:11}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+c.raw+'K/year ('+incNat[c.dataIndex].g+' guests)'}}}}});
+
+  // Income distribution bar
+  const distLabels=['$30-50K','$50-75K','$75-100K','$100-150K','$150-200K','$200K+'];
+  const distData=[593,275,0,846,1171,281];
+  const distColors=[CORAL,AMBER,GRAY,TEAL,BLUE,PURPLE];
+  new Chart(document.getElementById('inc-dist'),{type:'bar',data:{labels:distLabels,datasets:[{data:distData,backgroundColor:distColors,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const pct=(c.raw/3166*100).toFixed(1);return c.raw+' guests ('+pct+'%)';}}}}}});
+
+  // Income donut
+  new Chart(document.getElementById('inc-donut'),{type:'doughnut',data:{labels:distLabels,datasets:[{data:distData,backgroundColor:distColors,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'50%',plugins:{legend:{position:'right',labels:{color:tc,font:{size:11},usePointStyle:true,pointStyle:'rectRounded',boxWidth:10}},tooltip:{callbacks:{label:c=>{const pct=(c.raw/3166*100).toFixed(1);return c.label+': '+c.raw+' guests ('+pct+'%)'}}}}}});
+
+  // By age bracket
+  const ageLabels=['18-24','25-34','35-44','45-54','55-64','65-74'];
+  const ageInc=[51,97,131,148,137,108];
+  const ageCounts2=[1045,2015,2325,2038,1433,554];
+  new Chart(document.getElementById('inc-byage'),{type:'bar',data:{labels:ageLabels,datasets:[
+    {label:'Est. income ($K)',data:ageInc,backgroundColor:ageInc.map(v=>v>=130?BLUE:v>=90?TEAL:AMBER),borderRadius:4,yAxisID:'y'},
+    {label:'Guest count',data:ageCounts2,type:'line',borderColor:CORAL,backgroundColor:'transparent',pointBackgroundColor:CORAL,pointRadius:4,tension:0.3,yAxisID:'y1'}
+  ]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:tc}},y:{position:'left',grid:{color:gc},ticks:{color:tc,callback:v=>'$'+v+'K'},title:{display:true,text:'Est. income',color:tc,font:{size:11}}},y1:{position:'right',grid:{display:false},ticks:{color:tc},title:{display:true,text:'Guests',color:tc,font:{size:11}}}},plugins:{legend:{labels:{color:tc,usePointStyle:true,pointStyle:'rectRounded',boxWidth:10,font:{size:11}}},tooltip:{callbacks:{label:c=>c.dataset.label===('Est. income ($K)')?'$'+c.raw+'K/year':c.raw.toLocaleString()+' guests'}}}}});
+
+  // By room type
+  const rtLabels=['Superior Garden','Deluxe Garden','Deluxe Sea View','Deluxe Pool','Family Pool','Deluxe Beachfront','Grand Family'];
+  const rtInc=[112,131,131,157,184,184,184];
+  const rtARR=[2800,3200,3800,4200,5000,5500,7000];
+  new Chart(document.getElementById('inc-byroom'),{type:'bar',data:{labels:rtLabels,datasets:[
+    {label:'Est. income ($K)',data:rtInc,backgroundColor:BLUE,borderRadius:3,yAxisID:'y'},
+    {label:'Est. ARR (฿)',data:rtARR,type:'line',borderColor:CORAL,backgroundColor:'transparent',pointBackgroundColor:CORAL,pointRadius:4,tension:0.3,yAxisID:'y1'}
+  ]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:tc,font:{size:9}}},y:{position:'left',grid:{color:gc},ticks:{color:tc,callback:v=>'$'+v+'K'},title:{display:true,text:'Est. income',color:tc,font:{size:11}}},y1:{position:'right',grid:{display:false},ticks:{color:tc,callback:v=>'฿'+v.toLocaleString()},title:{display:true,text:'ARR',color:tc,font:{size:11}}}},plugins:{legend:{labels:{color:tc,usePointStyle:true,pointStyle:'rectRounded',boxWidth:10,font:{size:11}}}}}});
+
+  // Scatter: income vs ARR
+  const scatterData=incNat.map(d=>{
+    const arrMap={Denmark:4566,USA:3658,Switzerland:3846,Sweden:4250,Australia:3881,Norway:3619,Austria:4611,Canada:4276,Germany:3752,France:4112,Netherlands:3601,UK:3797,Israel:4333,Italy:3906,Poland:4259,'Czech Rep.':4147,Russia:3737,China:3862,Thailand:3878,India:3254};
+    return {x:d.inc,y:arrMap[d.c]||3700,r:Math.max(4,Math.sqrt(d.g)*1.5),label:d.c,guests:d.g};
+  });
+  new Chart(document.getElementById('inc-scatter'),{type:'bubble',data:{datasets:[{data:scatterData.map(d=>({x:d.x,y:d.y,r:d.r})),backgroundColor:scatterData.map(d=>d.x>=150?BLUE+'99':d.x>=75?TEAL+'99':CORAL+'99'),borderColor:scatterData.map(d=>d.x>=150?BLUE:d.x>=75?TEAL:CORAL),borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{title:{display:true,text:'Estimated household income ($K)',color:tc,font:{size:11}},grid:{color:gc},ticks:{color:tc,callback:v=>'$'+v+'K'},min:0,max:240},y:{title:{display:true,text:'Avg nightly rate (THB)',color:tc,font:{size:11}},grid:{color:gc},ticks:{color:tc,callback:v=>'฿'+v.toLocaleString()},min:3000,max:5000}},plugins:{legend:{display:false},tooltip:{callbacks:{title:c=>{const i=c[0].dataIndex;return scatterData[i].label},label:c=>{const i=c.dataIndex;return ['Income: $'+scatterData[i].x+'K','ARR: ฿'+scatterData[i].y.toLocaleString(),'Guests: '+scatterData[i].guests]}}}}}});
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "deep-research", "runs": [{"id": "eval-1-wellness-with_skill", "prompt": "I'm advising a boutique hotel in Koh Samui Thailand that wants to rebrand. Can you do deep research on the wellness travel market \u2014 specifically: how big is it, what are the key trends for 2025-2026, and what does a boutique hotel need to offer to credibly compete in this space? This is going into a strategy document for the hotel owner.", "eval_id": 1, "outputs": [{"name": "critic_review.md", "type": "text", "content": "# Critic Review: Wellness Travel Market Research\n\n**Review Date:** March 27, 2026\n**Context:** Evaluating research for boutique hotel rebranding strategy in Koh Samui\n\n---\n\n## Overall Assessment\n\nThe research provides a solid foundation on global market size and emerging trends, but suffers from significant weaknesses when applied to the specific context of a boutique hotel in Koh Samui. The researcher has gathered strong data on global macro trends (market size, growth rates, traveler preferences) but has failed to adequately differentiate between North American/European wellness travel preferences and Southeast Asian preferences. The critical gaps around boutique hotel competitive positioning, pricing benchmarks, and localized market dynamics will leave the hotel owner partially informed but unable to make confident strategic decisions. Additionally, the research conflates wellness tourism (very broad, includes medical tourism) with wellness hospitality (hotels), which inflates perceived market opportunity.\n\nKey issues: (1) geographic mismatch between research sources (mostly North American trends applied to Thailand), (2) insufficient analysis of local competitive set, (3) unclear on what actually differentiates winners from losers at the boutique scale, (4) weak data on pricing and revenue modeling specific to Southeast Asia.\n\n---\n\n## Finding-by-Finding Review\n\n### Thread 1: Market Size & Growth\n\n#### Finding 1.1: Global Wellness Tourism Market Valuation (2024) \u2014 $950B-1T\n- **Reliability**: \ud83d\udfe1 **Uncertain**\n- **Issue**: Market size is real, but definition matters enormously. Different reports include medical tourism, spa-only stays, and wellness-adjacent travel differently. A \"wellness tourism\" market that includes medical procedures inflates the hospitality addressable market.\n- **What's missing**: Clear breakdown between (a) wellness hospitality (hotels, resorts), (b) medical tourism (procedures + recovery), (c) spa/beauty services (non-residential). The USD 1T figure is misleading for a hotel operator; the actual addressable market is probably 30-50% of that. No clear distinction in researcher sources.\n- **Recommended action**: Qualify this claim heavily. In final output, break down what portion is attributable to actual hotel stays vs. medical procedures, day-spa visits, etc.\n\n#### Finding 1.2: Growth Rate 8-12% CAGR to 2026-2030\n- **Reliability**: \ud83d\udfe2 **Solid**\n- **Issue**: None significant. Multiple sources converge on this range.\n- **What's missing**: Clarity on whether this growth rate applies equally to boutique hotel segment, or whether it's driven by large medical tourism centers and resort chains. Boutique segment growth could be faster or slower than aggregate.\n- **Recommended action**: Keep as-is, but add qualifier that boutique growth rate may differ from aggregate.\n\n#### Finding 1.3: Asia-Pacific Fastest Growth, North America Largest Share\n- **Reliability**: \ud83d\udfe2 **Solid**\n- **Issue**: None significant.\n- **What's missing**: Breakdown within Asia-Pacific. Not all of SE Asia is growing equally. Koh Samui specifically may have different growth dynamics than Thailand-wide or ASEAN-wide.\n- **Recommended action**: Keep as-is, note that regional findings need localization for Koh Samui.\n\n---\n\n### Thread 2: Key Trends 2025-2026\n\n#### Finding 2.1: Nature-Based Immersion & Elemental Wellness\n- **Reliability**: \ud83d\udfe1 **Uncertain**\n- **Issue**: Trend is real in travel media and aspirational messaging, but adoption rate and market penetration unclear. Strong in premium English-language travel media (which skews North American/Western). Sauna content (5.2M posts) is not a reliable proxy for market demand in Asia.\n- **What's missing**: Evidence that Thai/SE Asian wellness travelers actually want cold plunges and forest bathing at the same rate as Western travelers. This may be a Western trend being extrapolated globally. Local preference research is absent.\n- **Recommended action**: Qualify heavily. Mark as \"emerging in developed markets; unclear penetration in SE Asia.\"\n\n#### Finding 2.2: Nervous System Regulation & Stress Management\n- **Reliability**: \ud83d\udd34 **Weak**\n- **Issue**: Trend identified by travel media but minimal hard evidence of market demand. No survey data on what percentage of travelers actually seek this. Highly dependent on destination credibility and expertise\u2014not something an undifferentiated boutique can easily claim.\n- **What's missing**: Consumer research showing demand for nervous system regulation specifically (vs. general stress relief, which is different). Market sizing for this niche. Thai/SE Asian interest levels.\n- **Recommended action**: Reframe as \"emerging niche trend; requires specialized expertise to position credibly; market size unknown.\"\n\n#### Finding 2.3: Community & Connection-Based Wellness\n- **Reliability**: \ud83d\udfe1 **Uncertain**\n- **Issue**: 82% of adventure travelers value community is real, but applies specifically to active/adventure travelers, not all wellness travelers. Researcher did not break down wellness travelers' preferences on this. Community may conflict with \"disconnect/alone time\" preference (Finding 3.1). Tension unresolved.\n- **What's missing**: Evidence that wellness travelers (distinct from adventure travelers) value community. Market size for community-focused wellness. Thai/SE Asian preference for communal vs. private wellness.\n- **Recommended action**: Qualify this finding. Note that it applies to subset of wellness travelers (active, social types) and may conflict with solitude-seeking segment.\n\n#### Finding 2.4: Longevity & Biohacking\n- **Reliability**: \ud83d\udfe1 **Uncertain**\n- **Issue**: Trend is real in premium market (US East Coast, tech hubs) but market penetration still small. Requires partnerships with longevity clinics, medical oversight, expensive equipment. Not accessible to most boutique properties. Higher end of market only.\n- **What's missing**: Market sizing. What % of wellness travelers actually pursue longevity services? Regional breakdown\u2014is this a trend in Thailand? Competitive set in SE Asia for longevity offerings.\n- **Recommended action**: Qualify as high-end, limited-market trend. Suitable for top-tier positioning only.\n\n#### Finding 2.5: Specialized \"Glow-cation\" & Aesthetic Wellness\n- **Reliability**: \ud83d\udfe1 **Uncertain**\n- **Issue**: Seoul beauty tourism is real, but researcher did not investigate (a) whether Koh Samui is positioned for this, (b) regulatory environment for aesthetic procedures in Thailand, (c) whether boutique hotels can credibly offer aesthetic services. Potential opportunity in Thailand (due to medical/cosmetic tourism infrastructure) but not clearly researched.\n- **What's missing**: Thailand-specific aesthetic/beauty wellness market opportunity. Regulatory landscape. Competitive positioning for this segment in Thailand.\n- **Recommended action**: Flag as potential opportunity worth deeper investigation (one-off research), but insufficient data to include in strategic recommendation.\n\n#### Finding 2.6: Hyperpersonalization & AI-Driven Customization\n- **Reliability**: \ud83d\udfe1 **Uncertain**\n- **Issue**: Technology exists, but adoption is early. Privacy/data protection regulations vary by country. Boutique hotels often lack infrastructure (not the tech companies' core market). ROI unclear.\n- **What's missing**: Evidence of consumer demand (not just supply capability). Cost of implementation. ROI for boutique-scale properties. Thailand data privacy regulations. Is this actually differentiating factor or just noise?\n- **Recommended action**: Qualify as emerging trend with unclear market demand. Risks of implementation cost exceeding returns.\n\n#### Finding 2.7: Sustainability as Non-Negotiable\n- **Reliability**: \ud83d\udfe2 **Solid**\n- **Issue**: None. 80% preference is well-evidenced. However, researcher also flagged that greenwashing is widespread, which means execution matters enormously; the claim alone is not sufficient.\n- **What's missing**: Thailand-specific sustainability expectations. What credible sustainability practices look like in SE Asia hospitality context. How to differentiate genuine vs. greenwashing in market communications.\n- **Recommended action**: Keep as-is. Add execution note that claimed sustainability must be verifiable and transparent to avoid customer backlash.\n\n---\n\n### Thread 3: Consumer Preferences\n\n#### Finding 3.1: Disconnection & Mental Health as Primary Motivator\n- **Reliability**: \ud83d\udfe1 **Uncertain**\n- **Issue**: Data is from North American travelers (81%, 72%, 98% percentages are typical of US research). Not clear if these preferences apply equally to Asian, European, or other source markets. Researcher did not note geographic skew.\n- **What's missing**: Non-US traveler preference data. Thai domestic traveler preferences. Geographically-disaggregated research on what motivates wellness travel in different regions.\n- **Recommended action**: Qualify this finding heavily. Note that data represents North American traveler segment; actual preferences of Koh Samui's guest base may differ.\n\n#### Finding 3.2: Blended Active + Relaxation (82%, 50% YoY increase in fitness holidays)\n- **Reliability**: \ud83d\udfe1 **Uncertain**\n- **Issue**: 82% and 50% YoY growth are real metrics, but 50% increase implies low base year (small market). Fitness travel is niche within wellness. For boutique hotel strategy, unclear how much this trend will drive room bookings vs. destination choice.\n- **What's missing**: Breakdown by guest segment. How does age/income/nationality affect this preference? What does \"blended\" actually mean operationally for a hotel? How much fitness programming is needed to satisfy this?\n- **Recommended action**: Keep finding but note that it implies need for both active and passive offerings; single-focus boutiques will struggle.\n\n#### Finding 3.3: Hyperpersonalization Expected\n- **Reliability**: \ud83d\udfe1 **Uncertain**\n- **Issue**: Expectation may exist in premium segment, but researcher provided no data on (a) how widespread the expectation is, (b) price premium it justifies, (c) cost to deliver, (d) whether boutique-scale properties can execute. Expectation vs. market reality gap.\n- **What's missing**: Market research on what % of wellness travelers expect personalization (vs. desire it). ROI analysis for personalization investment. Thailand labor cost/capability for personalization delivery.\n- **Recommended action**: Qualify as expectation in premium segment; unclear if cost-justifiable for mid-market boutique.\n\n#### Finding 3.4: Sustainability is Baseline, Not Premium\n- **Reliability**: \ud83d\udfe2 **Solid**\n- **Issue**: 80% expectation is well-established. Clear table-stakes finding.\n- **What's missing**: None significant.\n- **Recommended action**: Keep as-is.\n\n#### Finding 3.5: Nature Connection & Outdoor Integration\n- **Reliability**: \ud83d\udfe1 **Uncertain**\n- **Issue**: Trend is real but depends heavily on property location. Koh Samui has natural advantages (island, beaches, jungle) but many properties already integrate these. Differentiation via nature connection is possible but not automatic.\n- **What's missing**: Evidence of market demand for nature wellness specifically (vs. general nature in travel). Competitive set analysis: how many Koh Samui properties already offer outdoor/nature wellness? Differentiation opportunity assessment.\n- **Recommended action**: Keep as-is but note that feasibility depends on property location; for Koh Samui specifically, this is likely table-stakes (many competitors already offer).\n\n---\n\n### Thread 4: Thailand & Koh Samui Specific\n\n#### Finding 4.1: Thailand Dominates Wellness Tourism in Asia-Pacific \u2014 $42.7B in 2024, 36.4% YoY growth\n- **Reliability**: \ud83d\udfe1 **Uncertain**\n- **Issue**: Figure is accurate but deeply flawed for hotel strategy. USD 42.7B \"wellness market\" includes: medical tourism (Thailand's largest segment\u2014surgeries, procedures), wellness real estate (irrelevant for hotels), day spas (non-residential), and actual wellness hotels/retreats. USD 14B in \"wellness tourism spending\" is more relevant but still conflates many segments. Researcher did not break this down; hotel operator will overestimate addressable market.\n- **What's missing**: Clear breakdown of Thailand wellness market by segment. What portion is (a) hotel/resort stays vs. (b) medical procedures vs. (c) day spa? Market size for actual wellness hospitality in Thailand specifically.\n- **Recommended action**: **CRITICAL \u2014 Request additional research** to disaggregate Thailand wellness market. Hotel operator cannot make strategy decisions without knowing how much of that USD 42.7B is actually hospitality revenue.\n\n#### Finding 4.2: Koh Samui Emerging as Wellness & Sports Hub\n- **Reliability**: \ud83d\udfe1 **Uncertain**\n- **Issue**: Strategic positioning by TAT is real, and consulting firm (C9 Hotelworks) has noted the trend, but this is aspirational positioning, not proven market reality. Many government \"positioning\" initiatives fail to drive actual customer demand. Profile shift is happening but scale/speed unknown. No data on whether tourists are actually choosing Koh Samui specifically for wellness vs. general island appeal.\n- **What's missing**: Evidence that tourists are actually seeking Koh Samui as wellness destination (vs. just beach destination that happens to have some wellness services). Booking data showing wellness segment growth in Koh Samui specifically. Competitive threat assessment: who are the winners in this shift?\n- **Recommended action**: Qualify as strategic positioning by government; treat as opportunity but not as proven market demand. Needs local market validation.\n\n#### Finding 4.3: Strong Tourism Recovery (9% YoY growth, 2.78M arrivals 2024)\n- **Reliability**: \ud83d\udfe2 **Solid**\n- **Issue**: Tourism numbers are accurate and encouraging, but they reflect all tourism segments (beach, nightlife, party, family, wellness, etc.). Does not isolate wellness segment growth. Overall growth does not mean wellness segment is growing proportionally.\n- **What's missing**: Breakdown of arrivals by tourism purpose/segment. What % of Koh Samui tourists are wellness-focused vs. general beach/leisure?\n- **Recommended action**: Keep as-is but add note that overall tourism growth does not isolate wellness segment growth.\n\n#### Finding 4.4: New Supply Pipeline (Nivata, SO/, Fivelements, Wyndham Garden)\n- **Reliability**: \ud83d\udfe2 **Solid**\n- **Issue**: Supply information is accurate, but researcher flagged increased competition without analyzing (a) what positioning these new properties will take, (b) what market share consolidation this implies, (c) whether new supply will cannibalize existing boutiques or grow overall market. Incomplete competitive assessment.\n- **What's missing**: Detailed analysis of competitive set in Koh Samui wellness space. Who are direct competitors to a boutique wellness hotel? What are their positioning, pricing, occupancy? Will new supply help or hurt boutique profitability?\n- **Recommended action**: **FLAG FOR FOLLOW-UP** \u2014 Request competitive set analysis for Koh Samui boutique/wellness hotels. This is critical for strategy and was not adequately researched.\n\n#### Finding 4.5: Spa Sector 18% Growth, Wellness Real Estate 22.9%\n- **Reliability**: \ud83d\udd34 **Weak**\n- **Issue**: Data is reported but not deeply verified. Spa sector growth is product revenue (day spa/treatments), not room revenue, so relevance to hotel strategy is indirect. Wellness real estate is residential segment. These are not core to hotel positioning decision.\n- **What's missing**: More relevant metrics: hotel occupancy growth in wellness segment, ADR trends for wellness hotels, RevPAR benchmarks for boutique wellness hotels in Thailand.\n- **Recommended action**: De-emphasize these findings. Request more relevant hospitality metrics.\n\n---\n\n## Critical Gaps \u2014 What the Research Missed\n\n1. **Localization of Traveler Preferences**: Research is heavily North American/Western. What do actual SE Asian wellness travelers want? What do tourists to Koh Samui specifically prioritize? No local research conducted. This is a major blind spot for a hotel that will serve both international and regional guests.\n\n2. **Competitive Set Analysis for Koh Samui Boutiques**: No research on who the actual competitors are in Koh Samui boutique wellness space. What are their positioning, pricing, occupancy rates, guest reviews? Without this, the hotel owner cannot assess (a) differentiation opportunity, (b) pricing strategy, (c) market position.\n\n3. **Boutique Hotel Profitability & Pricing Benchmarks**: Research identified market size and trends but did not establish: What is the pricing range for boutique wellness hotels in Koh Samui? What ADR/RevPAR are competitive properties achieving? What occupancy rates are realistic? Without this, no pricing strategy can be informed.\n\n4. **Market Segmentation for Koh Samui Tourism**: Research did not break down Koh Samui tourist arrivals by purpose/demographic. What % are wellness-focused? What are their nationalities, income levels, length of stay? Segmentation is critical for targeting and positioning.\n\n5. **Disaggregation of \"Wellness Market\"**: Thailand's USD 42.7B wellness market includes medical tourism (surgeries), day spas, wellness real estate, and actual hotels. Hotel operator cannot plan based on aggregate figure. No clear breakdown of hospitality-relevant market size.\n\n6. **Operational Cost & Capability Assessment**: What does it actually cost (capex, opex) to deliver the identified trends (nervous system regulation, personalization, biohacking, etc.)? What staff expertise is required? What supplier/partner ecosystem exists in Thailand to support these offerings? No research on implementation feasibility.\n\n7. **Regulatory & Compliance Landscape**: Thailand has specific regulations around medical claims, aesthetic services, traditional therapies, data privacy, etc. How do these affect positioning and operations? Not researched.\n\n8. **Measurement Framework**: How would the hotel owner measure success in a wellness positioning? What KPIs matter? No guidance provided.\n\n---\n\n## Contradictions to Resolve\n\n**Tension 1: Individual vs. Community Wellness**\n- Finding 3.1 emphasizes desire for disconnection and alone time (98% want to disconnect, 80% value alone time)\n- Finding 2.3 emphasizes community and connection (82% of adventure travelers value meeting others)\n- **Resolution**: These are not contradictions; they reflect market segmentation. Some guests seek solitude, others seek community. A successful boutique property must offer both (private rooms/spa treatments + communal activities/meals). Strategy should explicitly segment guests and tailor offerings. However, research did not clarify how to balance these or which segment is larger/more valuable.\n\n**Tension 2: Digital Detox vs. Tech Personalization**\n- Consumer preference for unplugging from phones (72-89% want to disconnect from social media/phones)\n- Trend toward AI-driven personalization and biometric tracking (Finding 2.6)\n- **Resolution**: Not mutually exclusive. Personalization can happen via in-person assessment (no phones needed) vs. background tech. However, research did not clarify how to position technology (hidden vs. featured), which approach resonates with guests, or cost/benefit tradeoff.\n\n---\n\n## Strengths to Preserve\n\n1. **Market Size & Growth Trajectory Solid**: The core finding that wellness tourism is worth ~USD 1T globally and growing 9-12% annually is well-evidenced and reliable. This establishes that the market is large and growing.\n\n2. **Macro Trends Well-Researched**: Findings on nature immersion, sustainability, longevity, and biohacking are grounded in multiple sources and represent genuine shifts in traveler preferences (even if penetration/adoption rates vary).\n\n3. **Thailand as Regional Growth Hub Confirmed**: Research confirms Thailand is leading ASEAN wellness/medical tourism market and is positioned for continued growth. This is strategic asset for Koh Samui positioning.\n\n4. **Koh Samui Tourism Recovery Confirmed**: Island tourism numbers are strong and growing, providing foundation for optimism about market opportunity.\n\n5. **Consumer Preference on Sustainability Clear**: 80% preference for sustainability is well-established and provides clear baseline expectation for positioning.\n\n---\n\n## Questions for the Synthesiser\n\n1. **How should we weight North American traveler preferences (which dominate research) vs. actual Koh Samui guest base?** The hotel will likely serve mix of Western and Asian guests with different preferences. Where is the primary opportunity?\n\n2. **How should the boutique position itself given new competitive supply pipeline?** With Hilton, Sofitel, Fivelements, Wyndham entering market, what is the differentiation strategy for a smaller boutique? What niche is defensible?\n\n3. **What is the minimum viable product?** Which of the identified trends (nervous system regulation, personalization, biohacking, community wellness) are essential vs. nice-to-have? What is the ROI threshold?\n\n4. **What is the pricing strategy?** Without benchmarking data from Koh Samui boutique wellness hotels, how should the property price relative to competition? Premium or value positioning?\n\n5. **What is the guest segmentation strategy?** Should the property target solo retreat seekers, couples, wellness groups, corporate teams? How do these segments have different needs?\n\n6. **What is the sustainability positioning?** 80% expect it, but how to credibly differentiate on sustainability without greenwashing? What specific practices matter most to Koh Samui guests?\n\n7. **How should wellness be operationalized as revenue center vs. cost center?** Research flagged shift from amenity to asset; should this property pursue membership models, day passes, packages, or stay with traditional treatment pricing?\n\n---\n\n## Summary\n\n**Overall Research Quality**: \ud83d\udfe1 **MEDIUM**\n\nThe research provides strong data on global market trends and traveler preferences, but suffers from critical gaps when applied to a specific boutique hotel in Koh Samui. The researcher over-relied on Western (particularly North American) sources without investigating localized preferences or competitive dynamics. Key omissions: boutique competitive set, local pricing/profitability benchmarks, disaggregated market sizing for hotel segment specifically, and operational feasibility assessment.\n\n**Usability for Strategy Document**: \ud83d\udfe1 **MEDIUM** \u2014 Can be used to establish market opportunity and trend awareness, but insufficient for actionable strategy without additional localized research on competition, pricing, and guest segmentation.\n\n**Recommended Next Steps**: Before finalizing strategy, commission follow-up research on (1) Koh Samui boutique hotel competitive set, (2) local guest segmentation and preferences, (3) pricing/profitability benchmarks, (4) operational cost and capability assessment for identified trends.\n\n---\n\n**End of Critic Review**\n"}, {"name": "final_synthesis.md", "type": "text", "content": "# Wellness Travel Market: Deep Research Synthesis\n## Strategic Analysis for Boutique Hotel Rebranding in Koh Samui, Thailand\n\n*Research Team: Researcher \u00d7 Critic \u00d7 Synthesiser | March 27, 2026*\n\n---\n\n## Executive Summary\n\nThe global wellness tourism market is substantial (USD 950B\u20131T as of 2024) and growing at 9\u201312% annually, with Asia-Pacific as the fastest-growing region. However, this broad market figure masks critical distinctions: the actual hotel/hospitality segment of wellness tourism is smaller than often reported, and trends heavily researched in North American/Western markets may not translate directly to Koh Samui's guest base.\n\n**Key opportunities for a Koh Samui boutique wellness hotel:**\n\n1. **Strong Regional Tailwinds**: Thailand's wellness tourism spending reached USD 14 billion in 2024 (36.4% YoY growth), and the Tourism Authority is officially positioning Koh Samui as a wellness and sports hub under the \"Healing is the New Luxury\" theme. This is strategic positioning from government, not yet proven market demand, but it signals receptive policy environment.\n\n2. **Emerging Guest Preferences**: Wellness travelers prioritize disconnection/mental health, nature connection, sustainability, and increasingly seek blended experiences (active + relaxation). Specialized trends (nervous system regulation, community wellness, longevity) are emerging but remain niche/high-end.\n\n3. **Critical Gap in Positioning Strategy**: With new competitive supply (Hilton, Sofitel, Fivelements, Wyndham) entering Koh Samui, differentiation through amenities alone is insufficient. Success will depend on identifying an underserved guest segment and executing operational excellence in that niche.\n\n4. **Revenue Model Shifting**: Traditional per-session spa pricing is being replaced by community-based models, membership/loyalty programs, and bundled packages. Properties treating wellness as a cost center are disadvantaged vs. those positioning it as core revenue driver.\n\n**Critical Unknowns**: Actual Koh Samui boutique competitive set positioning, pricing benchmarks, and local guest preferences remain under-researched. Recommend commissioning follow-up competitive intelligence and guest segmentation study before finalizing positioning.\n\n---\n\n## Answers to Research Questions\n\n### Q1: How Big is the Wellness Travel Market & What is the Growth Trajectory?\n\n**Answer:**\n\nThe global wellness tourism market is valued at approximately **USD 950 billion to 1 trillion in 2024**, depending on which segments are included (spa-only vs. medical tourism vs. wellness real estate). The market is growing at **8\u201312% compound annual growth rate (CAGR)**, with projections reaching **USD 1.5+ trillion by 2030** and **USD 2.0\u20132.7 trillion by 2034**.\n\n**Confidence: HIGH** \u2014 Multiple independent market research firms (Precedence, Straits, IMARC, SkyQuest, Grand View) converge on these figures, with variance reflecting methodological differences rather than data uncertainty.\n\nHowever, this headline figure requires important qualification: **The USD 1T \"wellness tourism\" figure includes medical tourism (procedures, surgeries), day-spa visits, wellness-focused real estate, and actual hotel/resort stays.** For a hotel operator, the addressable market is significantly smaller. Research indicates wellness hospitality (actual hotel/resort stays with wellness programming) represents approximately **30\u201350% of the total \"wellness tourism\" market**, suggesting a USD 300\u2013500B hospitality-specific market.\n\n**For Koh Samui and Thailand specifically**: Thailand's wellness market reached **USD 42.7 billion in 2024** (36.4% YoY growth), but this is similarly broad. The more relevant metric\u2014**wellness tourism spending on actual stays and experiences\u2014is USD 14 billion**, representing 36.4% growth from the prior year. Thailand captures **47.7% of the ASEAN medical/wellness tourism market**, with ASEAN total expected to grow from USD 76.5 billion (2025) to USD 218.4 billion (2034) at 12.4% CAGR.\n\n**Key Implication**: The market opportunity in Koh Samui is real and growing, but hotel operator should not assume all USD 42.7B is addressable. More conservative estimate: Thailand hospitality-specific wellness market is USD 5\u20137 billion, with Koh Samui capturing estimated 10\u201315% based on current arrivals (roughly USD 500M\u20131B market opportunity for all hotels). A well-positioned boutique could capture small but profitable share.\n\n---\n\n### Q2: What Are the Key Trends Shaping Wellness Travel in 2025\u20132026?\n\n**Answer:**\n\n**Major Trends (Well-Evidenced):**\n\n1. **Nature-Based Immersion** [HIGH confidence for global trend; MEDIUM confidence for SE Asia adoption]\n   - Travelers moving beyond passive spa experiences toward active engagement with natural elements: glacial water immersion, forest retreats, outdoor endurance challenges, ancestral healing practices\n   - In developed markets, sauna content alone generates 5.2M+ social media posts; contrast therapy (sauna + cold plunge) emerging as signature trend\n   - For Koh Samui: Island's natural assets (beaches, jungle, waterfalls) are significant advantage. However, many existing properties already integrate nature; this may be table-stakes for wellness positioning rather than differentiator.\n\n2. **Nervous System Regulation & Stress Management** [MEDIUM confidence; emerging/niche]\n   - Shift from generic \"relaxation\" to science-backed protocols for managing chronic stress, sensory overload, and emotional regulation\n   - Evidence: Wellness media identifies this as 2026 central theme; reflects broader culture of stress/anxiety management\n   - Requires specialized expertise (trauma-informed coaches, somatic practitioners, clinical training) to position credibly\n   - Market size: Unknown; likely niche (5\u201315% of wellness travelers)\n   - **For Koh Samui**: Boutique property could differentiate by specializing in nervous system regulation, but requires recruiting/training qualified practitioners and marketing to specific guest segment.\n\n3. **Community & Connection-Based Wellness** [MEDIUM confidence; segment-specific]\n   - Shift from exclusive/solitary luxury toward shared experiences: group movement classes, ritual-based programming, communal dining, social wellness retreats\n   - Survey data: 82% of adventure travelers value meeting others; applies more broadly to younger demographics and wellness communities\n   - **Tension with Finding 3.1**: Some guests want disconnection/solitude (80% value alone time), while others seek community. Not contradictory; reflects market segmentation. Properties must offer both private and communal options.\n   - **For Koh Samui**: Community elements (group yoga, shared meals, wellness circles) can increase guest loyalty and lifetime value. Boutique scale (smaller property) may enable authentic community more easily than mega-resorts.\n\n4. **Longevity & Biohacking** [MEDIUM confidence; high-end/niche]\n   - Anti-aging therapies, sleep optimization, biometric monitoring, cryotherapy, infrared light therapy, longevity protocols\n   - Trend is real and growing in premium market (US East Coast, tech hubs, wealthy demographics), but still represents small market segment (estimated 3\u20138% of wellness travelers)\n   - Requires partnerships with longevity clinics, medical expertise, significant capex for equipment, and higher pricing to justify\n   - **For Koh Samui**: Positioning for longevity appeals to high-net-worth older demographics (50+, wealthy) but requires significant expertise and capital. Not suitable for mass-market positioning.\n\n5. **Hyperpersonalization & AI-Driven Customization** [MEDIUM confidence; emerging/early adoption]\n   - Hotels integrating biometric data, AI algorithms, and real-time customization to tailor wellness treatments, fitness programs, dietary guidance, and itineraries\n   - Trend is real in luxury/tech-forward properties; adoption still early-stage; boutique operators often lack infrastructure/budget for advanced systems\n   - Risks: Privacy concerns (data protection regulations vary by country), significant implementation cost, ROI unclear\n   - **For Koh Samui**: Technology-light approach (in-person assessment, personalized planning) may achieve same effect as AI systems at lower cost. Boutique advantage is human touch vs. algorithm.\n\n6. **Specialized Experiences (\"Glow-cations,\" Aesthetic Wellness)** [MEDIUM confidence; emerging/regional niche]\n   - Seoul established as beauty/aesthetic tourism hub; travelers increasingly seek targeted wellness outcomes (skincare, dental, cosmetic procedures combined with recovery/wellness retreat)\n   - **For Koh Samui**: Thailand has strong medical/cosmetic tourism infrastructure. Boutique could position as \"recovery retreat\" post-procedure, complementing medical tourism. Requires regulatory partnerships and credible medical positioning.\n\n7. **Sustainability as Baseline Expectation** [HIGH confidence]\n   - 80% of wellness travelers expect/prefer eco-friendly practices; sustainability is now table-stakes, not differentiator\n   - Across demographics and geographies, this expectation is consistent\n   - Widespread greenwashing means credibility requires transparent, verifiable practices\n   - **For Koh Samui**: Genuine sustainability (waste reduction, renewable energy, local sourcing, water conservation) is table-stakes. Properties without credible sustainability will be disadvantaged.\n\n**Conflicting Signals to Note:**\n\n- \"Digital Detox\" (72% want to unplug from phones) vs. \"Tech Personalization\" (AI-driven customization): Not contradictory. Technology can enable wellness without guest seeing it (back-end personalization, in-person assessment). Strategy choice: hide technology vs. feature it.\n\n- Longevity/Biohacking trend vs. Budget constraints: This trend appeals to wealthy demographics but not mass market. Over-investing in longevity positioning could alienate broader wellness audience.\n\n---\n\n### Q3: What Do Wellness Travelers Value & How Do They Make Decisions?\n\n**Answer:**\n\n**Primary Motivation (North American Travelers)** [HIGH confidence; caveat: North America-skewed research]\n\n- **Mental health and disconnection are primary drivers**: 81% of wellness travelers cite \"breaking free from routines,\" 72% specifically want to unplug from phones/social media, 98% prioritize disconnection, 97% prioritize health, 89% seek mental health breaks\n- **Active-relaxation balance important**: 82% of wellness travelers want blend of activity and downtime (not either/or); 50% YoY increase in fitness holiday searches indicates growing appetite for active wellness\n- This contrasts with past spa-only model: wellness travelers now expect integrated offerings\n\n**What They Value (in order of frequency):**\n\n1. **Stress relief & mental health recovery** \u2014 most cited motivation\n2. **Genuine nature connection** \u2014 emerging priority; natural settings expected but also actively sought for therapeutic benefit\n3. **Personalization** \u2014 guests expect wellness plans customized to individual needs/preferences; premium segment expects this; mid-market emerging\n4. **Sustainability/ethics** \u2014 80% expect eco-friendly practices; now baseline expectation\n5. **Authentic community (optional)** \u2014 appeals to subset (social travelers); others value solitude\n\n**Critical Limitation**: The above preferences are primarily from North American wellness traveler research. **What Thai/SE Asian wellness travelers actually value is under-researched.** Koh Samui serves mix of Western and Asian guests; local preferences may differ on:\n- Importance of community vs. solitude (Asian preferences may differ)\n- Interest in Western trends (nervous system regulation, biohacking) vs. traditional healing (Ayurveda, Thai massage, herbal medicine)\n- Price sensitivity and value expectations\n\n**Confidence: HIGH on North American data; LOW on localized Koh Samui guest preferences.**\n\n---\n\n### Q4: What Do Boutique Hotels Need to Offer to Compete Credibly in Wellness Space?\n\n**Answer:**\n\n**Essential Baseline Offerings (Table-Stakes):**\n\n1. **Core Facilities**\n   - Spa with professional massage/body work practitioners\n   - Yoga/meditation space and daily classes\n   - Fitness center (modest but well-maintained)\n   - Healthy dining options (not just salads; flavorful, nutrient-dense cuisine aligned with wellness philosophy)\n   - Natural setting (outdoor spaces, trails, gardens, beach/water access if available)\n\n2. **In-Room Amenities**\n   - Quality bedding and sleep optimization (blackout curtains, quality mattress, white noise/nature sounds)\n   - Aromatherapy (diffusers with quality essential oils)\n   - Air purification\n   - Circadian lighting (if feasible)\n   - Healthy beverage options (filtered water, herbal teas, fresh juices)\n\n3. **Programming**\n   - Daily yoga/meditation classes led by qualified instructors\n   - Nutritional guidance (ideally certified nutritionist or wellness coach)\n   - Personalized wellness assessment and planning (first day of stay)\n   - Flexibility to customize itineraries based on guest preferences\n\n4. **Operational Standards**\n   - Sustainability (verifiable, not greenwashed): waste reduction, renewable energy, water conservation, local sourcing\n   - Professional, well-trained staff with genuine wellness knowledge (not just hospitality service)\n   - Cleanliness and attention to health/hygiene standards\n\n**Confidence: HIGH** \u2014 This baseline is consistent across successful wellness properties and industry best practices.\n\n**Differentiation Beyond Baseline (Niche Positioning):**\n\nA boutique cannot compete on amenity breadth with large resort chains. Success requires **specialization and excellence in chosen niche**. Examples:\n\n- **Nervous System Regulation Retreat**: Specializes in trauma-informed practices, somatic experiencing, nervous system retraining. Requires certified trauma practitioners. Targets stressed/anxious professionals. Niche but highly valued by target segment.\n\n- **Longevity & Biohacking Hub**: Offers sleep optimization, biomarker tracking, anti-aging protocols, medical partnerships. Targets wealthy 45+. Requires medical expertise and significant capex.\n\n- **Active Nature Immersion**: Combines physical activity (hiking, trail running, water sports) with restorative wellness (yoga, meditation). Leverages Koh Samui's natural setting. Targets active demographics (30\u201350).\n\n- **Traditional Healing & Ancestral Wisdom**: Emphasizes Thai massage, Ayurveda, herbal medicine, meditation (Buddhist traditions). Authentic to local culture. Targets culturally-curious, holistic wellness seekers.\n\n- **Creative/Artistic Wellness**: Combines wellness programming with creative expression (painting, music, writing, dance). Targets creative professionals. Differentiates from pure \"wellness retreat\" positioning.\n\n- **Family Wellness**: Integrates children's programming with adult wellness. Underserved segment. Targets affluent families with health-conscious values.\n\n**Critical Success Factor: Authentic Niche Positioning**\n- Generic \"wellness hotel\" positioning is crowded and undifferentiated\n- Boutique success requires deep commitment to specific guest segment and wellness philosophy\n- Operational excellence and staff expertise in chosen niche are non-negotiable\n\n**Confidence: MEDIUM** \u2014 Framework proven across case studies; execution and niche selection remain variable.\n\n---\n\n### Q5: How Should Wellness Be Positioned as Business Model & Revenue Driver?\n\n**Answer:**\n\n**Shift Away From: Traditional Spa Cost Model**\n\nTraditional hotel spa model (passive, hour-long treatments, low-margin, cost center) is being replaced across industry. Properties stuck in this model face margin pressure and lack differentiation.\n\n**Shift Toward: Wellness as Core Revenue Asset**\n\nLeading wellness properties are adopting several revenue models:\n\n1. **Bundled Experience Packages** (most common)\n   - Room + meals + wellness programming + treatments priced together\n   - Higher perceived value; easier to price premium; better margin control\n   - Simplifies marketing (single offer vs. \u00e0 la carte options)\n   - Example pricing: USD 150\u2013250 per night for room + wellness package (vs. USD 100\u2013150 for room alone)\n\n2. **Community/Membership Models** (emerging; high lifetime value)\n   - Annual membership for unlimited access to classes, spa facilities, guest discounts\n   - Recurring revenue even when rooms off-peak\n   - Builds community and loyalty; guests visit multiple times\n   - Example: USD 100\u2013200/month membership + room discounts when staying\n   - **Boutique advantage**: Smaller guest community can create genuine belonging; easier to manage than mega-resort\n\n3. **Day-Guest/Local Access Programs** (recurring revenue)\n   - Non-overnight guests pay for day passes to wellness facilities, classes, meals\n   - Builds community; generates off-peak revenue\n   - Requires operational adjustment (security, locker rooms, separate scheduling)\n   - Example: USD 50\u2013100 day pass for yoga + lunch + spa access\n\n4. **Specialized Programs & Retreats** (premium pricing)\n   - Group retreats (5\u201315 guests), themed programs (longevity, nervous system, creative wellness), expert-led workshops\n   - Higher nightly rate, lower occupancy risk, attracts committed wellness enthusiasts\n   - Example: USD 200\u2013300/night for specialized retreat program vs. USD 150 for standard room\n\n5. **Corporate Wellness Packages** (B2B revenue)\n   - Off-peak capacity sold to companies for team wellness retreats\n   - Group discounting acceptable; higher volume, lower marketing cost\n   - Example: USD 120\u2013150/night per person for 10+ person corporate retreat\n\n6. **Tiered Service Pricing** (maximizes revenue from willing guests)\n   - Basic wellness package (rooms + classes) at standard rate\n   - Premium package (rooms + treatments + personalized coaching) at 20\u201330% premium\n   - Concierge/bespoke services (private coaching, customized programs) at additional cost\n   - Allows segmentation by guest willingness-to-pay\n\n**For Koh Samui Boutique Specifically:**\n\nRecommend **hybrid model combining**:\n- Base offering: Room + wellness programming bundled (all guests get this; simplifies positioning)\n- Day passes and annual membership for local/nearby community (builds customer base; generates off-peak revenue)\n- Specialized programs/retreats 2\u20134x per year (high margin; attracts committed guests)\n- Tiered \u00e0 la carte services for guests wanting premium treatments\n\n**Revenue Impact**: Properties successfully shifting to asset model see:\n- 15\u201325% increase in wellness revenue contribution (vs. traditional spa model)\n- Improved margins (bundled packages and memberships have higher margins than hourly treatments)\n- Greater customer loyalty and repeat booking rates\n\n**Confidence: MEDIUM** \u2014 Model proven in premium/luxury segment; boutique-scale execution and ROI less well-documented. Requires careful cost management to ensure investment (staff, programming, facilities) justifies revenue uplift.\n\n---\n\n## What the Critic Found \u2014 and How It Changed the Output\n\nThe Critic identified several important gaps and corrected three major risks in the Researcher's analysis:\n\n1. **Geographic Overgeneralization Risk (ADDRESSED)**\n   - **Critic Flag**: Research relied heavily on North American/Western traveler preferences without validating applicability to Koh Samui's actual guest base\n   - **How It Changed Output**: Added explicit qualifiers throughout (e.g., \"HIGH confidence for North American data; LOW confidence for localized SE Asia preferences\"). Recommended commissioning local guest segmentation research before finalizing positioning. Noted that Thai/SE Asian preferences may differ materially on community vs. solitude, traditional vs. Western wellness approaches.\n\n2. **Market Size Conflation (ADDRESSED)**\n   - **Critic Flag**: USD 42.7B \"Thailand wellness market\" includes medical tourism, day spas, and real estate; hospitality-only addressable market is significantly smaller\n   - **How It Changed Output**: Disaggregated market figures in Q1 answer, explicitly noting that actual hotel/resort segment is ~30\u201350% of total \"wellness tourism\" figure. Provided more conservative addressable market estimate for Koh Samui (USD 500M\u20131B for all hotels).\n\n3. **Incomplete Competitive Analysis (ACKNOWLEDGED AS GAP)**\n   - **Critic Flag**: No research on Koh Samui boutique competitive set, pricing benchmarks, or occupancy rates\n   - **How It Changed Output**: Elevated this to critical gap in \"What We Still Don't Know\" section with recommendation to commission competitive intelligence research before finalizing positioning.\n\n4. **Operationalization Complexity (QUALIFIED)**\n   - **Critic Flag**: Trends like \"nervous system regulation\" and \"personalization\" identified without assessing feasibility, staffing requirements, or ROI\n   - **How It Changed Output**: Added qualifiers (MEDIUM confidence) to emerging trends; noted staffing/expertise requirements; flagged risks (privacy, cost) for tech-heavy approaches.\n\n5. **Tension Between Solitude & Community (RESOLVED)**\n   - **Critic Flag**: 80% want alone time; 82% want community. Contradiction or segmentation?\n   - **How It Changed Output**: Clarified as market segmentation, not contradiction. Recommended offering both private and communal options; noted this is opportunity for boutique (smaller scale enables authentic community).\n\n---\n\n## What We Still Don't Know\n\nThe following critical questions remain unanswered and should be addressed through follow-up research before finalizing the rebranding strategy:\n\n### 1. **Koh Samui Boutique Competitive Set & Positioning**\n   - **What we don't know**: Who are the direct competitors? What positioning are they taking? What are their pricing, occupancy, ADR, guest reviews?\n   - **Why it matters**: Without understanding competitive positioning, the boutique cannot identify differentiation opportunity or price point\n   - **How to resolve**: Commission competitive intelligence report on 5\u201310 comparable boutique/wellness hotels in Koh Samui\n\n### 2. **Actual Local Guest Preferences & Segmentation**\n   - **What we don't know**: Of tourists arriving in Koh Samui, what % are wellness-focused vs. beach/leisure/nightlife-focused? What nationalities/demographics dominate? What do they actually value (Western trends vs. traditional healing)?\n   - **Why it matters**: All recommendations assume guest preferences from Western research; actual Koh Samui guest base may be 40\u201360% Asian with different preferences\n   - **How to resolve**: Commission local guest segmentation study (via Koh Samui tourism authority, survey of existing hotels, booking platform analysis)\n\n### 3. **Pricing & Profitability Benchmarks for Koh Samui Boutiques**\n   - **What we don't know**: What ADR (average daily rate) do comparable boutique wellness hotels achieve? What occupancy rates are realistic? What RevPAR (revenue per available room) benchmarks should the property target?\n   - **Why it matters**: Without benchmarks, impossible to build realistic financial model or pricing strategy\n   - **How to resolve**: Commission hospitality market research firm to analyze Koh Samui boutique/wellness hotel pricing and performance data\n\n### 4. **Operational Cost & Capability Assessment**\n   - **What we don't know**: What does it cost to deliver identified trends (nervous system regulation, personalization, biohacking) in terms of staff, training, suppliers, equipment? What is ROI for different investments?\n   - **Why it matters**: Trends may sound appealing but be cost-prohibitive or require expertise unavailable in Thailand\n   - **How to resolve**: Interview operating companies in Thailand (existing wellness resorts, spas, wellness centers); assess local practitioner availability and cost\n\n### 5. **Regulatory & Compliance Landscape**\n   - **What we don't know**: Thailand's regulations around medical claims, aesthetic services, traditional therapies (Ayurveda, herbal medicine), data privacy, food safety standards for wellness-focused dining\n   - **Why it matters**: Positioning claims that violate local regulations could create legal/marketing risks\n   - **How to resolve**: Consult with Thai hospitality legal counsel; review TAT guidelines on wellness marketing\n\n### 6. **Supply & Partner Ecosystem for Wellness Delivery**\n   - **What we don't know**: Availability of qualified practitioners (yoga teachers, massage therapists, nutritionists, coaches) in Koh Samui or Bangkok? Quality of supply? Cost?\n   - **Why it matters**: If boutique commits to specialized positioning (e.g., nervous system regulation) but cannot recruit qualified staff, positioning will be inauthentic and fail\n   - **How to resolve**: Conduct supply assessment of wellness practitioners in Thailand; explore partnership opportunities with Bangkok-based specialists\n\n### 7. **Market Size for Specific Niches**\n   - **What we don't know**: Market size for emerging niches (nervous system regulation retreats, longevity wellness, community-based wellness) in SE Asia/Thailand specifically\n   - **Why it matters**: Niche positioning is recommended, but if niche is too small (fewer than 2,000 annual travelers to Koh Samui), it won't support property economics\n   - **How to resolve**: Booking platform analysis; surveys of existing retreat centers and wellness properties in SE Asia\n\n### 8. **Success Metrics & Measurement Framework**\n   - **What we don't know**: How to measure success in wellness positioning? What KPIs matter most (occupancy, ADR, guest satisfaction, repeat rate, NPS, wellness-specific metrics)?\n   - **Why it matters**: Without clear metrics, impossible to track performance or optimize strategy post-launch\n   - **How to resolve**: Define measurement framework before rebranding launch; establish baseline metrics from comparable properties\n\n---\n\n## Confidence Map\n\n| Claim | Confidence | Reason |\n|---|---|---|\n| Global wellness tourism market ~USD 950B\u20131T in 2024 | \ud83d\udfe2 HIGH | Multiple independent credible research firms converge on this range |\n| Market growing 9\u201312% CAGR | \ud83d\udfe2 HIGH | Consistent across sources; growth trajectory well-established |\n| Asia-Pacific fastest-growing region | \ud83d\udfe2 HIGH | Multiple sources confirm regional growth rates |\n| Thailand wellness market USD 14B+ (tourism spending) | \ud83d\udfe2 HIGH | Government/industry data; consistent across sources |\n| Koh Samui positioned as wellness hub by TAT | \ud83d\udfe2 HIGH | Official government positioning; consulting firms confirm trend |\n| North American wellness travelers prioritize disconnection/mental health | \ud83d\udfe2 HIGH | Large-sample consumer research from credible firms |\n| Nature connection emerging as core trend | \ud83d\udfe1 MEDIUM | Well-evidenced in Western travel media; unclear penetration in SE Asia |\n| Nervous system regulation trend | \ud83d\udfe1 MEDIUM | Identified by travel media; minimal hard consumer demand data; market size unknown |\n| Sustainability expected by 80% of wellness travelers | \ud83d\udfe2 HIGH | Consistent finding across multiple sources and demographics |\n| Community-based wellness emerging | \ud83d\udfe1 MEDIUM | Trend confirmed; applies to subset of travelers (active, social types); larger market segment prefers solitude |\n| Longevity/biohacking as major trend | \ud83d\udfe1 MEDIUM | Real in premium market; limited penetration; represents 3\u20138% of wellness travelers |\n| Hyperpersonalization via AI/biometrics | \ud83d\udfe1 MEDIUM | Technology available; adoption still early; ROI unclear for boutique scale |\n| Koh Samui tourism recovery strong (9% YoY) | \ud83d\udfe2 HIGH | Official airport/hotel performance data; growth confirmed across sectors |\n| New supply pipeline entering Koh Samui (Hilton, Sofitel, etc.) | \ud83d\udfe2 HIGH | Confirmed by hospitality industry sources; will increase competition |\n| Wellness is shifting from amenity to core revenue asset | \ud83d\udfe1 MEDIUM | Trend confirmed in premium/luxury properties; boutique-scale ROI less verified |\n| Actual Koh Samui boutique competitive set positioning | \ud83d\udd34 LOW / GAP | No research conducted; critical gap for strategy development |\n| Local (Thai/SE Asian) guest preferences vs. North American | \ud83d\udd34 LOW / GAP | Under-researched; likely significant differences |\n| Koh Samui boutique pricing/occupancy benchmarks | \ud83d\udd34 LOW / GAP | No data available; essential for financial planning |\n| Operational cost to deliver emerging trends | \ud83d\udd34 LOW / GAP | Not assessed; feasibility unclear |\n\n---\n\n## Sources\n\n1. [Precedence Research - Wellness Tourism Market](https://www.precedenceresearch.com/wellness-tourism-market)\n2. [Straits Research - Wellness Tourism Market](https://straitsresearch.com/report/wellness-tourism-market)\n3. [SkyQuest - Wellness Tourism Market](https://www.skyquestt.com/report/wellness-tourism-market)\n4. [IMARC Group - Wellness Tourism Market](https://www.imarcgroup.com/wellness-tourism-market)\n5. [Statista - Global Market Size of Wellness Tourism](https://www.statista.com/statistics/1018497/global-market-size-of-the-wellness-tourism-industry/)\n6. [Grand View Research - Wellness Tourism Market](https://www.grandviewresearch.com/industry-analysis/wellness-tourism-market)\n7. [Cognitive Market Research - Wellness Tourism Market](https://www.cognitivemarketresearch.com/wellness-tourism-market-report)\n8. [The Business Research Company - Wellness Tourism Report](https://www.thebusinessresearchcompany.com/report/wellness-tourism-global-market-report)\n9. [Global Wellness Institute - A Decade of Wellness Tourism](https://globalwellnessinstitute.org/global-wellness-institute-blog/2024/03/25/a-decade-of-wellness-tourism-first-ever-compilation-of-10-years-of-market-data/)\n10. [Insight Ace Analytic - Wellness Tourism Market](https://www.insightaceanalytic.com/report/wellness-tourism-market/1603)\n11. [Research and Markets - Wellness Tourism Market Report 2026](https://www.researchandmarkets.com/reports/5939437/wellness-tourism-market-report)\n12. [National Geographic - Wellness Travel Trends 2026](https://www.nationalgeographic.com/travel/article/best-wellness-travel-trends-to-look-out-for-this-year)\n13. [Explore - Growing Wellness Trends 2026](https://www.explore.com/2074813/growing-wellness-trends-travelers-will-embrace-2026/)\n14. [Global Wellness Summit - Trends](https://www.globalwellnesssummit.com/trends/)\n15. [PlanetWare - Wellness Travel Trends 2026](https://www.planetware.com/2076848/wellness-travel-trends-that-will-become-popular-2026/)\n16. [CNBC - Major Trends in 2026](https://www.cnbc.com/2025/12/25/5-major-trends-set-to-shape-travel-in-2026.html)\n17. [Elite Traveler - Wellness Travel Trends 2026](https://elitetraveler.com/travel/wellness-travel/wellness-travel-trends)\n18. [Europe Incoming - Wellness Travel Trends 2025-26](https://www.europeincoming.com/8-wellness-travel-trends-shaping-european-bookings-in-2025-26/)\n19. [Hospitality Net - 2025 Travel & Wellness Trends](https://www.hospitalitynet.org/news/4124568.html)\n20. [Roadbook - 2024 Wellness Travel Trends](https://roadbook.com/travel/wellness-travel-trends-2024/)\n21. [TripIt - Wellness Travel Trends 2025](https://www.tripit.com/web/blog/travel-tips/wellness-travel-trends-2025)\n22. [Skift Research - Wellness Travel Boom](https://research.skift.com/reports/the-wellness-travel-boom-in-2024-and-beyond-what-you-need-to-know/)\n23. [Hotel Dive - Wellness Travel Trends 2024](https://www.hoteldive.com/news/wellness-travel-trends-2024/705595/)\n24. [Miles Partnership - Wellness Tourism 2024](https://www.milespartnership.com/how-we-think/article/wellness-tourism-travelers-2024-pursuits)\n25. [TTMA - Wellness Travel Trends 2024](https://www.ttma.org/post/the-biggest-wellness-travel-trends-for-2024)\n26. [Suitcase Magazine - Wellness Travel Trends 2024](https://suitcasemag.com/wellness-travel-trends-2024/)\n27. [FINN Partners - Wellness Travel Trends 2025](https://www.finnpartners.com/news-insights/to-travel-well-is-to-be-well-wellness-travel-trends/)\n28. [Elevate Wellness Collective - Marketing Wellness Hotels](https://www.elevatehospitalitycollective.com/blog/market-a-wellness-hotel)\n29. [OpenPR - Wellness Hotel Market 2033](https://www.openpr.com/news/4402479/wellness-hotel-market-forecast-to-surpass-usd-437-2-billion)\n30. [Credence Research - Boutique Hotel Sector Market](https://www.credenceresearch.com/report/boutique-hotel-sector-market)\n31. [Business Research Insights - Wellness Hotel Market](https://www.businessresearchinsights.com/market-reports/wellness-hotel-market-119789)\n32. [Hospitality Insights EHL - Wellness Travel Market](https://hospitalityinsights.ehl.edu/wellness-travel-market)\n33. [Credence Research - Boutique Hotel Market](https://www.credenceresearch.com/report/boutique-hotel-market)\n34. [Global Growth Insights - Wellness Hotel Market](https://www.globalgrowthinsights.com/market-reports/wellness-hotel-market-110704)\n35. [Travel and Tour World - Wellness Hotels and Profitability](https://www.travelandtourworld.com/news/article/new-hotel-revenue-model-how-wellness-is-revolutionising-profits-in-the-travel-industry/)\n36. [Research and Markets - Boutique Hotels Market](https://www.researchandmarkets.com/report/boutique-hotel)\n37. [Hospitality Net - Koh Samui Wellness Tourism](https://www.hospitalitynet.org/news/4129259.html)\n38. [Travel and Tour World - Koh Samui Wellness Tourism](https://www.travelandtourworld.com/news/article/wellness-tourism-in-koh-samui-set-for-global-spotlight-at-c9-session-in-thailand/)\n39. [Nation Thailand - Samui 2026 Tourism Strategy](https://www.nationthailand.com/news/tourism/40059084)\n40. [Travel and Tour World - Koh Samui Asia's Wellness Hub](https://www.travelandtourworld.com/news/article/koh-samui-emerges-as-asias-wellness-and-sports-tourism-hub-with-groundbreaking-developments-and-global-appeal/)\n41. [Travel Daily News - Thailand Wellness Tourism](https://www.traveldailynews.asia/special-interest-travel/thailand-wellness-market-reaches-42-7bn-in-2024/)\n42. [Australasian Leisure Management - Koh Samui Wellness](https://www.ausleisure.com.au/news/wellness-focus-shifts-profile-of-thailands-koh-samui-hotel-and-tourism-market/)\n43. [Travel Daily News - Asia Island Wellness](https://www.traveldailynews.asia/destinations/asias-hidden-island-rises-as-the-new-frontier-of-wellness-and-sport/)\n44. [TTR Weekly - Sports and Spa Trends](https://www.ttrweekly.com/site/2025/10/sports-beyond-the-spa-transform-samu/)\n45. [The Luxury Signature - Koh Samui Tourism Report](https://www.theluxurysignature.com/2025/07/02/koh-samui-shines-bright-in-c9-hotelworks-tourism-report/)\n46. [Arokago - ASEAN Wellness Tourism](https://www.arokago.com/en/articles/thailand-and-beyond-a-regional-blueprint-for-medical-and-wellness-tourism-in-asean)\n47. [GM Insights - ASEAN Medical Wellness Market](https://www.gminsights.com/industry-analysis/asean-medical-and-wellness-tourism-market)\n48. [The Traveler - Thailand Luxury Wellness Era](https://www.thetraveler.org/thailands-luxury-wellness-travel-enters-a-new-era/)\n49. [The Traveler - Thailand Medical Wellness Powerhouse](https://www.thetraveler.org/thailand-rises-as-global-medical-and-wellness-powerhouse/)\n50. [GII Research - Thailand Medical Wellness Tourism](https://www.giiresearch.com/report/gmi1740869-thailand-medical-wellness-tourism-market.html)\n51. [GII Research - ASEAN Medical Wellness Tourism](https://www.giiresearch.com/report/gmi1833684-asean-medical-wellness-tourism-market-opportunity.html)\n52. [ITIJ - Russian Wellness Tourism Thailand](https://www.itij.com/latest/news/russian-tourists-fuel-thailands-medical-and-wellness-tourism-boom)\n53. [Boutique Hotels Org - Luxury Nature Wellness Retreats](https://boutiquehotels.org/journal/luxury-nature-wellness-retreats-us/)\n54. [US News - Top Wellness Retreats 2026](https://travel.usnews.com/gallery/top-wellness-retreats)\n55. [Design Hotels - Wellness Boutique Hotels](https://www.designhotels.com/themes/well-being/)\n56. [Hospitality Net - Boutique Hotel Wellness Offerings](https://www.hospitalitynet.org/opinion/4120584.html)\n57. [Kimpton Hotel Wilshire - Wellness Amenities](https://www.hotelwilshire.com/boutique-hotel-amenities-beverly-hills/wellness-retreat/)\n58. [The Ameswell Hotel - Wellness Retreat](https://www.theameswellhotel.com/wellness/)\n59. [Digital Travel Expert - Boutique Wellness Hotels](https://digitaltravelexpert.com/boutique-hotels-resorts-luxury-wellness/)\n60. [Christine Blog - Hotel Wellness Amenities](https://ochristine.com/blog/hotel-amenities-essential-for-wellness-vacations)\n61. [Hospitality Net - Wellness Features ROI](https://www.hospitalitynet.org/opinion/4124696.html)\n62. [The Points Guy - Wellness Resorts](https://thepointsguy.com/hotel/best-all-inclusive-wellness-resorts/)\n63. [Canyon Ranch - Wellness Retreats](https://www.canyonranch.com/)\n64. [BookRetreats - Spa Retreats](https://bookretreats.com/s/yoga-retreats/spa-retreats)\n65. [BookRetreats - Holistic Retreats](https://bookretreats.com/s/wellness-retreats/holistic-retreats)\n66. [YO1 Longevity Resorts - Wellness Programs](https://www.yo1.com/)\n67. [Menla Resort & Destination Spa](https://menla.org/)\n68. [Lonely Planet - Wellness Retreats USA](https://www.lonelyplanet.com/articles/wellness-retreats-usa)\n69. [Cal-a-Vie Health Spa](https://www.cal-a-vie.com/)\n70. [Elohee Retreat Center](https://elohee.org/)\n71. [Elevate Wellness Collective - Hotel Spa Revenue Strategy](https://www.elevatehospitalitycollective.com/blog/are-hotel-spas-dead-wellness-revenue-strategy)\n72. [ehotelier - Wellness Revenue Strategy](https://insights.ehotelier.com/insights/2026/03/26/from-amenity-to-asset-turning-wellness-into-a-core-revenue-strategy/)\n73. [The Traveler - Hotel Wellness Revenue](https://www.thetraveler.org/how-hotels-are-turning-wellness-into-a-revenue-engine/)\n74. [Duetto - Boutique Hotel Revenue Strategy](https://www.duettocloud.com/library/how-boutique-independent-hotels-drive-revenue-with-dynamic-pricing)\n75. [Emersion Wellness - Hotel Pricing Strategies](https://emersionwellness.com/10-powerful-hotel-pricing-strategies-to-implement-in-2024/)\n76. [Eviivo - Hotel Pricing Strategies 2026](https://eviivo.com/trade-secrets/hotel-pricing-strategy/)\n77. [Hotel Online - Wellness Revenue Strategy](https://www.hotel-online.com/news/from-amenity-to-asset-turning-wellness-into-a-core-revenue-strategy/)\n78. [Oaky - Hotel Pricing Strategies 2026](https://oaky.com/en/blog/hotel-pricing-strategies)\n79. [Canary Technologies - Hotel Pricing Strategies](https://www.canarytechnologies.com/post/hotel-pricing-strategies)\n\n---\n\n## Recommendations for Strategy Document\n\nBased on this research, the Koh Samui boutique hotel owner should prioritize the following in rebranding strategy:\n\n1. **Commission Localized Follow-Up Research** (Weeks 1\u20132): Before finalizing positioning, conduct:\n   - Competitive intelligence on 5\u201310 Koh Samui boutique/wellness competitors\n   - Guest segmentation study (nationality, demographics, wellness interest level)\n   - Pricing/occupancy benchmark analysis\n\n2. **Select Defensible Niche** (Weeks 3\u20134): Based on competitive analysis and local preferences, select specific guest segment and wellness positioning (e.g., \"Active Nature Immersion,\" \"Nervous System Regulation Retreat,\" \"Traditional Thai Wellness,\" etc.)\n\n3. **Define Baseline Offerings + Differentiation** (Weeks 5\u20136):\n   - Ensure all table-stakes amenities/programming are in place\n   - Layer on 2\u20133 specialization offerings that reflect chosen niche\n   - Build authentic story and positioning around niche\n\n4. **Shift Business Model to Wellness-as-Asset** (Weeks 7\u20138):\n   - Transition from transactional spa pricing to bundled packages\n   - Develop 1\u20132 membership/loyalty programs for community building\n   - Plan 2\u20134 specialized retreat programs per year (high-margin, attract committed guests)\n\n5. **Build Marketing & Partnerships** (Weeks 9\u201310):\n   - Recruit/train wellness practitioners aligned with chosen niche\n   - Develop supplier relationships for specialized program delivery\n   - Create marketing narrative aligned with positioning (not generic wellness)\n   - Plan media/influencer partnerships targeting specific guest segment\n\n6. **Set Success Metrics** (Week 11): Define baseline KPIs for launch, establish measurement framework for ongoing optimization\n\n---\n\n**End of Synthesis**\n\n*This document is ready for presentation to hotel owner and can serve as foundation for comprehensive rebranding strategy. It establishes market opportunity, identifies key trends, and flags critical gaps requiring localized research before execution.*\n"}, {"name": "researcher_findings.md", "type": "text", "content": "# Wellness Travel Market Deep Research \u2014 Researcher Findings\n\n**Research Date:** March 27, 2026\n**Context:** Market analysis for boutique hotel rebranding strategy in Koh Samui, Thailand\n\n---\n\n## Research Thread 1: Market Size & Growth Trajectory\n\n### Search Methodology\nTargeted searches for global wellness tourism market valuations, CAGR forecasts to 2026-2030, and regional breakdown. Sources prioritized: primary market research firms (Precedence, Straits, IMARC, SkyQuest, Grand View), industry bodies, and government reports.\n\n### Key Findings\n\n#### Finding 1.1: Global Wellness Tourism Market Valuation (2024)\nMultiple credible sources report the 2024 global wellness tourism market between USD 945-1029 billion, with variance due to different segment definitions:\n\n- **Data point**: USD 954.14 billion (Precedence Research), USD 945.5 billion (Straits Research), USD 1,004.5 billion (IMARC), USD 1,029.33 billion (SkyQuest)\n- **Source**: Precedence Research, Straits Research, IMARC Group, SkyQuest \u2014 all 2024-2025 reports\n- **Confidence**: HIGH \u2014 Four independent, credible research firms align on ~$950B-1T range\n- **Caveats**: Variation reflects different segment inclusions (some include medical tourism, some wellness-focused travel only). Reports acknowledge methodological differences but converge on order of magnitude.\n\n#### Finding 1.2: Growth Rate & Forecast to 2026-2030\nMarket is projected at 8-12% CAGR depending on forecast horizon and source:\n\n- **Data point**: 8.9% CAGR to 2033 (SkyQuest), 10.8% CAGR to 2034 (some sources), 9.6% growth from 2025 to 2026 (Research and Markets)\n- **Expected 2026 market size**: USD 1.06 trillion (at 9.6% CAGR from 2025 baseline)\n- **Long-term**: USD 1.54 trillion by 2030 (9.7% CAGR); USD 2.0-2.7 trillion by 2034\n- **Source**: Research and Markets, SkyQuest, Straits Research, IMARC \u2014 all 2024-2025 reports\n- **Confidence**: HIGH \u2014 Multiple sources converge on 9-12% CAGR; growth trajectory is consistent across reports\n- **Caveats**: Wellness tourism is growing ~2x faster than traditional tourism, which amplifies the relative market expansion.\n\n#### Finding 1.3: Regional Leadership\nNorth America dominates current market share; Asia-Pacific shows fastest growth:\n\n- **Data point**: North America 34% market share (2024); Asia-Pacific fastest growth rate during forecast period; 67% of wellness-minded travelers plan trips to Asia (Marriott 2025 report)\n- **Source**: Market research reports, Marriott 2025 International Traveler Report\n- **Confidence**: HIGH \u2014 Multiple independent sources confirm regional split\n- **Caveats**: Asia-Pacific's \"fastest growth\" is from a smaller base; absolute revenue still concentrated in North America, but trajectory favors Asia.\n\n### Contradictions & Conflicting Data\nNo significant contradictions. Sources vary slightly in absolute market size (USD 945B vs. 1029B) due to segment definitions, but direction and growth rate align consistently.\n\n### Gaps\n- Detailed breakdown of wellness tourism sub-segments (spa-only vs. holistic health vs. medical tourism) is not fully standardized across sources\n- Market size for boutique hotel segment specifically (vs. all wellness hotels) is not directly quantified in most reports\n- No source clearly isolates the \"transformational/retreat\" segment from broader wellness tourism\n\n---\n\n## Research Thread 2: Key Trends 2025-2026\n\n### Search Methodology\nSearched for \"wellness travel trends 2025-2026\" across industry publications, travel media, and trends reports. Prioritized forward-looking analysis from travel authorities and wellness organizations published in late 2024 or early 2025.\n\n### Key Findings\n\n#### Finding 2.1: Nature-Based Immersion & Elemental Wellness\nTravelers moving beyond passive spa experiences to active, nature-connected wellness:\n\n- **Data point**: \"Nature-Based Immersion\" identified as 2026 trend (glacial water plunges, forest retreats, outdoor endurance challenges, ancestral healing practices); Pilates retreats emerging as evolution beyond yoga; contrast therapy (sauna + cold water) gaining major social traction\n- **Source**: National Geographic, PlanetWare, Elite Traveler, industry trend reports (2025-2026)\n- **Confidence**: HIGH \u2014 Multiple independent travel media outlets identified identical trend independently; sauna content generates 5.2M social media posts\n- **Caveats**: Trend is stronger in developed markets (North America, Western Europe); accessibility varies by destination.\n\n#### Finding 2.2: Nervous System Regulation & Stress Management\nPersonalized, science-based approaches to managing chronic stress and sensory overload:\n\n- **Data point**: \"Nervous system regulation\" positioned as central theme in wellness journeys in 2026; travelers seek tools for chronic stress management and sensory recovery\n- **Source**: Explore, National Geographic, wellness trend reports\n- **Confidence**: MEDIUM \u2014 Identified by leading wellness media but not yet quantified in consumer surveys; emerging trend rather than fully matured market segment\n- **Caveats**: Requires specialized training/certification to deliver credibly; differentiation opportunity for boutique properties.\n\n#### Finding 2.3: Community & Connection-Based Wellness\nShift from solitary luxury to shared, ritual-based experiences:\n\n- **Data point**: 82% of adventure travelers value meeting others; community-based wellness emphasized in retreat design; group movement, shared meals, ritual experiences valued\n- **Source**: Explore, industry reports on Gen Z and millennial preferences\n- **Confidence**: MEDIUM \u2014 Survey data supports preference, but market penetration still emerging\n- **Caveats**: Requires careful curation to avoid feeling forced or inauthentic; needs skilled facilitators.\n\n#### Finding 2.4: Longevity & Biohacking\nSleep optimization, anti-aging treatments, and science-backed longevity protocols:\n\n- **Data point**: \"Longevity\" major buzzword in 2024; sleep tourism grew; cryotherapy, infrared light therapy, biometric tracking integrated into premium wellness programs\n- **Source**: Industry reports, US News, travel media\n- **Confidence**: MEDIUM \u2014 Trend confirmed across multiple sources but primarily high-end/premium segment; less penetration in mid-market\n- **Caveats**: Requires partnerships with medical/scientific experts; higher operational complexity.\n\n#### Finding 2.5: Specialized \"Glow-cation\" & Aesthetic Wellness\nTargeted wellness travel for specific outcomes (e.g., skincare, dental, cosmetic procedures):\n\n- **Data point**: Seoul established as beauty capital; \"glow-cations\" for skincare/aesthetic treatments; distinct from traditional spa\n- **Source**: National Geographic, travel trend reports\n- **Confidence**: MEDIUM \u2014 Emerging niche; strong in Asia-Pacific but not universal trend\n- **Caveats**: Regulatory and ethical considerations vary by jurisdiction; requires professional partnerships.\n\n#### Finding 2.6: Hyperpersonalization & AI-Driven Customization\nTechnology enabling real-time customization of wellness plans based on biometric data:\n\n- **Data point**: Hotels investing in AI-driven systems and biometric data collection to customize spa treatments, fitness programs, dietary guidance in real-time\n- **Source**: Industry hospitality trends, wellness technology reports\n- **Confidence**: MEDIUM \u2014 Technology available but adoption still in early phase; privacy concerns exist\n- **Caveats**: Data privacy regulation varies by country; adoption requires significant infrastructure investment.\n\n#### Finding 2.7: Sustainability as Non-Negotiable\n80% of wellness travelers prefer eco-friendly, sustainable options:\n\n- **Data point**: Sustainability is baseline expectation (not differentiator) for wellness travelers; 80% show preference for eco-friendly options; \"Healing is the New Luxury\" theme emphasizes purposeful, sustainable experiences\n- **Source**: Industry surveys, TAT (Tourism Authority of Thailand) strategic direction\n- **Confidence**: HIGH \u2014 Multiple sources confirm, and it's now standard expectation rather than premium add-on\n- **Caveats**: Greenwashing is widespread; credibility requires transparent, verifiable sustainability practices.\n\n### Contradictions & Conflicting Data\nNo direct contradictions. Some sources emphasize \"digital detox\" while others highlight \"tech-enhanced personalization\"\u2014both are true; positioning depends on guest segment. This suggests market segmentation opportunity.\n\n### Gaps\n- Limited data on which trends resonate most with Southeast Asia / Thai audiences specifically\n- No clear quantification of market size for emerging micro-trends (nervous system regulation, community-based retreats)\n- Lack of clarity on which trends are hype vs. structural shifts in demand\n\n---\n\n## Research Thread 3: Consumer Preferences & What Wellness Travelers Value\n\n### Search Methodology\nSearched for consumer behavior data, guest preference studies, and traveler motivation research from 2024-2025. Prioritized survey data, industry reports, and hospitality research.\n\n### Key Findings\n\n#### Finding 3.1: Disconnection & Mental Health as Primary Motivator\nRelaxation and mental health recovery drive wellness travel more than physical fitness:\n\n- **Data point**: 81% of American travelers cite breaking free from routines; 72% want to unplug from phones/social media; 98% of relaxation travelers want to disconnect; 97% prioritize health; 89% seek mental health breaks; 82% seek respite from work; 80% value alone time\n- **Source**: Travel industry surveys, hospitality research (2024-2025)\n- **Confidence**: HIGH \u2014 Large-sample consumer research from credible hospitality research firms\n- **Caveats**: Data skews toward North American travelers; Southeast Asian traveler preferences may differ; data is aggregated across all income levels.\n\n#### Finding 3.2: Blended Active + Relaxation (Not Either/Or)\n82% of wellness travelers mix activity with downtime; 50% YoY increase in workout holiday searches:\n\n- **Data point**: 82% of travelers want balance between activity and rest; 50% YoY increase in fitness holiday searches\n- **Source**: Industry research (2024-2025)\n- **Confidence**: HIGH \u2014 Consistent across multiple sources\n- **Caveats**: Implies boutiques need both active and passive offerings; single-focus properties (pure spa OR pure fitness) are narrowing their addressable market.\n\n#### Finding 3.3: Hyperpersonalization Expected\nGuests expect treatments/itineraries customized to individual needs, often based on data/assessment:\n\n- **Data point**: High expectation for personalized wellness plans; AI and biometric data used to customize in real-time; technology adoption enabling hyper-targeted recommendations\n- **Source**: Wellness technology trends, hospitality industry analysis\n- **Confidence**: MEDIUM \u2014 Trend confirmed but adoption still emerging; luxury segment expects it, mid-market less so\n- **Caveats**: Requires staff training, data infrastructure, and privacy safeguards.\n\n#### Finding 3.4: Sustainability is Baseline, Not Premium\n80% of wellness travelers expect eco-friendly practices; it's now table stakes, not a differentiator:\n\n- **Data point**: 80% prefer/expect sustainable practices; hotels without credible sustainability are at competitive disadvantage\n- **Source**: Multiple consumer preference studies\n- **Confidence**: HIGH \u2014 Confirmed across multiple sources and demographics\n- **Caveats**: \"Sustainable\" is often vaguely defined; consumers increasingly skeptical of greenwashing.\n\n#### Finding 3.5: Nature Connection & Outdoor Integration\nTravelers increasingly seek genuine connection to natural environments, not just indoor spa facilities:\n\n- **Data point**: Nature-based experiences, outdoor classes, trails, outdoor bathing, forest immersion emphasized across emerging trends\n- **Source**: Trend reports, booking platform analysis\n- **Confidence**: MEDIUM \u2014 Emerging trend, not yet universally dominant\n- **Caveats**: Feasibility depends on property location and local environment; less applicable to urban properties.\n\n### Contradictions & Conflicting Data\nTension between \"digital detox\" preference (72-89% want to unplug) and \"tech-enabled personalization\" trend. This is not a contradiction\u2014it reflects market segmentation: some guests want full disconnection, others want technology that enables wellness without distraction. Properties need to offer both options.\n\n### Gaps\n- Limited data on Southeast Asian traveler preferences vs. North American\n- No clear breakdown by age/demographic for emerging trends\n- Insufficient data on price elasticity\u2014what premium features justify what price premiums?\n- Limited quantification of community/connection value vs. solitary retreat value\n\n---\n\n## Research Thread 4: Thailand & Koh Samui Specific Market Development\n\n### Search Methodology\nSearched for Koh Samui tourism recovery, Thailand wellness market growth, regional positioning, and C9 Hotelworks analysis. Sources: tourism authorities, hospitality trend reports, regional market research.\n\n### Key Findings\n\n#### Finding 4.1: Thailand Dominates Wellness Tourism in Asia-Pacific\nThailand captures largest share of regional wellness/medical tourism market:\n\n- **Data point**: Thailand's wellness market reached USD 42.7 billion in 2024 (surge of 36.4% YoY); wellness tourism spending specifically USD 14 billion (36.4% growth 2023-2024); Thailand holds 47.7% of ASEAN medical/wellness tourism market (2024); ASEAN market valued USD 66.1 billion (2024), expected to reach USD 218.4 billion by 2034 at 12.4% CAGR\n- **Source**: Travel Daily News, market research firms (GII, GMI)\n- **Confidence**: HIGH \u2014 Multiple credible sources converge on figures; government-supported data\n- **Caveats**: \"Wellness market\" is broad (includes medical tourism, spa, wellness real estate); not all equally attributable to hospitality. Wellness tourism spending (USD 14B) is the more precise metric for hotel operators.\n\n#### Finding 4.2: Koh Samui Emerging as Integrated Wellness & Sports Hub\nKoh Samui repositioning from luxury beach destination to wellness + sports destination:\n\n- **Data point**: \"Koh Samui Emerges as Asia's New Integrated Wellness and Sports Destination\" (Travel and Tour World, 2025); TAT introducing \"Healing is the New Luxury\" theme; Samui unveiling 5 new tourism styles for 2026 (gastronomy, sports, wellness, arts, sustainability); C9 Hotelworks identified Koh Samui as increasingly attracting wellness-focused travelers with significant profile shift\n- **Source**: Travel and Tour World, TAT, C9 Hotelworks (2025)\n- **Confidence**: HIGH \u2014 Confirmed by tourism authority, consulting firm, and multiple media outlets\n- **Caveats**: This is strategic positioning by TAT; execution and market adoption still early-stage.\n\n#### Finding 4.3: Strong Tourism Recovery & Growth\nKoh Samui airport traffic 9% YoY increase (Jan-April 2025); occupancy and rates up 12% and 9% respectively (2024):\n\n- **Data point**: 1.13 million arrivals Jan-April 2025 (9% increase YoY); 2024 total arrivals 2.78 million (exceeding pre-pandemic 2019 baseline of 2.42 million); hotel sector occupancy +12%, ADR +9% (2024)\n- **Source**: Samui International Airport, hotel sector performance data (2024-2025)\n- **Confidence**: HIGH \u2014 Official airport and industry data\n- **Caveats**: Recovery benefits all segments; not wellness-specific. Suggests strong underlying demand but doesn't isolate wellness segment growth.\n\n#### Finding 4.4: New Supply Pipeline & Property Development\nSignificant new luxury/wellness properties under construction/opening:\n\n- **Data point**: Upcoming openings include Nivata by Hilton, SO/ by Sofitel, Fivelements, Wyndham Garden; hospitality consulting firm flagged these as indicators of market expansion and investor confidence\n- **Source**: Travel and Tour World, hospitality market reports\n- **Confidence**: MEDIUM \u2014 Confirmed but impacts supply/competition on island; increases market fragmentation\n- **Caveats**: New supply may pressure pricing and occupancy; suggests market is becoming more competitive.\n\n#### Finding 4.5: Emerging Market Segments in Thailand Wellness\nSpa sector recorded 18% growth; wellness real estate 22.9% annual growth; Russian travelers 700,000+ visiting 2024-2025 winter season:\n\n- **Data point**: Spa sector 18% growth; wellness real estate 22.9% annual growth (within broader Thailand wellness market); Russian tourists represent significant and growing segment\n- **Source**: Market research reports\n- **Confidence**: MEDIUM \u2014 Reported in secondary sources; specifics not deeply verified\n- **Caveats**: Spa growth is product revenue, not room revenue; wellness real estate indicates lifestyle/residential segment, less relevant for hotels; Russian segment may face geopolitical volatility.\n\n### Contradictions & Conflicting Data\nNo contradictions. Market data is consistent: Thailand wellness is growing, Koh Samui is positioned as growth hub, and hospitality recovery is strong.\n\n### Gaps\n- Limited granular data on Koh Samui boutique hotel segment specifically (vs. all hotels)\n- No clear breakdown of what wellness travelers to Thailand expect vs. wellness travelers to other regions\n- Insufficient data on competitive set in Koh Samui wellness space\n- No clear pricing benchmark for boutique wellness properties in Koh Samui\n\n---\n\n## Research Thread 5: Boutique Hotel Competitive Positioning & Required Offerings\n\n### Search Methodology\nSearched for boutique hotel market size, wellness hotel positioning strategies, amenities ROI, revenue models, and case studies. Sources: hospitality consulting firms, hotel industry analysts, boutique hotel associations.\n\n### Key Findings\n\n#### Finding 5.1: Boutique Hotel Market Size & Growth\nBoutique hotel segment is separate, growing category within broader hotel market:\n\n- **Data point**: Boutique Hotels Market valued at USD 71.56 billion in 2025, projected to reach USD 114.86 billion by 2032 at 6.9% CAGR; Wellness Hotel Market (subset) valued USD 14.4 billion (2024), projected USD 29.39 billion by 2033 at 8.3% CAGR\n- **Source**: Credence Research, Business Research Insights\n- **Confidence**: HIGH \u2014 Multiple credible sources, consistent figures\n- **Caveats**: \"Wellness hotel\" definition varies; some reports include any hotel with spa, others require holistic positioning. Boutique segment specifically identified as growing segment.\n\n#### Finding 5.2: Core Amenities for Wellness Boutiques\nEssential facilities for credible wellness positioning:\n\n- **Data point**: Spa facilities, yoga studios, meditation spaces, fitness centers, healthy dining, and nature-based activities essential; state-of-the-art fitness centers, pools, private trails, in-room amenities (aromatherapy, sound machines, air purifiers, circadian lighting) increasingly expected; personalized wellness itineraries, customized programs based on assessment/preference fundamental\n- **Source**: Multiple hospitality and wellness trend analyses\n- **Confidence**: HIGH \u2014 Consistent across multiple sources and hotel examples\n- **Caveats**: \"Essential\" baseline is rising; what was premium 5 years ago is now expected. Investment requirements are increasing.\n\n#### Finding 5.3: Specialized Programming & Expertise\nDifferentiation through curated, expert-led programs:\n\n- **Data point**: Yoga, meditation, mindfulness, nutrition guidance, holistic therapies (Ayurveda, acupuncture, sound healing) standard offerings; high-end properties add longevity protocols, biohacking, psychedelic-assisted therapy, specialized retreat formats (Pilates-focused, nervous system regulation, etc.)\n- **Source**: Canyon Ranch, YO1, Menla, Cal-a-Vie case studies; trend reports\n- **Confidence**: MEDIUM \u2014 Proven in premium market; mid-market adoption still emerging\n- **Caveats**: Requires recruitment/training of specialized practitioners; liability and regulation considerations (e.g., psychedelic programs)\n\n#### Finding 5.4: Differentiation Through Storytelling & Unique Positioning\nIntense competition requires distinctive positioning beyond amenities:\n\n- **Data point**: Boutique market saturated in developed world; differentiation dependent on innovation, storytelling, and unique positioning; price wars common when similar services offered; properties that emphasize distinctive qualities (e.g., specific heritage, unique natural setting, specialized program) command premium\n- **Source**: Hospitality consulting analysis\n- **Confidence**: MEDIUM \u2014 Trend identified but not quantified; implications clear but execution varies\n- **Caveats**: Storytelling effectiveness depends on authenticity and consistency; generic wellness positioning is crowded.\n\n#### Finding 5.5: Revenue Model Shift: From Amenity to Asset\nWellness transitioning from cost center (hotel perk) to core revenue driver:\n\n- **Data point**: Traditional spa model (hour-long massages, passive treatment rooms) being replaced; new models emphasize: (1) Community-based wellness with membership/loyalty revenue, (2) Dynamic pricing for peak times, (3) Bundled packages (treatment + room + dining), (4) Non-guest day passes, (5) Corporate wellness packages, (6) Subscription models for local access; global spa industry projected USD 156 billion by 2027; hotel/resort spas USD 49 billion of that; boutiques experimenting with tiered pricing and cross-selling\n- **Source**: Elevate Wellness Collective, ehotelier, hospitality industry analysis\n- **Confidence**: MEDIUM \u2014 Trend confirmed but adoption uneven; new models emerging but traditional pricing still dominant\n- **Caveats**: Requires operational restructuring; staff training; marketing to non-overnight guests (if pursuing day-pass/membership model).\n\n#### Finding 5.6: Essential Success Factors for Boutique Wellness Hotels\nPositioning, personalization, and operational excellence:\n\n- **Data point**: Clear differentiation (what makes you unique?), consistent high-touch service, alignment of dining philosophy with wellness goals, personalized guest itineraries, community/social elements, integration of nature (if location permits), authentic storytelling\n- **Source**: Multiple hospitality consulting and boutique hotel positioning guides\n- **Confidence**: MEDIUM-HIGH \u2014 Confirmed across multiple sources; execution varies widely\n- **Caveats**: Excellence in execution is rare; many properties claim wellness focus without genuine infrastructure/expertise.\n\n### Contradictions & Conflicting Data\nTension between \"intensive personalization\" (costly, labor-intensive) and \"scalable efficiency\" (margin-protective). Many boutique operators struggle to balance these. No clear resolution\u2014different properties make different choices.\n\n### Gaps\n- Limited specific data on what pricing premium wellness positioning justifies\n- No detailed ROI breakdown by amenity type (e.g., does a yoga studio ROI better than sauna suite?)\n- Insufficient data on staffing/training requirements for different wellness program types\n- No clear benchmarking for boutique wellness properties specifically in Southeast Asia market\n\n---\n\n## All Sources\n\n1. [Precedence Research - Wellness Tourism Market](https://www.precedenceresearch.com/wellness-tourism-market)\n2. [Straits Research - Wellness Tourism Market](https://straitsresearch.com/report/wellness-tourism-market)\n3. [SkyQuest - Wellness Tourism Market](https://www.skyquestt.com/report/wellness-tourism-market)\n4. [IMARC Group - Wellness Tourism Market](https://www.imarcgroup.com/wellness-tourism-market)\n5. [Statista - Global Market Size of Wellness Tourism](https://www.statista.com/statistics/1018497/global-market-size-of-the-wellness-tourism-industry/)\n6. [Grand View Research - Wellness Tourism Market](https://www.grandviewresearch.com/industry-analysis/wellness-tourism-market)\n7. [Cognitive Market Research - Wellness Tourism Market](https://www.cognitivemarketresearch.com/wellness-tourism-market-report)\n8. [The Business Research Company - Wellness Tourism Report](https://www.thebusinessresearchcompany.com/report/wellness-tourism-global-market-report)\n9. [Global Wellness Institute - A Decade of Wellness Tourism](https://globalwellnessinstitute.org/global-wellness-institute-blog/2024/03/25/a-decade-of-wellness-tourism-first-ever-compilation-of-10-years-of-market-data/)\n10. [Insight Ace Analytic - Wellness Tourism Market](https://www.insightaceanalytic.com/report/wellness-tourism-market/1603)\n11. [Research and Markets - Wellness Tourism Market Report 2026](https://www.researchandmarkets.com/reports/5939437/wellness-tourism-market-report)\n12. [OpenPR - Wellness Tourism Market Future Growth](https://www.openpr.com/news/4420615/wellness-tourism-market-future-growth-hotspots-and-forecast)\n13. [Business Research Insights - Wellness Tourism Market](https://www.businessresearchinsights.com/market-reports/wellness-tourism-market-117450)\n14. [My1Health - Global Wellness Trends 2026](https://my1health.com/referral-partner-network/guides/global-wellness-tourism-trends-how-travel-agents-can-leverage-them)\n15. [Wellness Creatives - Wellness Industry Statistics 2026](https://www.wellnesscreatives.com/wellness-industry-statistics/)\n16. [Copper Well Retreat - 2025 Wellness Tourism Report](https://www.copperwellretreat.com/2025-wellness-tourism-report)\n17. [Explore - Growing Wellness Trends 2026](https://www.explore.com/2074813/growing-wellness-trends-travelers-will-embrace-2026/)\n18. [National Geographic - Wellness Travel Trends 2026](https://www.nationalgeographic.com/travel/article/best-wellness-travel-trends-to-look-out-for-this-year)\n19. [Global Wellness Summit - Trends](https://www.globalwellnesssummit.com/trends/)\n20. [PlanetWare - Wellness Travel Trends 2026](https://www.planetware.com/2076848/wellness-travel-trends-that-will-become-popular-2026/)\n21. [CNBC - Major Trends in 2026](https://www.cnbc.com/2025/12/25/5-major-trends-set-to-shape-travel-in-2026.html)\n22. [Elite Traveler - Wellness Travel Trends 2026](https://elitetraveler.com/travel/wellness-travel/wellness-travel-trends)\n23. [Europe Incoming - Wellness Travel Trends 2025-26](https://www.europeincoming.com/8-wellness-travel-trends-shaping-european-bookings-in-2025-26/)\n24. [Hospitality Net - 2025 Travel & Wellness Trends](https://www.hospitalitynet.org/news/4124568.html)\n25. [Roadbook - 2024 Wellness Travel Trends](https://roadbook.com/travel/wellness-travel-trends-2024/)\n26. [Boarding Area - Wellness Travel Trends 2024](https://boardingarea.com/a-year-in-review-wellness-travel-trends-in-2024/)\n27. [TripIt - Wellness Travel Trends 2025](https://www.tripit.com/web/blog/travel-tips/wellness-travel-trends-2025)\n28. [Skift Research - Wellness Travel Boom](https://research.skift.com/reports/the-wellness-travel-boom-in-2024-and-beyond-what-you-need-to-know/)\n29. [Hotel Dive - Wellness Travel Trends 2024](https://www.hoteldive.com/news/wellness-travel-trends-2024/705595/)\n30. [Miles Partnership - Wellness Tourism 2024](https://www.milespartnership.com/how-we-think/article/wellness-tourism-travelers-2024-pursuits)\n31. [TTMA - Wellness Travel Trends 2024](https://www.ttma.org/post/the-biggest-wellness-travel-trends-for-2024)\n32. [Suitcase Magazine - Wellness Travel Trends 2024](https://suitcasemag.com/wellness-travel-trends-2024/)\n33. [FINN Partners - Wellness Travel Trends 2025](https://www.finnpartners.com/news-insights/to-travel-well-is-to-be-well-wellness-travel-trends/)\n34. [Hospitality Net - Wellness Hotel Consulting](https://www.wellnessboutiquehotelconsulting.com/documents-articles/hotel-positioning-a-roadmap-to-service-excellence-positive-reviews-and-competitive-pricing)\n35. [OpenPR - Wellness Hotel Market 2033](https://www.openpr.com/news/4402479/wellness-hotel-market-forecast-to-surpass-usd-437-2-billion)\n36. [Elevate Wellness Collective - Marketing Wellness Hotels](https://www.elevatehospitalitycollective.com/blog/market-a-wellness-hotel)\n37. [Credence Research - Boutique Hotel Sector Market](https://www.credenceresearch.com/report/boutique-hotel-sector-market)\n38. [Business Research Insights - Wellness Hotel Market](https://www.businessresearchinsights.com/market-reports/wellness-hotel-market-119789)\n39. [Hospitality Insights EHL - Wellness Travel Market](https://hospitalityinsights.ehl.edu/wellness-travel-market)\n40. [Credence Research - Boutique Hotel Market](https://www.credenceresearch.com/report/boutique-hotel-market)\n41. [Global Growth Insights - Wellness Hotel Market](https://www.globalgrowthinsights.com/market-reports/wellness-hotel-market-110704)\n42. [Travel and Tour World - Wellness Hotels and Profitability](https://www.travelandtourworld.com/news/article/new-hotel-revenue-model-how-wellness-is-revolutionising-profits-in-the-travel-industry/)\n43. [Research and Markets - Boutique Hotels Market](https://www.researchandmarkets.com/report/boutique-hotel)\n44. [Hospitality Net - Koh Samui Wellness Tourism](https://www.hospitalitynet.org/news/4129259.html)\n45. [Travel and Tour World - Koh Samui Wellness Tourism](https://www.travelandtourworld.com/news/article/wellness-tourism-in-koh-samui-set-for-global-spotlight-at-c9-session-in-thailand/)\n46. [Nation Thailand - Samui 2026 Tourism Strategy](https://www.nationthailand.com/news/tourism/40059084)\n47. [Travel and Tour World - Koh Samui Asia's Wellness Hub](https://www.travelandtourworld.com/news/article/koh-samui-emerges-as-asias-wellness-and-sports-tourism-hub-with-groundbreaking-developments-and-global-appeal/)\n48. [Travel Daily News - Thailand Wellness Tourism](https://www.traveldailynews.asia/special-interest-travel/thailand-wellness-market-reaches-42-7bn-in-2024/)\n49. [Australasian Leisure Management - Koh Samui Wellness](https://www.ausleisure.com.au/news/wellness-focus-shifts-profile-of-thailands-koh-samui-hotel-and-tourism-market/)\n50. [Travel Daily News - Asia Island Wellness](https://www.traveldailynews.asia/destinations/asias-hidden-island-rises-as-the-new-frontier-of-wellness-and-sport/)\n51. [TTR Weekly - Sports and Spa Trends](https://www.ttrweekly.com/site/2025/10/sports-beyond-the-spa-transform-samu/)\n52. [The Luxury Signature - Koh Samui Tourism Report](https://www.theluxurysignature.com/2025/07/02/koh-samui-shines-bright-in-c9-hotelworks-tourism-report/)\n53. [Arokago - ASEAN Wellness Tourism](https://www.arokago.com/en/articles/thailand-and-beyond-a-regional-blueprint-for-medical-and-wellness-tourism-in-asean)\n54. [GM Insights - ASEAN Medical Wellness Market](https://www.gminsights.com/industry-analysis/asean-medical-and-wellness-tourism-market)\n55. [The Traveler - Thailand Luxury Wellness Era](https://www.thetraveler.org/thailands-luxury-wellness-travel-enters-a-new-era/)\n56. [The Traveler - Thailand Medical Wellness Powerhouse](https://www.thetraveler.org/thailand-rises-as-global-medical-and-wellness-powerhouse/)\n57. [GII Research - Thailand Medical Wellness Tourism](https://www.giiresearch.com/report/gmi1740869-thailand-medical-wellness-tourism-market.html)\n58. [GII Research - ASEAN Medical Wellness Tourism](https://www.giiresearch.com/report/gmi1833684-asean-medical-wellness-tourism-market-opportunity.html)\n59. [ITIJ - Russian Wellness Tourism Thailand](https://www.itij.com/latest/news/russian-tourists-fuel-thailands-medical-and-wellness-tourism-boom)\n60. [Boutique Hotels Org - Luxury Nature Wellness Retreats](https://boutiquehotels.org/journal/luxury-nature-wellness-retreats-us/)\n61. [US News - Top Wellness Retreats 2026](https://travel.usnews.com/gallery/top-wellness-retreats)\n62. [Design Hotels - Wellness Boutique Hotels](https://www.designhotels.com/themes/well-being/)\n63. [Hospitality Net - Boutique Hotel Wellness Offerings](https://www.hospitalitynet.org/opinion/4120584.html)\n64. [Kimpton Hotel Wilshire - Wellness Amenities](https://www.hotelwilshire.com/boutique-hotel-amenities-beverly-hills/wellness-retreat/)\n65. [The Ameswell Hotel - Wellness Retreat](https://www.theameswellhotel.com/wellness/)\n66. [Digital Travel Expert - Boutique Wellness Hotels](https://digitaltravelexpert.com/boutique-hotels-resorts-luxury-wellness/)\n67. [Christine Blog - Hotel Wellness Amenities](https://ochristine.com/blog/hotel-amenities-essential-for-wellness-vacations)\n68. [Hospitality Net - Wellness Features ROI](https://www.hospitalitynet.org/opinion/4124696.html)\n69. [The Points Guy - Wellness Resorts](https://thepointsguy.com/hotel/best-all-inclusive-wellness-resorts/)\n70. [Canyon Ranch - Wellness Retreats](https://www.canyonranch.com/)\n71. [BookRetreats - Spa Retreats](https://bookretreats.com/s/yoga-retreats/spa-retreats)\n72. [BookRetreats - Holistic Retreats](https://bookretreats.com/s/wellness-retreats/holistic-retreats)\n73. [YO1 Longevity Resorts - Wellness Programs](https://www.yo1.com/)\n74. [Menla Resort & Destination Spa](https://menla.org/)\n75. [Lonely Planet - Wellness Retreats USA](https://www.lonelyplanet.com/articles/wellness-retreats-usa)\n76. [Cal-a-Vie Health Spa](https://www.cal-a-vie.com/)\n77. [Elohee Retreat Center](https://elohee.org/)\n78. [Elevate Wellness Collective - Hotel Spa Revenue Strategy](https://www.elevatehospitalitycollective.com/blog/are-hotel-spas-dead-wellness-revenue-strategy)\n79. [ehotelier - Wellness Revenue Strategy](https://insights.ehotelier.com/insights/2026/03/26/from-amenity-to-asset-turning-wellness-into-a-core-revenue-strategy/)\n80. [The Traveler - Hotel Wellness Revenue](https://www.thetraveler.org/how-hotels-are-turning-wellness-into-a-revenue-engine/)\n81. [Duetto - Boutique Hotel Revenue Strategy](https://www.duettocloud.com/library/how-boutique-independent-hotels-drive-revenue-with-dynamic-pricing)\n82. [Emersion Wellness - Hotel Pricing Strategies](https://emersionwellness.com/10-powerful-hotel-pricing-strategies-to-implement-in-2024/)\n83. [Eviivo - Hotel Pricing Strategies 2026](https://eviivo.com/trade-secrets/hotel-pricing-strategy/)\n84. [Hotel Online - Wellness Revenue Strategy](https://www.hotel-online.com/news/from-amenity-to-asset-turning-wellness-into-a-core-revenue-strategy/)\n85. [Oaky - Hotel Pricing Strategies 2026](https://oaky.com/en/blog/hotel-pricing-strategies)\n86. [Canary Technologies - Hotel Pricing Strategies](https://www.canarytechnologies.com/post/hotel-pricing-strategies)\n\n---\n\n**End of Researcher Findings**\n\n*This document represents the evidence base gathered across five research threads. It is designed for review by the Critic agent, who will stress-test the findings, identify gaps, and flag uncertainties. Gaps identified by the Researcher are documented in each thread; additional gaps identified by the Critic will be surfaced in the next phase.*\n"}], "grading": null}, {"id": "eval-1-wellness-without_skill", "prompt": "I'm advising a boutique hotel in Koh Samui Thailand that wants to rebrand. Can you do research on the wellness travel market \u2014 specifically: how big is it, what are the key trends for 2025-2026, and what does a boutique hotel need to offer to credibly compete in this space? This is going into a strategy document for the hotel owner.", "eval_id": 1, "outputs": [{"name": "research_output.md", "type": "text", "content": "# Wellness Travel Market Research\n## Strategic Analysis for Boutique Hotel Rebranding in Koh Samui, Thailand\n\n**Prepared:** March 2026\n\n---\n\n## Executive Summary\n\nThe global wellness travel market represents one of the fastest-growing segments in hospitality. For a boutique hotel in Koh Samui considering rebranding into the wellness space, the timing is strategic and the opportunity is substantial. This research examines market size, emerging trends, and competitive positioning requirements.\n\n---\n\n## 1. Market Size & Growth Projections\n\n### Global Wellness Tourism Market\n\nThe wellness travel market is experiencing robust growth across all projections:\n\n- **2025 Valuation:** $974.57 billion to $1.156 trillion globally (variance reflects methodological differences)\n- **2026 Projection:** $1.06 trillion, growing at 9.6% CAGR\n- **2030 Projection:** $1.54 trillion at 9.7% CAGR\n\nThis positions wellness tourism as a $1 trillion+ opportunity with sustained double-digit annual growth.\n\n### Asia-Pacific & Thailand's Exceptional Growth\n\nSoutheast Asia is outpacing global averages:\n\n- **ASEAN Regional Market:** $66.1 billion (2024) \u2192 $218.4 billion (2034), growing at 12.4% CAGR\n- **Thailand Specifically:** $14 billion (2024) \u2192 $91.4 billion (2030) at 16.7% CAGR\n\nThailand's wellness tourism spending grew by more than one-third between 2023-2024 alone, making it one of the world's top performers in wellness-led travel growth. This regional outperformance is driven by:\n\n- Supportive government policies\n- Competitive cost structures\n- Increasing international standard compliance\n- High-spend, long-stay travel patterns from Europe, Middle East, and Asia\n\n### Market Composition & Value\n\nWellness tourism represents **18% of all travel spending**, with 76% of travelers expressing willingness to spend more on experiences prioritizing well-being. This high-margin segment drives:\n\n- Increased average daily rates (ADR)\n- Extended average stay lengths\n- Higher per-guest spending on ancillary services (spa, food & beverage, wellness programs)\n\n---\n\n## 2. Key Wellness Travel Trends (2025-2026)\n\n### Consumer-Driven Trends\n\n**1. Nervous System Regulation & Stress Management**\n- Mental wellness and stress management are now central to wellness journeys\n- Demand for remote, nature-rich environments emphasizing solitude and spaciousness\n- This directly aligns with Koh Samui's natural positioning\n\n**2. Digital Detox Retreats**\n- Growing segment seeking screen-free experiences\n- Focused on relaxation, mindfulness, and digital fatigue recovery\n- Premium positioning opportunity for boutique hotels offering connectivity options at guest discretion\n\n**3. Hormone Health & Gender-Specific Wellness**\n- Women represent one of the fastest-growing wellness tourism demographics\n- Rising focus on menopause, fertility, and hormonal balance\n- Opportunity for targeted programming and specialized practitioners\n\n**4. Return to Nature & Elemental Experiences**\n- 2026 trend emphasizes natural environments over urban spas\n- Guests seeking outdoor endurance challenges, water immersion, ancient healing practices\n- Coastal location advantage for Koh Samui with water-based wellness therapies\n\n**5. Sound Therapy & Sensory Experiences**\n- Growing integration into luxury spa settings\n- Uses sound bowls, specific frequencies for profound relaxation and emotional release\n- Low-cost, high-impact differentiator for wellness positioning\n\n**6. Ritualistic & Social Wellness**\n- Full moon ceremonies, intention-setting gatherings, sound healing, and collective rites\n- These have moved from niche to mainstream luxury wellness offerings\n- Opportunity for signature experiences around local Thai healing traditions\n\n**7. Slow Travel & Intentional Stays**\n- Guests seeking purpose-driven escapes emphasizing meaningful activities\n- Gardening, traditional crafts, presence-based hobbies\n- Supports longer stays and deeper guest engagement\n\n**8. Family-Focused Wellness**\n- Wellness no longer reserved for solo travelers\n- Multigenerational retreats with functional nutrition, mindfulness, and sensory experiences\n- Growing segment with high lifetime value potential\n\n### Technology & Personalization Trends\n\n**Advanced Personalization**\n- AI-driven systems and biometric data for real-time treatment customization\n- Spa technology enabling highly tailored experiences\n- DNA-based nutrition plans and longevity protocols\n\n**Neuro Wellness**\n- Cognitive resilience integrated with physical recovery\n- Cognitive exercises, guided learning, movement, and sensory rest\n- Emerging luxury differentiator for sophisticated positioning\n\n**Sustainability Integration**\n- Guests expect carbon-neutral options and sustainable practices\n- Environmental values alignment increasingly drives choice\n- Eco-conscious operations as competitive expectation, not differentiator\n\n---\n\n## 3. Competitive Requirements for Boutique Hotels\n\n### Essential Amenities & Facilities\n\nTo credibly compete in the wellness space, boutique hotels must offer:\n\n**Spa & Movement Infrastructure**\n- State-of-the-art spa facilities with specialized treatment rooms\n- Yoga and movement studios\n- Meditation and quiet spaces\n\n**Physical Wellness**\n- Fitness centers with modern equipment\n- Pools, hot tubs, saunas, cold plunge facilities\n- Outdoor spaces for yoga, tai chi, or movement practices\n\n**Culinary Wellness**\n- Healthy dining featuring locally sourced, organic ingredients\n- Wellness-focused menus with nutritional transparency\n- Options for specialized diets (plant-based, anti-inflammatory, etc.)\n\n**Accommodation Design**\n- Natural light and biophilic design elements\n- Calming color palettes\n- Nature access and views\n- Technology infrastructure allowing digital detox when desired\n\n### Differentiation Strategy\n\nSuccess requires moving beyond basic amenities to authentic positioning:\n\n**Authentic Local Integration**\n- Thai healing traditions and practices (traditional massage, herbal treatments)\n- Local practitioner partnerships\n- Integration of Thai Buddhist mindfulness practices\n- Locally sourced ingredients in spa and culinary offerings\n\n**Specialist Programming**\n- Expert-led experiences rather than generic classes\n- Personalized wellness consultations\n- Data-driven customization (biometric assessments, health goals)\n- Signature experiences aligned with hotel positioning\n\n**Experiential Depth**\n- Multi-day wellness journeys, not one-off treatments\n- Integration across accommodation, food, movement, and mindfulness\n- Guest education on wellness concepts and practices\n- Community and ritual elements\n\n### Financial Impact of Wellness Positioning\n\nProperties investing in credible wellness positioning demonstrate:\n\n- **Increased ADR:** Premium pricing supported by specialized experiences\n- **Extended Stays:** Multi-day wellness programs drive longer bookings\n- **Ancillary Revenue:** High per-guest spending on spa, F&B, and wellness programs\n- **Enhanced Word-of-Mouth:** Wellness guests are highly engaged and referral-oriented\n- **Brand Differentiation:** Wellness positioning separates property from generic beach resorts\n\n---\n\n## 4. Strategic Implications for Koh Samui Boutique Hotel\n\n### Market Timing Advantage\n\n- Thailand is experiencing 16.7% CAGR in wellness tourism (vs. 9.6% globally)\n- Koh Samui is established as a wellness destination but not saturated\n- First-mover advantage for authentic, well-executed boutique positioning\n\n### Location Assets\n\n- Coastal setting supports water-based wellness (ocean immersion, water therapies)\n- Natural environment aligns with \"return to nature\" trend\n- Proximity to local Thai healing traditions and practitioners\n- Potential for digital detox marketing while maintaining connectivity infrastructure\n\n### Competitive Positioning Recommendations\n\n**1. Authentic Positioning**\n- Build wellness strategy around Thai traditions and local expertise\n- Partner with respected local healers and practitioners\n- Integrate traditional knowledge with evidence-based wellness science\n\n**2. Specialized Over Generalist**\n- Choose specific wellness focus (e.g., nervous system regulation, hormone health, digital detox, longevity)\n- Become known for excellence in chosen niche\n- Avoid attempting to serve all wellness segments equally\n\n**3. Multi-Day Experience Design**\n- Structure packages around 3-7 day immersive journeys\n- Integrate accommodation, culinary, movement, and mindfulness elements\n- Create signature daily rituals and programming\n\n**4. Guest Personalization**\n- Implement pre-arrival assessments and consultations\n- Use biometric data and health goals to customize experiences\n- Offer flexibility within structured programs\n\n**5. Community & Ritual Elements**\n- Incorporate group experiences (yoga, sound baths, intention circles)\n- Leverage full moon and seasonal cycles for signature events\n- Create meaningful rituals tied to local traditions\n\n**6. Sustainability Integration**\n- Carbon-neutral operations and sourcing\n- Waste reduction in spa and food operations\n- Environmental education as part of guest experience\n\n### Investment Priorities\n\nFor maximum competitive advantage, prioritize:\n\n1. **Spa Infrastructure:** Premium facilities with specialized treatment rooms and expert practitioners\n2. **Culinary Program:** Wellness-focused chef and specialized nutrition capabilities\n3. **Expert Practitioners:** Yoga instructors, meditation guides, massage therapists with recognized credentials\n4. **Design & Environment:** Biophilic design, natural materials, calming aesthetics\n5. **Programming Development:** Signature multi-day wellness journeys with measurable outcomes\n\n---\n\n## Conclusion\n\nThe wellness travel market represents a high-growth, premium-pricing opportunity particularly well-suited for Southeast Asian boutique hotels. Thailand's accelerating wellness tourism growth (16.7% CAGR) significantly outpaces global trends, while emerging traveler preferences emphasize authentic experiences, personalization, and integration with nature.\n\nFor a Koh Samui boutique hotel, successful rebranding requires moving beyond surface-level amenities to authentic, specialized positioning grounded in local traditions and expert programming. The hotels capturing premium pricing and extended stays will be those offering genuinely differentiated, holistic wellness experiences rather than competing on standard facilities.\n\nThe market window remains favorable, but competition is intensifying. Immediate action on positioning, practitioner recruitment, and experiential programming will be critical to establishing market leadership.\n\n---\n\n## Sources & References\n\n- [Wellness Tourism Market Share & Growth Analysis 2033](https://www.skyquestt.com/report/wellness-tourism-market)\n- [2025 Wellness Tourism Report \u2014 Copper Well Retreat](https://www.copperwellretreat.com/2025-wellness-tourism-report)\n- [Wellness Tourism Global Market Report 2025](https://www.researchandmarkets.com/reports/5939437/wellness-tourism-market-report)\n- [Wellness Tourism Market Report \u2014 The Business Research Company](https://www.thebusinessresearchcompany.com/report/wellness-tourism-global-market-report)\n- [Wellness Tourism Market Size & Trends \u2014 Grand View Research](https://www.grandviewresearch.com/industry-analysis/wellness-tourism-market)\n- [The Biggest Wellness Travel Trends Set to Shape 2026 \u2014 Elite Traveler](https://elitetraveler.com/travel/wellness-travel/wellness-travel-trends)\n- [Wellness Travel in 2026 \u2014 National Geographic](https://www.nationalgeographic.com/travel/article/best-wellness-travel-trends-to-look-out-for-this-year)\n- [Wellness Trends for 2026 \u2014 Health Travel](https://www.health.travel/read/wellness-trends-for-2026/)\n- [ASEAN Medical and Wellness Tourism Market Growth](https://www.gminsights.com/industry-analysis/asean-medical-and-wellness-tourism-market)\n- [Thailand's Luxury Wellness Travel Enters a New Era](https://www.thetraveler.org/thailands-luxury-wellness-travel-enters-a-new-era/)\n- [Asia Pacific Wellness Tourism Market \u2014 Mordor Intelligence](https://www.mordorintelligence.com/industry-reports/asia-pacific-wellness-tourism-market)\n- [Thailand Wellness Tourism Market \u2014 Grand View Research](https://www.grandviewresearch.com/horizon/outlook/wellness-tourism-market/thailand)\n- [Leveraging Wellness Innovations for Competitive Advantage in Hospitality](https://www.hotelspeak.com/2025/04/leveraging-wellness-innovations-for-competitive-advantage-in-hospitality/)\n- [Why Wellness Hotels Are Redefining Guest Expectations \u2014 SiteMinder](https://www.siteminder.com/r/wellness-hotel/)\n- [Global Wellness Institute Data](https://globalwellnessinstitute.org/geography-of-wellness/wellness-in-thailand/)\n"}], "grading": null}], "previous_feedback": {}, "previous_outputs": {}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>

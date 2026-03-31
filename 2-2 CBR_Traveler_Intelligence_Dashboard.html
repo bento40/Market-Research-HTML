@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CBR Traveler Intelligence Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --navy: #0B1D3A;
+    --teal: #0D9488;
+    --gold: #D4A853;
+    --coral: #E8654A;
+    --sky: #38BDF8;
+    --slate: #64748B;
+    --sand: #F5E6D0;
+    --white: #FFFFFF;
+    --offwhite: #FAFAF7;
+    --dark: #1E293B;
+    --mid: #475569;
+    --border: #E2E8F0;
+    --couples: #E8654A;
+    --family: #0D9488;
+    --nomad: #38BDF8;
+    --solo: #D4A853;
+    --bleisure: #8B5CF6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', 'Segoe UI', sans-serif; background: var(--offwhite); color: var(--dark); }
+
+  .header {
+    background: linear-gradient(135deg, var(--navy) 0%, #14304D 100%);
+    padding: 28px 28px 18px; color: white;
+  }
+  .header-row { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+  .header-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--teal), var(--sky));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 800; color: white;
+  }
+  .header-title { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+  .header-sub { font-size: 11px; opacity: 0.7; letter-spacing: 0.5px; }
+  .header-meta { font-size: 11px; opacity: 0.5; margin-top: 8px; }
+
+  .tabs {
+    display: flex; gap: 2px; padding: 0 20px;
+    background: var(--navy); overflow-x: auto; -webkit-overflow-scrolling: touch;
+  }
+  .tab {
+    padding: 10px 16px; font-size: 12px; font-weight: 500;
+    color: rgba(255,255,255,0.5); background: transparent;
+    border: none; cursor: pointer; border-bottom: 2px solid transparent;
+    white-space: nowrap; transition: all 0.2s; font-family: inherit;
+  }
+  .tab.active { font-weight: 700; color: white; background: rgba(255,255,255,0.1); border-bottom-color: var(--teal); }
+  .tab:hover { color: rgba(255,255,255,0.8); }
+
+  .content { padding: 20px 20px 40px; max-width: 920px; margin: 0 auto; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .section-title { font-size: 20px; font-weight: 700; color: var(--dark); letter-spacing: -0.3px; margin-bottom: 4px; }
+  .section-sub { font-size: 13px; color: var(--mid); margin-bottom: 20px; }
+
+  .grid { display: grid; gap: 12px; margin-bottom: 24px; }
+  .grid-4 { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+
+  .stat-card {
+    background: white; border-radius: 12px; padding: 20px 22px;
+    border: 1px solid var(--border); position: relative; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .stat-card .accent { position: absolute; top: 0; left: 0; width: 4px; height: 100%; border-radius: 12px 0 0 12px; }
+  .stat-card .label { font-size: 11px; color: var(--mid); text-transform: uppercase; letter-spacing: 1.2px; font-weight: 600; margin-bottom: 6px; }
+  .stat-card .value { font-size: 28px; font-weight: 800; color: var(--dark); line-height: 1.1; }
+  .stat-card .sub { font-size: 12px; color: var(--mid); margin-top: 4px; }
+
+  .chart-card {
+    background: white; border-radius: 12px; padding: 20px 16px 16px;
+    border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    margin-bottom: 14px;
+  }
+  .chart-card.span-2 { grid-column: span 2; }
+  .chart-title { font-size: 13px; font-weight: 700; color: var(--dark); margin-bottom: 14px; padding-left: 4px; text-transform: uppercase; letter-spacing: 0.8px; }
+
+  .insight-box {
+    padding: 16px 18px; border-radius: 12px;
+    border: 1px solid var(--border); margin-top: 16px;
+  }
+  .insight-box .insight-title { font-size: 13px; font-weight: 700; color: var(--dark); margin-bottom: 8px; }
+  .insight-box .insight-text { font-size: 13px; color: var(--mid); line-height: 1.7; }
+  .insight-box .insight-text strong { color: var(--dark); }
+
+  .segment-card {
+    display: flex; gap: 16px; margin-bottom: 12px; padding: 16px 18px;
+    background: white; border-radius: 12px; border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .segment-icon {
+    width: 48px; height: 48px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .segment-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .segment-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .segment-tag { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 20px; }
+  .segment-desc { font-size: 12px; color: var(--mid); line-height: 1.5; }
+
+  .los-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 0; border-bottom: 1px solid var(--border);
+  }
+  .los-row:last-child { border-bottom: none; }
+  .los-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+  .los-label { font-size: 12px; font-weight: 500; }
+  .los-value { font-size: 12px; font-weight: 700; }
+
+  .factor-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 12px; }
+  .factor-num {
+    width: 18px; height: 18px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; flex-shrink: 0;
+    background: rgba(13,148,136,0.1); color: var(--teal);
+  }
+
+  .strategy-card { margin-bottom: 14px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .strategy-header { display: flex; align-items: center; gap: 12px; padding: 14px 18px; }
+  .strategy-num { width: 32px; height: 32px; border-radius: 8px; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; flex-shrink: 0; }
+  .strategy-role { font-size: 10px; font-weight: 700; color: var(--mid); letter-spacing: 1px; }
+  .strategy-body { padding: 12px 18px 16px; }
+  .strategy-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+  .strategy-action { font-size: 11px; color: var(--mid); line-height: 1.5; }
+  .strategy-action span { font-weight: 700; margin-right: 4px; }
+  .strategy-metric { font-size: 11px; padding: 6px 10px; border-radius: 6px; font-weight: 600; }
+
+  .bottom-line {
+    margin-top: 20px; padding: 18px 20px;
+    background: linear-gradient(135deg, var(--navy), #14304D);
+    border-radius: 12px; color: white;
+  }
+  .bottom-line h3 { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+  .bottom-line p { font-size: 12px; line-height: 1.8; opacity: 0.9; }
+  .bottom-line strong { opacity: 1; }
+
+  .footer { text-align: center; padding: 16px 20px 30px; font-size: 10px; color: var(--mid); }
+
+  .warning-box { margin-top: 16px; padding: 14px 18px; border-radius: 12px; }
+  .warning-title { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+  .warning-text { font-size: 12px; color: var(--mid); line-height: 1.6; }
+
+  .canvas-container { position: relative; width: 100%; }
+  .chart-note { font-size: 11px; color: var(--mid); margin-top: 8px; padding-left: 4px; font-style: italic; }
+
+  .ai-box { background: white; border-radius: 12px; padding: 16px 18px; border: 1px solid var(--border); }
+  .ai-box h4 { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+  .ai-box p { font-size: 12px; color: var(--mid); line-height: 1.7; }
+  .ai-box strong { color: var(--dark); }
+
+  @media (max-width: 640px) {
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .chart-card.span-2 { grid-column: span 1; }
+    .strategy-actions { grid-template-columns: 1fr; }
+    .stat-card .value { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-row">
+    <div class="header-icon">C</div>
+    <div>
+      <div class="header-title">Chaweng Buri Resort</div>
+      <div class="header-sub">TRAVELER INTELLIGENCE DASHBOARD</div>
+    </div>
+  </div>
+  <div class="header-meta">Multi-Agent Deep Research · March 2026 · 28 Sources Cross-Checked</div>
+</div>
+
+<div class="tabs" id="tabs">
+  <button class="tab active" onclick="switchTab(0)">Overview</button>
+  <button class="tab" onclick="switchTab(1)">Segments</button>
+  <button class="tab" onclick="switchTab(2)">Length of Stay</button>
+  <button class="tab" onclick="switchTab(3)">Decision Journey</button>
+  <button class="tab" onclick="switchTab(4)">CBR Strategy</button>
+</div>
+
+<div class="content">
+
+<!-- TAB 0: OVERVIEW -->
+<div class="tab-panel active" id="panel-0">
+  <h2 class="section-title">Market Snapshot</h2>
+  <p class="section-sub">Global travel market headlines — 2024/2025 data</p>
+
+  <div class="grid grid-4">
+    <div class="stat-card"><div class="accent" style="background:var(--teal)"></div><div class="label">Global Tourists 2025</div><div class="value">1.52B</div><div class="sub">Record year · +4% YoY</div></div>
+    <div class="stat-card"><div class="accent" style="background:var(--gold)"></div><div class="label">Tourism Receipts</div><div class="value">$1.9T</div><div class="sub">International · +5% YoY</div></div>
+    <div class="stat-card"><div class="accent" style="background:var(--coral)"></div><div class="label">Thailand Arrivals</div><div class="value">35M</div><div class="sub">2024 · Near pre-pandemic</div></div>
+    <div class="stat-card"><div class="accent" style="background:var(--sky)"></div><div class="label">Thailand ALOS</div><div class="value">9.8 days</div><div class="sub">Intl tourist average</div></div>
+  </div>
+  <div class="grid grid-4">
+    <div class="stat-card"><div class="accent" style="background:var(--family)"></div><div class="label">Families Traveling</div><div class="value">92%</div><div class="sub">Parents planning trips w/ kids</div></div>
+    <div class="stat-card"><div class="accent" style="background:var(--nomad)"></div><div class="label">Digital Nomads</div><div class="value">40M+</div><div class="sub">Globally · doubled since 2020</div></div>
+    <div class="stat-card"><div class="accent" style="background:var(--solo)"></div><div class="label">Solo Market</div><div class="value">$482B</div><div class="sub">Growing 14.3% CAGR</div></div>
+    <div class="stat-card"><div class="accent" style="background:var(--couples)"></div><div class="label">Honeymoon Market</div><div class="value">$131.6B</div><div class="sub">Beach = 61% of choice</div></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">Growth Rate by Segment (CAGR %)</div>
+    <div class="canvas-container" style="height:280px"><canvas id="chart-growth"></canvas></div>
+  </div>
+
+  <div class="insight-box" style="background: linear-gradient(135deg, rgba(11,29,58,0.03), rgba(13,148,136,0.03));">
+    <div class="insight-title">Key Insight</div>
+    <div class="insight-text">Family/multi-gen travel dominates by volume (47% of all trips), but <strong>digital nomad services</strong> is the fastest-growing market by CAGR (21.3%). For CBR, the strategic play is: couples/honeymoon as the premium core, families as volume, and digital nomads/long-stay as the low-season stabilizer.</div>
+  </div>
+</div>
+
+<!-- TAB 1: SEGMENTS -->
+<div class="tab-panel" id="panel-1">
+  <h2 class="section-title">Segment Analysis</h2>
+  <p class="section-sub">Deep dive into each traveler segment — size, behavior, and needs</p>
+
+  <div class="grid grid-2">
+    <div class="chart-card">
+      <div class="chart-title">Honeymoon Destination Preference</div>
+      <div class="canvas-container" style="height:220px"><canvas id="chart-honeymoon"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">What Each Segment Values</div>
+      <div class="canvas-container" style="height:220px"><canvas id="chart-radar"></canvas></div>
+    </div>
+  </div>
+
+  <div class="segment-card">
+    <div class="segment-icon" style="background:rgba(232,101,74,0.08)">♥</div>
+    <div style="flex:1">
+      <div class="segment-name" style="color:var(--couples)">Couples & Honeymoon</div>
+      <div class="segment-tags">
+        <span class="segment-tag" style="background:rgba(232,101,74,0.08);color:var(--couples)">42M couples/yr</span>
+        <span class="segment-tag" style="background:rgba(232,101,74,0.08);color:var(--couples)">8.7 nights avg</span>
+        <span class="segment-tag" style="background:rgba(232,101,74,0.08);color:var(--couples)">61% choose beach</span>
+        <span class="segment-tag" style="background:rgba(232,101,74,0.08);color:var(--couples)">65% want bespoke</span>
+      </div>
+      <div class="segment-desc">High-value segment. Privacy + romance + Instagram-worthy settings. Pool villas are perfect product-market fit.</div>
+    </div>
+  </div>
+
+  <div class="segment-card">
+    <div class="segment-icon" style="background:rgba(13,148,136,0.08)">👨‍👩‍👧‍👦</div>
+    <div style="flex:1">
+      <div class="segment-name" style="color:var(--family)">Family & Multi-Gen</div>
+      <div class="segment-tags">
+        <span class="segment-tag" style="background:rgba(13,148,136,0.08);color:var(--family)">47% of all trips</span>
+        <span class="segment-tag" style="background:rgba(13,148,136,0.08);color:var(--family)">$8,052 avg spend</span>
+        <span class="segment-tag" style="background:rgba(13,148,136,0.08);color:var(--family)">92% plan to travel</span>
+        <span class="segment-tag" style="background:rgba(13,148,136,0.08);color:var(--family)">84% kids co-plan</span>
+      </div>
+      <div class="segment-desc">Largest segment by volume. Need multi-room accommodation, activities for all ages, and value perception.</div>
+    </div>
+  </div>
+
+  <div class="segment-card">
+    <div class="segment-icon" style="background:rgba(56,189,248,0.08)">💻</div>
+    <div style="flex:1">
+      <div class="segment-name" style="color:var(--nomad)">Digital Nomads</div>
+      <div class="segment-tags">
+        <span class="segment-tag" style="background:rgba(56,189,248,0.08);color:var(--nomad)">40M globally</span>
+        <span class="segment-tag" style="background:rgba(56,189,248,0.08);color:var(--nomad)">3 months avg in TH</span>
+        <span class="segment-tag" style="background:rgba(56,189,248,0.08);color:var(--nomad)">31% American</span>
+        <span class="segment-tag" style="background:rgba(56,189,248,0.08);color:var(--nomad)">$787B impact</span>
+      </div>
+      <div class="segment-desc">Occupancy stabilizer. Need fast WiFi, work spaces, monthly rates. Thailand is top-3 destination globally.</div>
+    </div>
+  </div>
+
+  <div class="segment-card">
+    <div class="segment-icon" style="background:rgba(212,168,83,0.08)">🧭</div>
+    <div style="flex:1">
+      <div class="segment-name" style="color:var(--solo)">Solo Travelers</div>
+      <div class="segment-tags">
+        <span class="segment-tag" style="background:rgba(212,168,83,0.08);color:var(--solo)">$482B market</span>
+        <span class="segment-tag" style="background:rgba(212,168,83,0.08);color:var(--solo)">14.3% CAGR</span>
+        <span class="segment-tag" style="background:rgba(212,168,83,0.08);color:var(--solo)">76% Gen Z/Mill</span>
+        <span class="segment-tag" style="background:rgba(212,168,83,0.08);color:var(--solo)">55-84% women</span>
+      </div>
+      <div class="segment-desc">Fastest-growing by CAGR. Safety is #1 factor. Wellness retreats for solo women align with CBR positioning.</div>
+    </div>
+  </div>
+
+  <div class="segment-card">
+    <div class="segment-icon" style="background:rgba(139,92,246,0.08)">✈️</div>
+    <div style="flex:1">
+      <div class="segment-name" style="color:var(--bleisure)">Bleisure / Workation</div>
+      <div class="segment-tags">
+        <span class="segment-tag" style="background:rgba(139,92,246,0.08);color:var(--bleisure)">$762B market</span>
+        <span class="segment-tag" style="background:rgba(139,92,246,0.08);color:var(--bleisure)">12.7% CAGR</span>
+        <span class="segment-tag" style="background:rgba(139,92,246,0.08);color:var(--bleisure)">84% want to extend</span>
+        <span class="segment-tag" style="background:rgba(139,92,246,0.08);color:var(--bleisure)">Longer LOS</span>
+      </div>
+      <div class="segment-desc">Hybrid segment. Work-from-resort trend is real. WiFi + beach + extended stay = perfect CBR fit.</div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 2: LENGTH OF STAY -->
+<div class="tab-panel" id="panel-2">
+  <h2 class="section-title">Length of Stay Analysis</h2>
+  <p class="section-sub">Average length of stay by segment and source market</p>
+
+  <div class="grid grid-4">
+    <div class="stat-card"><div class="accent" style="background:var(--slate)"></div><div class="label">Global Hotel Avg</div><div class="value">2-4 nights</div><div class="sub">Declining trend</div></div>
+    <div class="stat-card"><div class="accent" style="background:var(--gold)"></div><div class="label">Thailand Intl</div><div class="value">9.8 days</div><div class="sub">2-4× global average</div></div>
+    <div class="stat-card"><div class="accent" style="background:var(--teal)"></div><div class="label">EU → Thailand</div><div class="value">16.8 days</div><div class="sub">Longest leisure segment</div></div>
+    <div class="stat-card"><div class="accent" style="background:var(--nomad)"></div><div class="label">DN → Thailand</div><div class="value">~90 days</div><div class="sub">3 months average</div></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">Length of Stay: Global Segments vs Thailand by Source (Nights)</div>
+    <div class="canvas-container" style="height:320px"><canvas id="chart-los"></canvas></div>
+    <div class="chart-note">Note: Digital Nomads avg 90 nights — excluded from chart for scale. Thailand dramatically outperforms the global average.</div>
+  </div>
+
+  <div class="grid grid-2" style="margin-top:14px">
+    <div class="chart-card">
+      <div class="chart-title">Thailand LOS by Source Region</div>
+      <div class="canvas-container" style="height:220px"><canvas id="chart-los-th"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">CBR Target ALOS by Segment</div>
+      <div class="los-row"><div style="display:flex;align-items:center;gap:8px"><div class="los-dot" style="background:var(--couples)"></div><span class="los-label">Couples / Honeymoon</span></div><span class="los-value" style="color:var(--couples)">7-10 nights</span></div>
+      <div class="los-row"><div style="display:flex;align-items:center;gap:8px"><div class="los-dot" style="background:var(--family)"></div><span class="los-label">Families</span></div><span class="los-value" style="color:var(--family)">5-7 nights</span></div>
+      <div class="los-row"><div style="display:flex;align-items:center;gap:8px"><div class="los-dot" style="background:var(--teal)"></div><span class="los-label">European Long-Stay</span></div><span class="los-value" style="color:var(--teal)">10-14 nights</span></div>
+      <div class="los-row"><div style="display:flex;align-items:center;gap:8px"><div class="los-dot" style="background:var(--nomad)"></div><span class="los-label">Digital Nomads</span></div><span class="los-value" style="color:var(--nomad)">30+ nights</span></div>
+      <div class="los-row"><div style="display:flex;align-items:center;gap:8px"><div class="los-dot" style="background:var(--coral)"></div><span class="los-label">Russian Winter</span></div><span class="los-value" style="color:var(--coral)">14+ nights</span></div>
+      <div class="los-row"><div style="display:flex;align-items:center;gap:8px"><div class="los-dot" style="background:var(--bleisure)"></div><span class="los-label">Bleisure</span></div><span class="los-value" style="color:var(--bleisure)">7-14 nights</span></div>
+    </div>
+  </div>
+
+  <div class="warning-box" style="background:rgba(232,101,74,0.04);border:1px solid rgba(232,101,74,0.15)">
+    <div class="warning-title" style="color:var(--coral)">⚠ Global Trend Warning</div>
+    <div class="warning-text">Global ALOS is declining (down every month Jan-Jul 2025 vs 2024). But Thailand bucks this trend — stays are longer, and the "slow travel" movement pushes premium resort stays even higher. CBR's opportunity is in the long-stay premium end, not the shrinking short-stay market.</div>
+  </div>
+</div>
+
+<!-- TAB 3: DECISION JOURNEY -->
+<div class="tab-panel" id="panel-3">
+  <h2 class="section-title">The Decision Funnel</h2>
+  <p class="section-sub">How travelers move from inspiration to booking</p>
+
+  <div class="grid grid-4">
+    <div class="stat-card"><div class="accent" style="background:var(--teal)"></div><div class="label">Content Consumed</div><div class="value">141 pages</div><div class="sub">In 45 days before booking</div></div>
+    <div class="stat-card"><div class="accent" style="background:var(--gold)"></div><div class="label">Time Spent</div><div class="value">5+ hours</div><div class="sub">Up to 8.7h in the US</div></div>
+    <div class="stat-card"><div class="accent" style="background:var(--coral)"></div><div class="label">Visit OTA</div><div class="value">80%</div><div class="sub">Even if booking elsewhere</div></div>
+    <div class="stat-card"><div class="accent" style="background:var(--sky)"></div><div class="label">SEA Booking Window</div><div class="value">83 days</div><div class="sub">Up from 46 days in 2024</div></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">Social Media Influence on Travel Decisions (%)</div>
+    <div class="canvas-container" style="height:260px"><canvas id="chart-social"></canvas></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">Two Funnels: Traditional vs Experience-Led (Inverted)</div>
+    <p style="font-size:12px;color:var(--mid);margin-bottom:12px;line-height:1.6;padding:0 4px">McKinsey 2024: The traditional "pick destination first" funnel coexists with a new "pick experience first" funnel — especially among younger travelers. 52% of Gen Z splurge on experiences over accommodation.</p>
+    <div class="canvas-container" style="height:260px"><canvas id="chart-funnel"></canvas></div>
+  </div>
+
+  <div class="grid grid-2" style="margin-top:14px">
+    <div class="ai-box">
+      <h4>🔍 Hotel Selection Factors</h4>
+      <div class="factor-row"><span class="factor-num">1</span>Quality & Condition</div>
+      <div class="factor-row"><span class="factor-num">2</span>Safety</div>
+      <div class="factor-row"><span class="factor-num">3</span>Location (beach proximity)</div>
+      <div class="factor-row"><span class="factor-num">4</span>Review Score (15-20% conv. lift)</div>
+      <div class="factor-row"><span class="factor-num">5</span>Photos & Visual Verification</div>
+      <div class="factor-row"><span class="factor-num">6</span>Facilities (ML: #1 satisfaction driver)</div>
+      <div class="factor-row"><span class="factor-num">7</span>Price / Value</div>
+      <div class="factor-row"><span class="factor-num">8</span>Loyalty Program</div>
+      <div class="factor-row"><span class="factor-num">9</span>Cancellation Flexibility</div>
+      <div class="factor-row"><span class="factor-num">10</span>"Vibe" & Aesthetics</div>
+    </div>
+    <div class="ai-box">
+      <h4>📱 AI Disruption</h4>
+      <p><strong>24%</strong> of US consumers used gen AI for travel planning in 2025 (up from 16% in 2024). <strong>93%</strong> of SEA travelers use Google/YouTube. The booking funnel is compressing — travelers go from inspiration to booking in fewer steps. AI agents are the new gatekeepers.<br><br><strong>Action for CBR:</strong> Structured data, Google Business Profile optimization, clean OTA feeds, and content that AI tools can surface.</p>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 4: CBR STRATEGY -->
+<div class="tab-panel" id="panel-4">
+  <h2 class="section-title">Strategic Recommendations</h2>
+  <p class="section-sub">Recommended segment priority and actions for Chaweng Buri Resort</p>
+
+  <div class="strategy-card">
+    <div class="strategy-header" style="background:rgba(232,101,74,0.05)">
+      <div class="strategy-num" style="background:var(--couples)">#1</div>
+      <div><div class="segment-name" style="color:var(--couples)">Couples / Honeymoon</div><div class="strategy-role">PREMIUM CORE</div></div>
+    </div>
+    <div class="strategy-body">
+      <div class="strategy-actions">
+        <div class="strategy-action"><span style="color:var(--couples)">→</span> Build couple-specific packages (private dining, couple spa, sunset)</div>
+        <div class="strategy-action"><span style="color:var(--couples)">→</span> Target Instagram/TikTok with pool villa content</div>
+        <div class="strategy-action"><span style="color:var(--couples)">→</span> Create 'minimoon' (3-4 night) and full honeymoon (7-10 night) tiers</div>
+        <div class="strategy-action"><span style="color:var(--couples)">→</span> Partner with wedding planners for destination wedding referrals</div>
+      </div>
+      <div class="strategy-metric" style="background:rgba(232,101,74,0.06);color:var(--couples)">Target: 40-50% of bookings · ADR premium: +30%</div>
+    </div>
+  </div>
+
+  <div class="strategy-card">
+    <div class="strategy-header" style="background:rgba(13,148,136,0.05)">
+      <div class="strategy-num" style="background:var(--family)">#2</div>
+      <div><div class="segment-name" style="color:var(--family)">Family / Multi-Gen</div><div class="strategy-role">VOLUME DRIVER</div></div>
+    </div>
+    <div class="strategy-body">
+      <div class="strategy-actions">
+        <div class="strategy-action"><span style="color:var(--family)">→</span> Market multi-villa bookings for extended families</div>
+        <div class="strategy-action"><span style="color:var(--family)">→</span> Non-pool villas as grandparent/family rooms alongside couple pool villas</div>
+        <div class="strategy-action"><span style="color:var(--family)">→</span> Add family-friendly activities programming</div>
+        <div class="strategy-action"><span style="color:var(--family)">→</span> Offer 'stay 7 pay 6' promotions</div>
+      </div>
+      <div class="strategy-metric" style="background:rgba(13,148,136,0.06);color:var(--family)">Target: 25-30% of bookings · Highest total revenue per booking</div>
+    </div>
+  </div>
+
+  <div class="strategy-card">
+    <div class="strategy-header" style="background:rgba(56,189,248,0.05)">
+      <div class="strategy-num" style="background:var(--nomad)">#3</div>
+      <div><div class="segment-name" style="color:var(--nomad)">Digital Nomads / Long-Stay</div><div class="strategy-role">LOW-SEASON STABILIZER</div></div>
+    </div>
+    <div class="strategy-body">
+      <div class="strategy-actions">
+        <div class="strategy-action"><span style="color:var(--nomad)">→</span> Monthly rates on non-pool villas (May-October)</div>
+        <div class="strategy-action"><span style="color:var(--nomad)">→</span> Upgrade WiFi to enterprise grade — non-negotiable</div>
+        <div class="strategy-action"><span style="color:var(--nomad)">→</span> Create co-working corner or work-friendly common area</div>
+        <div class="strategy-action"><span style="color:var(--nomad)">→</span> List on Nomad List, Remote Year, and DN communities</div>
+      </div>
+      <div class="strategy-metric" style="background:rgba(56,189,248,0.06);color:var(--nomad)">Target: Fill 10-15% of rooms in low season · 30+ night stays</div>
+    </div>
+  </div>
+
+  <div class="strategy-card">
+    <div class="strategy-header" style="background:rgba(212,168,83,0.05)">
+      <div class="strategy-num" style="background:var(--solo)">#4</div>
+      <div><div class="segment-name" style="color:var(--solo)">Solo Wellness</div><div class="strategy-role">NICHE PREMIUM</div></div>
+    </div>
+    <div class="strategy-body">
+      <div class="strategy-actions">
+        <div class="strategy-action"><span style="color:var(--solo)">→</span> Women-focused wellness retreat packages</div>
+        <div class="strategy-action"><span style="color:var(--solo)">→</span> Partner with yoga/meditation instructors</div>
+        <div class="strategy-action"><span style="color:var(--solo)">→</span> Create 'solo recharge' 5-7 night packages</div>
+        <div class="strategy-action"><span style="color:var(--solo)">→</span> Target solo female travel communities</div>
+      </div>
+      <div class="strategy-metric" style="background:rgba(212,168,83,0.06);color:var(--solo)">Target: 5-10% of bookings · Aligns with wellness rebrand</div>
+    </div>
+  </div>
+
+  <div class="strategy-card">
+    <div class="strategy-header" style="background:rgba(139,92,246,0.05)">
+      <div class="strategy-num" style="background:var(--bleisure)">#5</div>
+      <div><div class="segment-name" style="color:var(--bleisure)">Bleisure / Workation</div><div class="strategy-role">EMERGING HYBRID</div></div>
+    </div>
+    <div class="strategy-body">
+      <div class="strategy-actions">
+        <div class="strategy-action"><span style="color:var(--bleisure)">→</span> 1-2 week 'work from paradise' packages</div>
+        <div class="strategy-action"><span style="color:var(--bleisure)">→</span> Reliable WiFi + power + desk in rooms</div>
+        <div class="strategy-action"><span style="color:var(--bleisure)">→</span> Day-rate access to resort amenities for visiting professionals</div>
+        <div class="strategy-action"><span style="color:var(--bleisure)">→</span> Market to remote-first companies for team retreats</div>
+      </div>
+      <div class="strategy-metric" style="background:rgba(139,92,246,0.06);color:var(--bleisure)">Target: 5-10% of bookings · Higher LOS than standard leisure</div>
+    </div>
+  </div>
+
+  <div class="bottom-line">
+    <h3>The Bottom Line</h3>
+    <p>CBR's 44 pool villas on Chaweng Beach are naturally positioned for the two highest-value segments: <strong>couples/honeymoon</strong> (beach + private pool + romance) and <strong>family/multi-gen</strong> (multiple villas, beach, activities). The wellness rebrand amplifies both — 88% of wellness tourism is "secondary" (people seeking wellness as part of a broader trip). Digital nomads and long-stay travelers stabilize low season. The <strong>star reclassification from 3→4</strong> remains the single highest-leverage action to unlock visibility across all segments.</p>
+  </div>
+</div>
+
+</div>
+
+<div class="footer">Data: 28 cross-checked sources including McKinsey, Expedia, Google/Visa, GHA, UN Tourism, Phocuswright · Multi-agent research: Researcher × Critic × Synthesiser</div>
+
+<script>
+function switchTab(idx) {
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  document.querySelectorAll('.tab-panel').forEach((p, i) => p.classList.toggle('active', i === idx));
+  // Init charts on first view
+  if (idx === 0 && !window._chart0) initOverviewCharts();
+  if (idx === 1 && !window._chart1) initSegmentCharts();
+  if (idx === 2 && !window._chart2) initLosCharts();
+  if (idx === 3 && !window._chart3) initJourneyCharts();
+}
+
+const cDefaults = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false, labels: { font: { family: "'DM Sans'" } } } }, scales: {} };
+
+function initOverviewCharts() {
+  window._chart0 = true;
+  new Chart(document.getElementById('chart-growth'), {
+    type: 'bar',
+    data: {
+      labels: ['Digital Nomad Svcs', 'Family Trips (YoY)', 'Solo Travel', 'Bleisure', 'Honeymoon'],
+      datasets: [{ data: [21.3, 17, 14.3, 12.7, 6.8], backgroundColor: ['#38BDF8','#0D9488','#D4A853','#8B5CF6','#E8654A'], borderRadius: 6, barThickness: 28 }]
+    },
+    options: { ...cDefaults, indexAxis: 'y',
+      scales: { x: { grid: { color: '#f0f0f0' }, ticks: { callback: v => v + '%', font: { size: 11, family: "'DM Sans'" } } }, y: { grid: { display: false }, ticks: { font: { size: 11, weight: 600, family: "'DM Sans'" } } } },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.raw + '% CAGR' } } }
+    }
+  });
+}
+
+function initSegmentCharts() {
+  window._chart1 = true;
+  new Chart(document.getElementById('chart-honeymoon'), {
+    type: 'doughnut',
+    data: { labels: ['Beach (61%)', 'Mountain (21%)', 'City (18%)'], datasets: [{ data: [61, 21, 18], backgroundColor: ['#0D9488','#0B1D3A','#D4A853'], borderWidth: 0, spacing: 3 }] },
+    options: { ...cDefaults, cutout: '55%', plugins: { legend: { display: true, position: 'bottom', labels: { padding: 16, usePointStyle: true, pointStyle: 'rectRounded', font: { size: 11, family: "'DM Sans'" } } } } }
+  });
+
+  new Chart(document.getElementById('chart-radar'), {
+    type: 'radar',
+    data: {
+      labels: ['Location','Price','WiFi','Pool/Beach','Activities','Privacy','Wellness','Reviews'],
+      datasets: [
+        { label: 'Couples', data: [95,60,40,95,70,95,90,80], borderColor: '#E8654A', backgroundColor: 'rgba(232,101,74,0.1)', borderWidth: 2, pointRadius: 2 },
+        { label: 'Family', data: [85,90,50,90,95,60,40,85], borderColor: '#0D9488', backgroundColor: 'rgba(13,148,136,0.08)', borderWidth: 2, pointRadius: 2 },
+        { label: 'Nomad', data: [70,95,100,50,40,60,45,75], borderColor: '#38BDF8', backgroundColor: 'rgba(56,189,248,0.08)', borderWidth: 2, pointRadius: 2 },
+      ]
+    },
+    options: { ...cDefaults,
+      scales: { r: { beginAtZero: true, max: 100, ticks: { display: false }, grid: { color: '#e8e8e8' }, pointLabels: { font: { size: 9, family: "'DM Sans'" } } } },
+      plugins: { legend: { display: true, position: 'bottom', labels: { padding: 14, usePointStyle: true, pointStyle: 'line', font: { size: 10, family: "'DM Sans'" } } } }
+    }
+  });
+}
+
+function initLosCharts() {
+  window._chart2 = true;
+  const losData = [
+    { l: 'Global Hotel Avg', v: 2.5, c: '#64748B' },
+    { l: 'US Vacation Rental', v: 4.5, c: '#64748B' },
+    { l: 'Family Vacation', v: 6, c: '#0D9488' },
+    { l: 'Honeymoon', v: 8.7, c: '#E8654A' },
+    { l: 'Thailand Intl Tourist', v: 9.8, c: '#D4A853' },
+    { l: 'US → Thailand', v: 14.5, c: '#38BDF8' },
+    { l: 'Russia → Thailand', v: 14, c: '#E8654A' },
+    { l: 'EU → Thailand', v: 16.8, c: '#0D9488' },
+  ];
+  new Chart(document.getElementById('chart-los'), {
+    type: 'bar',
+    data: { labels: losData.map(d => d.l), datasets: [{ data: losData.map(d => d.v), backgroundColor: losData.map(d => d.c), borderRadius: 6, barThickness: 22 }] },
+    options: { ...cDefaults, indexAxis: 'y',
+      scales: { x: { grid: { color: '#f0f0f0' }, ticks: { font: { size: 11, family: "'DM Sans'" } }, title: { display: true, text: 'Nights', font: { size: 11, family: "'DM Sans'" } } }, y: { grid: { display: false }, ticks: { font: { size: 10, weight: 500, family: "'DM Sans'" } } } },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.raw + ' nights' } } }
+    }
+  });
+
+  new Chart(document.getElementById('chart-los-th'), {
+    type: 'bar',
+    data: { labels: ['ASEAN','East Asia','South Asia','Americas','Russia/CIS','Europe'], datasets: [{ data: [5,8,10,14.5,14,16.8], backgroundColor: '#0D9488', borderRadius: 4, barThickness: 32 }] },
+    options: { ...cDefaults,
+      scales: { x: { grid: { display: false }, ticks: { font: { size: 10, family: "'DM Sans'" } } }, y: { grid: { color: '#f0f0f0' }, ticks: { font: { size: 10, family: "'DM Sans'" } } } },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.raw + ' nights' } } }
+    }
+  });
+}
+
+function initJourneyCharts() {
+  window._chart3 = true;
+  new Chart(document.getElementById('chart-social'), {
+    type: 'bar',
+    data: {
+      labels: ['TikTok', 'Instagram', 'YouTube', 'Facebook'],
+      datasets: [
+        { label: 'Inspired to Travel %', data: [83, 86, 68, 50], backgroundColor: '#38BDF8', borderRadius: 4, barThickness: 24 },
+        { label: 'Actually Booked %', data: [32, 44, 20, 40], backgroundColor: '#0D9488', borderRadius: 4, barThickness: 24 },
+      ]
+    },
+    options: { ...cDefaults,
+      scales: { x: { grid: { display: false }, ticks: { font: { size: 12, weight: 600, family: "'DM Sans'" } } }, y: { grid: { color: '#f0f0f0' }, ticks: { font: { size: 10, family: "'DM Sans'" } } } },
+      plugins: { legend: { display: true, position: 'bottom', labels: { padding: 16, usePointStyle: true, pointStyle: 'circle', font: { size: 11, family: "'DM Sans'" } } } }
+    }
+  });
+
+  new Chart(document.getElementById('chart-funnel'), {
+    type: 'line',
+    data: {
+      labels: ['Inspiration', 'Country Choice', 'Area Selection', 'Experience Choice', 'Hotel Booking'],
+      datasets: [
+        { label: 'Traditional Funnel', data: [100, 75, 50, 30, 15], borderColor: '#64748B', backgroundColor: 'rgba(100,116,139,0.06)', fill: true, tension: 0.4, borderWidth: 2, pointRadius: 4, pointBackgroundColor: '#64748B' },
+        { label: 'Experience-Led (Inverted)', data: [40, 55, 70, 90, 100], borderColor: '#0D9488', backgroundColor: 'rgba(13,148,136,0.08)', fill: true, tension: 0.4, borderWidth: 2, pointRadius: 4, pointBackgroundColor: '#0D9488' },
+      ]
+    },
+    options: { ...cDefaults,
+      scales: { x: { grid: { display: false }, ticks: { font: { size: 10, family: "'DM Sans'" } } }, y: { grid: { color: '#f0f0f0' }, ticks: { font: { size: 10, family: "'DM Sans'" } } }, },
+      plugins: { legend: { display: true, position: 'bottom', labels: { padding: 14, usePointStyle: true, pointStyle: 'circle', font: { size: 11, family: "'DM Sans'" } } } }
+    }
+  });
+}
+
+// Init first tab charts on load
+window.addEventListener('DOMContentLoaded', () => initOverviewCharts());
+</script>
+</body>
+</html>

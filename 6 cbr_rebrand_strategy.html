@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chaweng Buri Resort — Blue Ocean Rebranding Strategy</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --sand: #f5f0e8;
+  --sand-d: #ebe4d6;
+  --stone: #d4cbbf;
+  --sage: #7a8c6e;
+  --sage-l: #e8ede4;
+  --sage-d: #4a5c3e;
+  --ocean: #3a6b7c;
+  --ocean-l: #e2eef2;
+  --ocean-d: #1e3a44;
+  --coral: #c4785a;
+  --coral-l: #f8ece6;
+  --gold: #b8944a;
+  --gold-l: #f6f0e0;
+  --charcoal: #2c2a26;
+  --ink: #1a1816;
+  --mist: #9a9590;
+  --paper: #faf8f4;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Outfit', sans-serif; background: var(--paper); color: var(--charcoal); font-weight: 300; line-height: 1.7; font-size: 15px; }
+
+.container { max-width: 960px; margin: 0 auto; padding: 0 2rem; }
+
+/* HERO */
+.hero { background: var(--ocean-d); color: var(--sand); padding: 5rem 2rem 4rem; text-align: center; position: relative; overflow: hidden; }
+.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(255,255,255,0.015) 40px, rgba(255,255,255,0.015) 80px); }
+.hero-sub { font-size: 0.75rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--sage); margin-bottom: 1.5rem; font-weight: 400; position: relative; }
+.hero h1 { font-family: 'Cormorant Garamond', serif; font-size: 3.2rem; font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 1rem; position: relative; }
+.hero h1 em { font-style: italic; color: var(--sage); }
+.hero-tagline { font-size: 1.05rem; color: var(--stone); font-weight: 300; max-width: 600px; margin: 0 auto; position: relative; }
+.hero-data { display: flex; justify-content: center; gap: 2.5rem; margin-top: 2.5rem; position: relative; flex-wrap: wrap; }
+.hero-stat { text-align: center; }
+.hero-stat-val { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 500; color: #fff; }
+.hero-stat-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--mist); margin-top: 2px; }
+
+/* NAV */
+.toc { background: var(--sand); border-bottom: 1px solid var(--stone); padding: 0.8rem 0; position: sticky; top: 0; z-index: 100; }
+.toc-inner { display: flex; gap: 0.3rem; overflow-x: auto; max-width: 960px; margin: 0 auto; padding: 0 2rem; }
+.toc a { font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; text-decoration: none; color: var(--mist); padding: 0.4rem 0.8rem; border-radius: 99px; white-space: nowrap; transition: all 0.25s; font-weight: 400; }
+.toc a:hover, .toc a.active { background: var(--ocean-d); color: var(--sand); }
+
+/* SECTIONS */
+section { padding: 3.5rem 0; }
+section + section { border-top: 1px solid var(--stone); }
+
+.sec-label { font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--sage); margin-bottom: 0.5rem; font-weight: 500; }
+.sec-title { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 400; line-height: 1.2; margin-bottom: 0.5rem; }
+.sec-desc { color: var(--mist); font-size: 0.88rem; margin-bottom: 2rem; max-width: 680px; }
+
+/* CARDS */
+.card { background: #fff; border: 1px solid var(--stone); border-radius: 10px; padding: 1.5rem; margin-bottom: 1.25rem; }
+.card-sm { padding: 1.1rem 1.3rem; }
+.card-title { font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mist); margin-bottom: 0.75rem; font-weight: 500; }
+
+/* METRICS */
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 10px; margin-bottom: 2rem; }
+.metric { background: var(--sand); border-radius: 8px; padding: 1rem; }
+.metric-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--mist); margin-bottom: 3px; }
+.metric-val { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 500; }
+.metric-sub { font-size: 0.72rem; color: var(--mist); margin-top: 1px; }
+.metric-val.sage { color: var(--sage-d); }
+.metric-val.ocean { color: var(--ocean); }
+.metric-val.coral { color: var(--coral); }
+.metric-val.gold { color: var(--gold); }
+
+/* GRIDS */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+
+/* ERRC */
+.errc { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 1.5rem 0; }
+.errc-box { border-radius: 10px; padding: 1.2rem 1.4rem; }
+.errc-box h4 { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; font-weight: 500; margin-bottom: 0.5rem; }
+.errc-box ul { list-style: none; font-size: 0.82rem; line-height: 1.8; }
+.errc-box ul li::before { content: '→ '; color: inherit; opacity: 0.5; }
+.errc-elim { background: #f9e8e4; color: #8a3a28; }
+.errc-reduce { background: var(--gold-l); color: #7a6020; }
+.errc-raise { background: var(--ocean-l); color: var(--ocean-d); }
+.errc-create { background: var(--sage-l); color: var(--sage-d); }
+
+/* PERSONA */
+.persona { background: #fff; border: 1px solid var(--stone); border-radius: 10px; padding: 1.5rem; margin-bottom: 1rem; }
+.persona-header { display: flex; align-items: center; gap: 14px; margin-bottom: 1rem; }
+.persona-avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 500; }
+.persona-name { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 500; }
+.persona-tag { font-size: 0.7rem; color: var(--mist); }
+.persona-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; font-size: 0.82rem; margin-bottom: 1rem; }
+.persona-grid dt { color: var(--mist); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.persona-grid dd { margin-bottom: 6px; }
+.persona-quote { background: var(--sand); border-radius: 8px; padding: 1rem 1.2rem; font-style: italic; font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; color: var(--ocean-d); line-height: 1.6; }
+
+/* TABLE */
+.tbl-wrap { overflow-x: auto; border: 1px solid var(--stone); border-radius: 8px; margin: 1rem 0; }
+table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+th { background: var(--sand); text-align: left; padding: 0.6rem 0.8rem; font-weight: 500; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mist); border-bottom: 1px solid var(--stone); }
+td { padding: 0.55rem 0.8rem; border-bottom: 1px solid rgba(0,0,0,0.05); }
+tr:last-child td { border-bottom: none; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+th.num { text-align: right; }
+tr.highlight { background: var(--sage-l); font-weight: 500; }
+
+/* INSIGHT */
+.insight { border-radius: 10px; padding: 1.1rem 1.3rem; margin: 1.25rem 0; font-size: 0.85rem; line-height: 1.7; }
+.insight strong { font-weight: 500; }
+.insight-sage { background: var(--sage-l); color: var(--sage-d); }
+.insight-ocean { background: var(--ocean-l); color: var(--ocean-d); }
+.insight-coral { background: var(--coral-l); color: var(--coral); }
+.insight-gold { background: var(--gold-l); color: #6a5018; }
+
+/* REVIEW */
+.review { background: var(--sand); border-radius: 12px; padding: 2rem; margin: 1.5rem 0; }
+.review-stars { color: var(--gold); font-size: 1.1rem; margin-bottom: 0.5rem; }
+.review-title { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 500; margin-bottom: 1rem; }
+.review-body { font-size: 0.88rem; line-height: 1.85; color: var(--charcoal); }
+.review-body p { margin-bottom: 0.8rem; }
+.review-author { margin-top: 1.2rem; font-size: 0.78rem; color: var(--mist); font-style: italic; }
+
+/* CHART */
+.chart-wrap { position: relative; width: 100%; }
+
+/* CONFIDENCE */
+.conf-row { display: grid; grid-template-columns: 2fr 80px 2fr; gap: 8px; align-items: center; font-size: 0.8rem; padding: 0.4rem 0; border-bottom: 1px solid rgba(0,0,0,0.04); }
+.conf-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+.conf-green { background: var(--sage); }
+.conf-yellow { background: var(--gold); }
+.conf-red { background: var(--coral); }
+
+/* OPTION CARDS */
+.opt-card { border: 1px solid var(--stone); border-radius: 10px; padding: 1.5rem; margin-bottom: 1rem; transition: box-shadow 0.2s; }
+.opt-card.recommended { border-color: var(--sage); border-width: 2px; background: linear-gradient(135deg, var(--sage-l) 0%, #fff 100%); }
+.opt-badge { display: inline-block; font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 99px; margin-bottom: 0.75rem; font-weight: 500; }
+.opt-badge-rec { background: var(--sage-d); color: #fff; }
+.opt-badge-alt { background: var(--sand-d); color: var(--mist); }
+.opt-title { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 500; margin-bottom: 0.3rem; }
+.opt-sub { font-size: 0.82rem; color: var(--mist); margin-bottom: 1rem; }
+.opt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 0.82rem; }
+.opt-pros li, .opt-cons li { margin-bottom: 4px; line-height: 1.6; }
+.opt-pros { color: var(--sage-d); list-style: none; }
+.opt-pros li::before { content: '+ '; font-weight: 600; }
+.opt-cons { color: var(--coral); list-style: none; }
+.opt-cons li::before { content: '— '; }
+
+/* ASPIRATION TABLE */
+.asp-row { display: grid; grid-template-columns: 180px 1fr 100px; gap: 12px; padding: 0.8rem 0; border-bottom: 1px solid rgba(0,0,0,0.05); align-items: start; font-size: 0.82rem; }
+.asp-name { font-weight: 500; }
+.asp-rate { color: var(--mist); font-size: 0.75rem; text-align: right; }
+
+/* FOOTER */
+footer { background: var(--ocean-d); color: var(--stone); padding: 2.5rem 2rem; text-align: center; font-size: 0.75rem; line-height: 1.8; }
+
+/* ANIMATION */
+.fade { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+.fade.visible { opacity: 1; transform: translateY(0); }
+
+@media (max-width: 768px) {
+  .grid2, .grid3, .errc, .persona-grid, .opt-grid { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 2.2rem; }
+  .hero-data { gap: 1.5rem; }
+  .metrics { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-sub">Multi-Agent Strategic Rebranding Framework</div>
+  <h1>Chaweng Buri<br><em>Blue Ocean Strategy</em></h1>
+  <div class="hero-tagline">From red-ocean beach commodity to blue-ocean wellness village.<br>A data-driven transformation roadmap built on 12,394 guests, 28,293 room nights, and ฿105M in revenue intelligence.</div>
+  <div class="hero-data">
+    <div class="hero-stat"><div class="hero-stat-val">฿3,713</div><div class="hero-stat-label">Current ADR</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">→</div><div class="hero-stat-label">&nbsp;</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">฿8,000</div><div class="hero-stat-label">Target ADR (Yr 3)</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">59.6%</div><div class="hero-stat-label">Current Occ.</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">→</div><div class="hero-stat-label">&nbsp;</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">75%</div><div class="hero-stat-label">Target Occ. (Yr 3)</div></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="toc">
+  <div class="toc-inner">
+    <a href="#blue-ocean">Blue ocean</a>
+    <a href="#errc">ERRC framework</a>
+    <a href="#personas">Target personas</a>
+    <a href="#financials">Financial roadmap</a>
+    <a href="#options">Strategic options</a>
+    <a href="#operations">Operations</a>
+    <a href="#team">Team & HR</a>
+    <a href="#review">Target review</a>
+    <a href="#aspiration">Aspiration set</a>
+    <a href="#critics">Critic panel</a>
+    <a href="#confidence">Confidence map</a>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ======== BLUE OCEAN ======== -->
+<section id="blue-ocean" class="fade">
+  <div class="sec-label">Agent 1 — Branding expert</div>
+  <div class="sec-title">The blue ocean opportunity</div>
+  <div class="sec-desc">Every resort on Chaweng competes on the same variables: beach proximity, pool size, breakfast inclusion, and OTA ranking. The blue ocean lies in a category that doesn't yet exist on Chaweng Beach.</div>
+
+  <div class="card" style="text-align:center; padding: 2.5rem;">
+    <div style="font-size:0.68rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--sage); margin-bottom:0.5rem;">Proposed concept</div>
+    <div style="font-family:'Cormorant Garamond',serif; font-size:2.4rem; font-weight:500; color:var(--ocean-d); line-height:1.2; margin-bottom:0.4rem;">Chaweng Buri Wellness Village</div>
+    <div style="font-family:'Cormorant Garamond',serif; font-size:1.1rem; font-style:italic; color:var(--sage);">"Where beach meets balance"</div>
+    <div style="margin-top:1.5rem; font-size:0.85rem; color:var(--mist); max-width:550px; margin-left:auto; margin-right:auto;">A beachfront wellness lifestyle resort that occupies the white space between full-medical wellness sanctuaries (Kamalaya at ฿15,000+/night) and conventional beach resorts with a spa bolted on (฿3,000–5,000/night).</div>
+  </div>
+
+  <div class="grid3" style="margin-top:1.5rem;">
+    <div class="metric"><div class="metric-label">Category</div><div class="metric-val sage">Beachfront wellness lifestyle</div></div>
+    <div class="metric"><div class="metric-label">Star equivalent</div><div class="metric-val ocean">4.5-star experience</div></div>
+    <div class="metric"><div class="metric-label">Personality</div><div class="metric-val">Warm, Thai-rooted, non-clinical</div></div>
+  </div>
+
+  <div class="insight insight-sage">
+    <strong>The core insight:</strong> Every wellness resort on Samui is remote and clinical. Every Chaweng resort is a commodity. Nobody occupies the intersection: wellness that doesn't feel like a hospital, on the best beach, where you can walk to dinner. The Chaweng location is a feature — "wellness without isolation" — not a bug.
+  </div>
+</section>
+
+<!-- ======== ERRC ======== -->
+<section id="errc" class="fade">
+  <div class="sec-label">Strategic framework</div>
+  <div class="sec-title">ERRC grid — the four actions</div>
+  <div class="sec-desc">What to eliminate, reduce, raise, and create to escape the red ocean.</div>
+
+  <div class="errc">
+    <div class="errc-box errc-elim">
+      <h4>Eliminate</h4>
+      <ul>
+        <li>Star-rating mentality — build a category, not a rating</li>
+        <li>Generic "Room Only" plans (78% of current bookings)</li>
+        <li>Cheap walk-in / last-minute discounting</li>
+        <li>Competing on Booking.com price sort with 50+ Chaweng hotels</li>
+      </ul>
+    </div>
+    <div class="errc-box errc-reduce">
+      <h4>Reduce</h4>
+      <ul>
+        <li>OTA dependency: 87.5% → target 45%</li>
+        <li>Room type complexity: 9 types → 4 wellness tiers</li>
+        <li>Low-season rate discounting — replace with programs</li>
+        <li>Commission cost: ฿14.6M → ฿6M target</li>
+      </ul>
+    </div>
+    <div class="errc-box errc-raise">
+      <h4>Raise</h4>
+      <ul>
+        <li>Direct bookings: 12.5% → 40%</li>
+        <li>Breakfast inclusion: 22% → 85%+</li>
+        <li>Guest email capture: 1.3% → 90%+</li>
+        <li>Avg length of stay: 4.6 → 6+ nights</li>
+        <li>Repeat guest rate: 24% → 40%+</li>
+      </ul>
+    </div>
+    <div class="errc-box errc-create">
+      <h4>Create</h4>
+      <ul>
+        <li>Daily wellness programming included in rate</li>
+        <li>Wellness concierge — journey mapping at check-in</li>
+        <li>"Beach Wellness" concept — unique to Chaweng</li>
+        <li>Longevity-focused F&B (nutritionist-designed)</li>
+        <li>"Buri Circle" loyalty membership</li>
+        <li>Bangkok Hospital Samui medical partnership</li>
+        <li>Low-season wellness retreats (7–14 day programs)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Value curve — positioning vs. competitors</div>
+    <div class="chart-wrap" style="height:320px"><canvas id="valueCurve"></canvas></div>
+  </div>
+</section>
+
+<!-- ======== PERSONAS ======== -->
+<section id="personas" class="fade">
+  <div class="sec-label">Agent 2 — Marketing expert</div>
+  <div class="sec-title">Target customer personas</div>
+  <div class="sec-desc">Three personas derived from 12,394 actual guest records, nationality revenue data, and age-income analysis.</div>
+
+  <div class="persona">
+    <div class="persona-header">
+      <div class="persona-avatar" style="background:var(--ocean-l);color:var(--ocean-d);">WC</div>
+      <div><div class="persona-name">The wellness-curious couple</div><div class="persona-tag">Primary — 48% of current guest base</div></div>
+    </div>
+    <div class="persona-grid">
+      <dt>Age</dt><dd>38–52 years old</dd>
+      <dt>Income</dt><dd>$100K–180K/yr household</dd>
+      <dt>Nationality</dt><dd>German, French, British, Swiss, Scandi, Australian</dd>
+      <dt>Behavior</dt><dd>Yoga 1–2×/week, health-curious but not "wellness people"</dd>
+      <dt>Current booking</dt><dd>4.5 nights, Room Only, ฿3,700/night via Booking.com</dd>
+      <dt>Target booking</dt><dd>6 nights, Wellness Stay package, ฿7,500/night, direct</dd>
+    </div>
+    <div class="persona-quote">"We don't want a health boot camp — we want a proper holiday where we also feel amazing when we leave."</div>
+  </div>
+
+  <div class="persona">
+    <div class="persona-header">
+      <div class="persona-avatar" style="background:var(--sage-l);color:var(--sage-d);">AF</div>
+      <div><div class="persona-name">The active family</div><div class="persona-tag">Secondary — 15.5% of current guest base</div></div>
+    </div>
+    <div class="persona-grid">
+      <dt>Age</dt><dd>40–50 years old, 1–2 teens/school-age children</dd>
+      <dt>Income</dt><dd>$120K–200K/yr household</dd>
+      <dt>Nationality</dt><dd>German, French, British, Australian, Scandinavian</dd>
+      <dt>Behavior</dt><dd>Travel 2–3×/year, health-conscious parents, want teen activities</dd>
+      <dt>Current booking</dt><dd>5 nights, Family Pool Villa, ฿4,500/night</dd>
+      <dt>Target booking</dt><dd>7 nights, Family Wellness package, ฿8,500/night</dd>
+    </div>
+    <div class="persona-quote">"Finally a resort where the kids were engaged with actual meaningful activities while we had our spa time."</div>
+  </div>
+
+  <div class="persona">
+    <div class="persona-header">
+      <div class="persona-avatar" style="background:var(--coral-l);color:var(--coral);">SW</div>
+      <div><div class="persona-name">The solo wellness seeker</div><div class="persona-tag">Tertiary — 16.7% of current guest base</div></div>
+    </div>
+    <div class="persona-grid">
+      <dt>Age</dt><dd>32–55, predominantly female</dd>
+      <dt>Income</dt><dd>$80K–150K/yr household</dd>
+      <dt>Behavior</dt><dd>Has done Kamalaya/similar but found it too clinical. Wants community.</dd>
+      <dt>Current booking</dt><dd>N/A — not currently choosing CBR for wellness</dd>
+      <dt>Target booking</dt><dd>10 nights, Wellness Journey, ฿6,500/night solo, direct</dd>
+      <dt>Key insight</dt><dd>This persona doesn't currently book Chaweng — capturing them is net new revenue</dd>
+    </div>
+    <div class="persona-quote">"It's like Kamalaya's little sister — less medical, more human, and you can actually walk to restaurants."</div>
+  </div>
+</section>
+
+<!-- ======== FINANCIALS ======== -->
+<section id="financials" class="fade">
+  <div class="sec-label">Revenue strategy</div>
+  <div class="sec-title">Three-year financial roadmap</div>
+  <div class="sec-desc">Conservative Year 1 dip in occupancy as we reposition, followed by compounding growth as brand equity builds.</div>
+
+  <div class="card">
+    <div class="card-title">ADR and RevPAR trajectory</div>
+    <div class="chart-wrap" style="height:300px"><canvas id="financialChart"></canvas></div>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Metric</th><th class="num">Current</th><th class="num">Year 1</th><th class="num">Year 2</th><th class="num">Year 3</th></tr></thead>
+      <tbody>
+        <tr><td>ADR (net)</td><td class="num">฿3,713</td><td class="num">฿5,500</td><td class="num">฿7,000</td><td class="num">฿8,000</td></tr>
+        <tr><td>Occupancy</td><td class="num">59.6%</td><td class="num">55%</td><td class="num">65%</td><td class="num">75%</td></tr>
+        <tr><td>RevPAR</td><td class="num">฿2,214</td><td class="num">฿3,025</td><td class="num">฿4,550</td><td class="num">฿6,000</td></tr>
+        <tr><td>OTA share</td><td class="num">87.5%</td><td class="num">70%</td><td class="num">55%</td><td class="num">45%</td></tr>
+        <tr><td>Avg LOS</td><td class="num">4.6 nights</td><td class="num">5.5 nights</td><td class="num">6.2 nights</td><td class="num">7.0 nights</td></tr>
+        <tr class="highlight"><td>Est. net revenue</td><td class="num">฿105M</td><td class="num">฿121M</td><td class="num">฿171M</td><td class="num">฿227M</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="insight insight-ocean">
+    <strong>Year 1 occupancy dip is intentional.</strong> Higher rate × slightly lower occupancy = more revenue + lower operational cost per guest. We deliberately shed price-sensitive OTA traffic to make room for higher-value direct bookings. The math: 55% occ × ฿5,500 ADR = ฿121M vs current 59.6% × ฿3,713 = ฿105M. More revenue, fewer guests to serve.
+  </div>
+</section>
+
+<!-- ======== STRATEGIC OPTIONS ======== -->
+<section id="options" class="fade">
+  <div class="sec-label">Strategic choices</div>
+  <div class="sec-title">Four options — pros, cons, and recommendation</div>
+  <div class="sec-desc">Evaluated against CBR's actual data: 102 rooms, Chaweng Beach location, guest demographics, and income profile.</div>
+
+  <div class="opt-card recommended">
+    <div class="opt-badge opt-badge-rec">Recommended</div>
+    <div class="opt-title">Option A — Accessible wellness village</div>
+    <div class="opt-sub">Target ADR ฿7,500–8,500 · Comparable: Fusion Maia Da Nang, Garrya Tongsai Bay</div>
+    <div class="opt-grid">
+      <ul class="opt-pros">
+        <li>Largest addressable market (wellness-curious >> committed seekers)</li>
+        <li>Chaweng location is an advantage, not a limitation</li>
+        <li>Phased execution — doesn't require all-at-once renovation</li>
+        <li>Flattens seasonality through retreat programming</li>
+        <li>Commission savings fund the transformation</li>
+      </ul>
+      <ul class="opt-cons">
+        <li>"Wellness" is becoming a buzzword — must deliver substance</li>
+        <li>Requires hiring talent scarce on Samui</li>
+        <li>3-year transition means Year 1 revenue uncertainty</li>
+        <li>Must convince OTA algorithms of justified higher rates</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="opt-card">
+    <div class="opt-badge opt-badge-alt">Alternative</div>
+    <div class="opt-title">Option B — Boutique design beach hotel</div>
+    <div class="opt-sub">Target ADR ฿6,000–8,000 · Comparable: W Koh Samui, The Library</div>
+    <div class="opt-grid">
+      <ul class="opt-pros">
+        <li>Strong visual differentiation — easier social media marketing</li>
+        <li>No ongoing wellness programming cost</li>
+        <li>Design hotels command natural premium</li>
+      </ul>
+      <ul class="opt-cons">
+        <li>Chaweng already has buzzy design hotels (W, Vana Belle)</li>
+        <li>Design trends change — requires continuous reinvestment</li>
+        <li>No seasonality solution — no low-season demand driver</li>
+        <li>Higher renovation cost for design-grade across 102 rooms</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="opt-card">
+    <div class="opt-badge opt-badge-alt">Alternative</div>
+    <div class="opt-title">Option C — Premium family adventure resort</div>
+    <div class="opt-sub">Target ADR ฿5,500–7,000 · Comparable: Hotel Cavallino Bianco, Soneva Kiri</div>
+    <div class="opt-grid">
+      <ul class="opt-pros">
+        <li>15.5% of current base already families — proven demand</li>
+        <li>Families stay longer and spend more on F&B</li>
+        <li>Underserved on Samui — most luxury resorts are couples-focused</li>
+      </ul>
+      <ul class="opt-cons">
+        <li>Family resorts command lower ADR than couples/wellness</li>
+        <li>Higher ops cost (programming, childcare, safety)</li>
+        <li>May alienate couples/solo (65% of current base)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="opt-card">
+    <div class="opt-badge opt-badge-alt">Backup</div>
+    <div class="opt-title">Option D — Hybrid: wellness village + family wing</div>
+    <div class="opt-sub">Target ADR ฿7,000–9,000 blended · No direct competitor exists</div>
+    <div class="opt-grid">
+      <ul class="opt-pros">
+        <li>Captures both top personas (couples + families)</li>
+        <li>Family wing keeps children separate from adult wellness</li>
+        <li>Genuinely unique positioning globally</li>
+      </ul>
+      <ul class="opt-cons">
+        <li>Brand identity dilution risk</li>
+        <li>More complex operations</li>
+        <li>Requires very careful spatial planning</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ======== OPERATIONS ======== -->
+<section id="operations" class="fade">
+  <div class="sec-label">Agent 3 — General manager</div>
+  <div class="sec-title">Operational blueprint</div>
+
+  <div class="card">
+    <div class="card-title">Room consolidation: 9 types → 4 wellness tiers</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Tier</th><th>Old types</th><th class="num">Rooms</th><th class="num">Target rate</th><th>Concept</th></tr></thead>
+        <tbody>
+          <tr><td style="font-weight:500">Garden Wellness Room</td><td>SGV, DGV</td><td class="num">45</td><td class="num">฿5,500–6,500</td><td>Yoga mat, wellness minibar, circadian lighting</td></tr>
+          <tr><td style="font-weight:500">Pool Wellness Villa</td><td>DPV, DSV, FPV</td><td class="num">35</td><td class="num">฿8,000–10,000</td><td>Private pool, outdoor yoga deck, meditation speaker</td></tr>
+          <tr><td style="font-weight:500">Beachfront Wellness Suite</td><td>DBV, BSV</td><td class="num">12</td><td class="num">฿12,000–15,000</td><td>Direct beach, daily in-villa treatment included</td></tr>
+          <tr><td style="font-weight:500">Grand Wellness Residence</td><td>GFV, HPV+</td><td class="num">10</td><td class="num">฿18,000–25,000</td><td>Multi-bedroom, private chef, HBOT/red light in-room</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Daily wellness programming (included in rate)</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Time</th><th>Activity</th><th>Location</th></tr></thead>
+        <tbody>
+          <tr><td>06:30</td><td>Sunrise beach yoga</td><td>Beachfront</td></tr>
+          <tr><td>07:30</td><td>Wellness breakfast (until 10:30)</td><td>Restaurant</td></tr>
+          <tr><td>09:00</td><td>Breathwork or meditation</td><td>Wellness Pavilion</td></tr>
+          <tr><td>10:00</td><td>Movement class (Thai boxing, Pilates, swimming)</td><td>Fitness / Pool</td></tr>
+          <tr><td>14:00</td><td>Wellness workshop (nutrition, sleep, stress)</td><td>Wellness Pavilion</td></tr>
+          <tr><td>17:00</td><td>Sunset beach activity (paddleboard, walk)</td><td>Beach</td></tr>
+          <tr><td>19:00</td><td>Wellness dinner experience (2×/week)</td><td>Restaurant</td></tr>
+          <tr><td>20:30</td><td>Evening wind-down (sound bath, relaxation)</td><td>Wellness Pavilion</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Renovation budget estimate</div>
+    <div class="chart-wrap" style="height:260px"><canvas id="renoChart"></canvas></div>
+    <div style="margin-top:0.75rem; font-size:0.78rem; color:var(--mist);">Total estimated: ฿75–95M over 18 months. Building 3 (2 rooms, 79 room nights/year) converts to Wellness Pavilion — yoga studio, meditation cave, treatment rooms.</div>
+  </div>
+</section>
+
+<!-- ======== TEAM ======== -->
+<section id="team" class="fade">
+  <div class="sec-label">Agent 4 — HR director</div>
+  <div class="sec-title">Team &amp; hiring plan</div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Role</th><th class="num">Count</th><th class="num">Monthly salary (THB)</th><th>Priority</th></tr></thead>
+      <tbody>
+        <tr><td style="font-weight:500">Wellness Director (expat)</td><td class="num">1</td><td class="num">120,000–180,000</td><td>Hire first — sets the wellness DNA</td></tr>
+        <tr><td style="font-weight:500">Yoga/Movement instructors</td><td class="num">3</td><td class="num">35,000–50,000 each</td><td>Certified, English-fluent</td></tr>
+        <tr><td style="font-weight:500">Nutritionist / F&B consultant</td><td class="num">1</td><td class="num">60,000–80,000</td><td>Redesigns entire menu</td></tr>
+        <tr><td style="font-weight:500">Wellness concierge</td><td class="num">2</td><td class="num">30,000–40,000 each</td><td>Replaces traditional front desk</td></tr>
+        <tr><td style="font-weight:500">Digital marketing manager</td><td class="num">1</td><td class="num">55,000–75,000</td><td>Owns direct booking + social</td></tr>
+        <tr><td style="font-weight:500">Thai traditional medicine</td><td class="num">1</td><td class="num">40,000–55,000</td><td>Herbal medicine, master therapist</td></tr>
+        <tr><td style="font-weight:500">Guest experience manager</td><td class="num">1</td><td class="num">50,000–65,000</td><td>Owns end-to-end journey</td></tr>
+        <tr class="highlight"><td>Total additional payroll</td><td class="num">10</td><td class="num">~฿550K/month</td><td>฿6.6M/year — funded by commission savings</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="insight insight-sage">
+    <strong>Funding math:</strong> Current OTA commissions = ฿14.6M/year. Shifting 30% of bookings to direct saves ~฿4.4M. Combined with rate increase revenue, the entire wellness team is self-funding by Month 12.
+  </div>
+</section>
+
+<!-- ======== TARGET REVIEW ======== -->
+<section id="review" class="fade">
+  <div class="sec-label">What success looks like</div>
+  <div class="sec-title">The target guest review</div>
+  <div class="sec-desc">This is the review we're designing the entire experience to produce.</div>
+
+  <div class="review">
+    <div class="review-stars">★★★★★</div>
+    <div class="review-title">"The wellness resort I didn't know I needed"</div>
+    <div class="review-body">
+      <p>We came to Samui for a beach holiday and chose Buri because it offered morning yoga and wellness breakfast included in the rate. We weren't "wellness people" — we just wanted to feel good on holiday. By day 3, we were addicted to the breathwork sessions.</p>
+      <p>The food was extraordinary — not "health food" but genuinely delicious Thai cuisine designed to nourish. Our pool villa had a yoga mat, a meditation cushion, and the most comfortable bed we've ever slept in. The circadian lighting meant we slept like babies.</p>
+      <p>What sets this place apart is the location. You can walk to Chaweng restaurants in 5 minutes, but the resort itself is a total sanctuary. It's wellness without feeling trapped or clinical. The staff don't lecture you about health — they just create an environment where feeling good happens naturally.</p>
+      <p>We booked direct through their website (better rate than Booking.com) and joined the Buri Circle — already planning our return next February.</p>
+    </div>
+    <div class="review-author">— Marcus & Kathrin, Germany · Pool Wellness Villa · 7 nights · Booked direct</div>
+  </div>
+</section>
+
+<!-- ======== ASPIRATION ======== -->
+<section id="aspiration" class="fade">
+  <div class="sec-label">Competitive intelligence</div>
+  <div class="sec-title">Aspiration set — who to study, what to learn</div>
+  <div class="sec-desc">The goal isn't to become any of these. It's to occupy the white space between them.</div>
+
+  <div class="asp-row" style="border-bottom:1px solid var(--stone); padding-bottom:0.5rem; margin-bottom:0.3rem;"><div style="font-weight:500;font-size:0.7rem;text-transform:uppercase;color:var(--mist);">Property</div><div style="font-weight:500;font-size:0.7rem;text-transform:uppercase;color:var(--mist);">What to learn</div><div style="font-weight:500;font-size:0.7rem;text-transform:uppercase;color:var(--mist);text-align:right">ADR range</div></div>
+  <div class="asp-row"><div class="asp-name">Kamalaya Koh Samui</div><div>Wellness programming depth, repeat loyalty (#1 TripAdvisor), content marketing</div><div class="asp-rate">฿13–25K</div></div>
+  <div class="asp-row"><div class="asp-name">Fusion Maia Da Nang</div><div>"All-spa-inclusive" — 2 treatments/day in rate. Brilliant packaging model.</div><div class="asp-rate">฿8–12K</div></div>
+  <div class="asp-row"><div class="asp-name">Cavallino Bianco, Italy</div><div>Blue ocean master class — zero OTA dependency, family niche dominance</div><div class="asp-rate">€400–800</div></div>
+  <div class="asp-row"><div class="asp-name">Six Senses Samui</div><div>Sustainability storytelling, barefoot luxury aesthetic, organic farm</div><div class="asp-rate">฿15–30K</div></div>
+  <div class="asp-row"><div class="asp-name">Garrya Tongsai Bay</div><div>Heritage property wellness repositioning — directly comparable transition</div><div class="asp-rate">฿6–12K</div></div>
+  <div class="asp-row"><div class="asp-name">Banyan Tree Samui</div><div>Villa host model, Wellbeing Sanctuary concept, hydrotherapy</div><div class="asp-rate">฿12–25K</div></div>
+  <div class="asp-row"><div class="asp-name">Centara Reserve Samui</div><div>Chaweng Beach wellness — closest competitor. Study their gaps.</div><div class="asp-rate">฿8–15K</div></div>
+  <div class="asp-row"><div class="asp-name">1 Hotel (Miami/NYC)</div><div>Nature-meets-urban luxury, eco-design language, accessible wellness</div><div class="asp-rate">$500–1,200</div></div>
+  <div class="asp-row" style="border-bottom:none"><div class="asp-name">Aman Resorts</div><div>Space, silence, minimalism — the philosophy, not the price point</div><div class="asp-rate">$1,000–5,000</div></div>
+
+  <div class="insight insight-gold" style="margin-top:1.5rem;">
+    <strong>CBR's unique position:</strong> More accessible than Kamalaya, more wellness-integrated than Centara, more beachfront than Six Senses, more Thai-rooted than Banyan Tree, and the only one on Chaweng Beach. That specific intersection is the white space nobody owns.
+  </div>
+</section>
+
+<!-- ======== CRITIC PANEL ======== -->
+<section id="critics" class="fade">
+  <div class="sec-label">Stress testing</div>
+  <div class="sec-title">Critic panel challenges &amp; resolutions</div>
+
+  <div class="card card-sm" style="border-left:4px solid var(--gold);">
+    <div style="font-weight:500; margin-bottom:0.3rem;">🟡 "Doubling ADR is aggressive" — Financial skeptic</div>
+    <div style="font-size:0.82rem; color:var(--mist); margin-bottom:0.5rem;">Moving from ฿3,700 to ฿7,500 means losing the value-conscious segment (27% of guests). Can you fill rooms at 2× the rate?</div>
+    <div style="font-size:0.82rem;"><strong>Resolution:</strong> Year 1 target is ฿5,500 (48% increase, not 100%). Full doubling is a 3-year journey. Each phase funded by previous phase revenue. If Year 1 misses target, slow Phase 2.</div>
+  </div>
+
+  <div class="card card-sm" style="border-left:4px solid var(--gold);">
+    <div style="font-weight:500; margin-bottom:0.3rem;">🟡 "Chaweng location works against wellness" — Market realist</div>
+    <div style="font-size:0.82rem; color:var(--mist); margin-bottom:0.5rem;">Kamalaya, Six Senses, Banyan Tree are all on quiet, remote beaches. Can you sell "wellness" next to Walking Street?</div>
+    <div style="font-size:0.82rem;"><strong>Resolution:</strong> This IS the blue ocean insight. Every wellness resort is remote. CBR would be the ONLY beachfront wellness resort with walkable access to town. "Wellness without isolation" — a feature, not a bug.</div>
+  </div>
+
+  <div class="card card-sm" style="border-left:4px solid var(--gold);">
+    <div style="font-weight:500; margin-bottom:0.3rem;">🟡 "1.3% email capture = zero marketing capability" — Ops skeptic</div>
+    <div style="font-size:0.82rem; color:var(--mist); margin-bottom:0.5rem;">Building direct booking from scratch while renovating and retraining is extremely ambitious.</div>
+    <div style="font-size:0.82rem;"><strong>Resolution:</strong> Email capture is Day 1 priority — before any renovation. Start collecting immediately (target 50% Month 1). Build 3,000+ contacts in 6 months before relaunch.</div>
+  </div>
+
+  <div class="card card-sm" style="border-left:4px solid var(--coral);">
+    <div style="font-weight:500; margin-bottom:0.3rem;">🔴 "Wellness on Samui is getting crowded" — Brand skeptic</div>
+    <div style="font-size:0.82rem; color:var(--mist); margin-bottom:0.5rem;">Fivelements opens 2026, Garrya repositioned, Centara Reserve has programs. Is this really a blue ocean?</div>
+    <div style="font-size:0.82rem;"><strong>Resolution:</strong> "Wellness" alone is not a blue ocean. The specific intersection is: beachfront + accessible + Chaweng + ฿7,500. No one owns that. Kamalaya is ฿15K+ and remote. Centara is conventional luxury with wellness bolted on. The white space is precise.</div>
+  </div>
+</section>
+
+<!-- ======== CONFIDENCE MAP ======== -->
+<section id="confidence" class="fade">
+  <div class="sec-label">Research quality</div>
+  <div class="sec-title">Confidence map &amp; open questions</div>
+
+  <div class="card">
+    <div class="card-title">Claim confidence ratings</div>
+    <div class="conf-row"><div>Samui wellness tourism growing 21% YoY</div><div><span class="conf-dot conf-green"></span> High</div><div style="color:var(--mist)">C9 Hotelworks + STR verified</div></div>
+    <div class="conf-row"><div>"Accessible wellness on Chaweng" is uncontested</div><div><span class="conf-dot conf-green"></span> High</div><div style="color:var(--mist)">Competitive mapping confirmed</div></div>
+    <div class="conf-row"><div>OTA commission savings fund transformation</div><div><span class="conf-dot conf-green"></span> High</div><div style="color:var(--mist)">฿14.6M current cost, math direct</div></div>
+    <div class="conf-row"><div>Guest base can support ฿7,500 ADR</div><div><span class="conf-dot conf-yellow"></span> Medium</div><div style="color:var(--mist)">Income model shows capacity, willingness untested</div></div>
+    <div class="conf-row"><div>Direct booking can reach 40% in 3 years</div><div><span class="conf-dot conf-yellow"></span> Medium</div><div style="color:var(--mist)">Industry benchmarks support, requires investment</div></div>
+    <div class="conf-row"><div>Wellness retreats flatten seasonality</div><div><span class="conf-dot conf-yellow"></span> Medium</div><div style="color:var(--mist)">Kamalaya achieves this, but 20 years established</div></div>
+    <div class="conf-row"><div>฿75–95M renovation budget sufficient</div><div><span class="conf-dot conf-yellow"></span> Medium</div><div style="color:var(--mist)">Based on comparables, Samui costs volatile</div></div>
+    <div class="conf-row" style="border-bottom:none"><div>Year 3 revenue target ฿227M</div><div><span class="conf-dot conf-red"></span> Low</div><div style="color:var(--mist)">Requires everything to work — optimistic</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">What we still don't know</div>
+    <div style="font-size:0.82rem; line-height:1.9; color:var(--mist);">
+      <div>1. Land lease terms — renovation investment requires long-term security</div>
+      <div>2. Construction timeline — Samui monsoon season and labor availability</div>
+      <div>3. Funding preference — self-fund vs. investor changes pace of everything</div>
+      <div>4. Competitor response — if Centara or another Chaweng property pivots simultaneously</div>
+      <div>5. Regulatory — wellness health claims may need Thai FDA approvals</div>
+      <div>6. Staff market — can certified wellness practitioners be recruited to Samui?</div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /container -->
+
+<footer>
+  Chaweng Buri Resort — Blue Ocean Rebranding Strategy<br>
+  Multi-Agent Team: Branding Expert × Marketing Expert × GM × HR Director × Revenue Strategist × Design Consultant × Critic Panel<br>
+  Data: HotelTime PMS · Guest Book · Nationality Revenue · Reservation Data · C9 Hotelworks 2025 · STR<br>
+  Produced March 2026
+</footer>
+
+<script>
+const isDark=false;
+const gc='rgba(0,0,0,0.06)';
+const tc='#9a9590';
+const SAGE='#7a8c6e',OCEAN='#3a6b7c',CORAL='#c4785a',GOLD='#b8944a',CHARCOAL='#2c2a26';
+
+// Value Curve
+const vcLabels=['Beach\nquality','Pool/Villa','Wellness\nprogram','F&B\nquality','Service','Location\nconvenience','Price\nvalue','Digital\nexperience','Longevity\noffering','Community\nfeel'];
+new Chart(document.getElementById('valueCurve'),{type:'radar',data:{labels:vcLabels,datasets:[
+  {label:'Typical Chaweng 3-4★',data:[7,5,2,4,4,9,8,3,1,3],borderColor:CORAL,backgroundColor:CORAL+'20',pointRadius:3,borderWidth:2},
+  {label:'Kamalaya (wellness leader)',data:[3,4,10,8,9,2,3,6,9,7],borderColor:GOLD,backgroundColor:GOLD+'20',pointRadius:3,borderWidth:2},
+  {label:'Buri Wellness Village (target)',data:[8,7,8,8,8,9,6,7,7,8],borderColor:SAGE,backgroundColor:SAGE+'25',pointRadius:4,borderWidth:2.5},
+]},options:{responsive:true,maintainAspectRatio:false,scales:{r:{grid:{color:gc},ticks:{display:false},pointLabels:{color:tc,font:{family:'Outfit',size:10}},min:0,max:10}},plugins:{legend:{labels:{color:CHARCOAL,font:{family:'Outfit',size:11},usePointStyle:true,pointStyle:'rectRounded',boxWidth:10}}}}});
+
+// Financial chart
+const finLabels=['Current','Year 1','Year 2','Year 3'];
+new Chart(document.getElementById('financialChart'),{type:'bar',data:{labels:finLabels,datasets:[
+  {label:'ADR (฿)',data:[3713,5500,7000,8000],backgroundColor:OCEAN,borderRadius:4,yAxisID:'y'},
+  {label:'RevPAR (฿)',data:[2214,3025,4550,6000],backgroundColor:SAGE,borderRadius:4,yAxisID:'y'},
+  {label:'Occupancy %',data:[59.6,55,65,75],type:'line',borderColor:CORAL,backgroundColor:'transparent',pointBackgroundColor:CORAL,pointRadius:5,tension:0.3,yAxisID:'y1'}
+]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{position:'left',grid:{color:gc},ticks:{color:tc,callback:v=>'฿'+v.toLocaleString()},title:{display:true,text:'THB',color:tc,font:{size:10}}},y1:{position:'right',grid:{display:false},ticks:{color:tc,callback:v=>v+'%'},min:40,max:85,title:{display:true,text:'Occupancy',color:tc,font:{size:10}}},x:{grid:{display:false},ticks:{color:tc}}},plugins:{legend:{labels:{color:CHARCOAL,font:{family:'Outfit',size:11},usePointStyle:true,pointStyle:'rectRounded',boxWidth:10}}}}});
+
+// Renovation chart
+new Chart(document.getElementById('renoChart'),{type:'bar',data:{labels:['Phase 1\nWellness Pavilion\n+ lobby','Phase 2\n35 Pool Villas','Phase 3\n45 Garden Rooms','Phase 4\nBeachfront +\nResidences','Technology\n& digital'],datasets:[{data:[17.5,27.5,13.5,20,6.5],backgroundColor:[OCEAN,SAGE,SAGE+'99',GOLD,CORAL],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:tc,font:{size:10}}},y:{grid:{color:gc},ticks:{color:tc,callback:v=>'฿'+v+'M'}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'฿'+c.raw+'M estimated'}}}}});
+
+// Scroll fade-in
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+}, {threshold: 0.1});
+document.querySelectorAll('.fade').forEach(el => observer.observe(el));
+
+// Active nav
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.toc a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if(window.scrollY >= s.offsetTop - 120) current = s.id; });
+  navLinks.forEach(a => { a.classList.toggle('active', a.getAttribute('href') === '#'+current); });
+});
+</script>
+</body>
+</html>

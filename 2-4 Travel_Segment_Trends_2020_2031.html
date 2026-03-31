@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Travel Segment Trends: 5-Year History + 5-Year Forecast</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+  :root { --navy:#0B1D3A; --teal:#0D9488; --gold:#D4A853; --coral:#E8654A; --sky:#38BDF8; --purple:#8B5CF6; --dark:#1E293B; --mid:#475569; --border:#E2E8F0; --bg:#FAFAF7; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans','Segoe UI',sans-serif; background:var(--bg); color:var(--dark); }
+
+  .header { background:linear-gradient(135deg,var(--navy),#14304D); padding:28px; color:white; }
+  .header h1 { font-size:20px; font-weight:800; letter-spacing:-0.5px; }
+  .header p { font-size:12px; opacity:0.6; margin-top:6px; }
+
+  .content { max-width:960px; margin:0 auto; padding:24px 20px 60px; }
+
+  .chart-section { margin-bottom:32px; }
+  .chart-section h2 { font-size:17px; font-weight:700; color:var(--dark); margin-bottom:4px; }
+  .chart-section .sub { font-size:12px; color:var(--mid); margin-bottom:16px; line-height:1.5; }
+  .chart-box {
+    background:white; border-radius:14px; padding:20px 16px 16px;
+    border:1px solid var(--border); box-shadow:0 1px 4px rgba(0,0,0,0.04);
+    margin-bottom:16px;
+  }
+  .chart-box .title { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--dark); margin-bottom:14px; padding-left:4px; }
+  .chart-wrap { position:relative; width:100%; }
+  .chart-note { font-size:10px; color:var(--mid); margin-top:8px; padding-left:4px; line-height:1.5; }
+  .chart-note strong { color:var(--dark); }
+
+  .legend-row { display:flex; flex-wrap:wrap; gap:14px; justify-content:center; margin-top:10px; }
+  .legend-item { display:flex; align-items:center; gap:6px; font-size:11px; font-weight:500; color:var(--mid); }
+  .legend-dot { width:10px; height:3px; border-radius:2px; }
+
+  .insight { padding:16px 18px; border-radius:12px; border:1px solid var(--border); background:linear-gradient(135deg,rgba(11,29,58,0.02),rgba(13,148,136,0.03)); margin-bottom:24px; }
+  .insight h3 { font-size:13px; font-weight:700; margin-bottom:6px; }
+  .insight p { font-size:12px; color:var(--mid); line-height:1.7; }
+  .insight strong { color:var(--dark); }
+
+  .source-box { font-size:10px; color:var(--mid); line-height:1.7; margin-top:20px; padding:14px 16px; background:white; border-radius:10px; border:1px solid var(--border); }
+  .source-box strong { color:var(--dark); }
+
+  .divider { height:1px; background:var(--border); margin:28px 0; }
+
+  @media(max-width:640px) { .content { padding:16px 14px 40px; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Travel Segment Trends: 2020–2031</h1>
+  <p>5-Year Historical Data + 5-Year Projections · All Major Segments · Sources: Grand View Research, Fortune Business Insights, MBO Partners, Statista, UN Tourism, McKinsey</p>
+</div>
+
+<div class="content">
+
+<!-- CHART 1: ALL SEGMENTS MARKET SIZE -->
+<div class="chart-section">
+  <h2>Market Size by Segment (USD Billions)</h2>
+  <div class="sub">Estimated market value for each travel segment from 2020 to 2031. Solid lines = historical data; dashed lines = projections based on published CAGR forecasts.</div>
+  <div class="chart-box">
+    <div class="title">All Segments — Market Size Trend</div>
+    <div class="chart-wrap" style="height:400px"><canvas id="chart-all"></canvas></div>
+    <div class="chart-note"><strong>Note:</strong> Solo travel and bleisure are the two largest segments by absolute market size. Honeymoon and digital nomad services are smaller but growing rapidly. Family travel is measured by avg spend per family ($B equivalent estimated from household data), not total market value.</div>
+  </div>
+</div>
+
+<!-- CHART 2: DIGITAL NOMADS POPULATION -->
+<div class="chart-section">
+  <h2>Digital Nomads: Global Population (Millions)</h2>
+  <div class="sub">The number of people identifying as digital nomads worldwide has more than doubled since 2019, with 64 countries now offering dedicated visas.</div>
+  <div class="chart-box">
+    <div class="title">Digital Nomad Population — Historical & Projected</div>
+    <div class="chart-wrap" style="height:320px"><canvas id="chart-dn"></canvas></div>
+    <div class="chart-note"><strong>Sources:</strong> MBO Partners (US data), Statista, A Brother Abroad, Global Citizen Solutions. US figures are precise (MBO annual survey); global estimates extrapolated from multiple sources. Thailand consistently ranks top-3 globally as a DN destination.</div>
+  </div>
+</div>
+
+<!-- CHART 3: GROWTH RATES -->
+<div class="chart-section">
+  <h2>Compound Annual Growth Rate (CAGR) Comparison</h2>
+  <div class="sub">Projected growth rates for the forecast period, showing which segments are accelerating fastest.</div>
+  <div class="chart-box">
+    <div class="title">CAGR by Segment (Forecast Period)</div>
+    <div class="chart-wrap" style="height:300px"><canvas id="chart-cagr"></canvas></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- CHART 4: SOLO TRAVEL -->
+<div class="chart-section">
+  <h2>Solo Travel Market (USD Billions)</h2>
+  <div class="chart-box">
+    <div class="title">Solo Travel — Market Size Trend</div>
+    <div class="chart-wrap" style="height:300px"><canvas id="chart-solo"></canvas></div>
+    <div class="chart-note"><strong>Source:</strong> Grand View Research, Market.us, Spherical Insights. CAGR 13.8-14.5%. Women = 55-84% of solo travelers. Fastest-growing segment by absolute market CAGR.</div>
+  </div>
+</div>
+
+<!-- CHART 5: BLEISURE -->
+<div class="chart-section">
+  <h2>Bleisure / Workation Market (USD Billions)</h2>
+  <div class="chart-box">
+    <div class="title">Bleisure Travel — Market Size Trend</div>
+    <div class="chart-wrap" style="height:300px"><canvas id="chart-bleis"></canvas></div>
+    <div class="chart-note"><strong>Source:</strong> Fortune Business Insights. CAGR 12.7%. 84% of business travelers want to extend trips for leisure. IT sector dominates. Characterized by longer length of stay.</div>
+  </div>
+</div>
+
+<!-- CHART 6: HONEYMOON -->
+<div class="chart-section">
+  <h2>Honeymoon / Romance Travel Market (USD Billions)</h2>
+  <div class="chart-box">
+    <div class="title">Honeymoon Tourism — Market Size Trend</div>
+    <div class="chart-wrap" style="height:300px"><canvas id="chart-honey"></canvas></div>
+    <div class="chart-note"><strong>Source:</strong> Grand View Research, Fortune Business Insights. CAGR 6.6-6.8%. Beach = 61% of honeymoon preference. Indonesia = fastest-growing country. "Minimoons" = fastest-growing sub-segment.</div>
+  </div>
+</div>
+
+<!-- CHART 7: FAMILY -->
+<div class="chart-section">
+  <h2>Family Travel: Avg Annual Spend Per Family (USD)</h2>
+  <div class="chart-box">
+    <div class="title">US Family Travel Spending — Historical & Projected</div>
+    <div class="chart-wrap" style="height:300px"><canvas id="chart-family"></canvas></div>
+    <div class="chart-note"><strong>Source:</strong> FTA/NYU SPS Family Travel Survey. 47% of all travelers chose multi-gen trips in 2025 (+17% YoY). 92% of parents plan to travel with kids. Note: data is US-centric; global family travel spending patterns vary by region.</div>
+  </div>
+</div>
+
+<!-- CHART 8: INTERNATIONAL ARRIVALS -->
+<div class="chart-section">
+  <h2>Global International Tourist Arrivals (Billions)</h2>
+  <div class="chart-box">
+    <div class="title">World Tourism Recovery & Growth</div>
+    <div class="chart-wrap" style="height:300px"><canvas id="chart-arrivals"></canvas></div>
+    <div class="chart-note"><strong>Source:</strong> UN Tourism World Tourism Barometer. 2025 was a record year with 1.52B arrivals. 2026 expected +3-4% growth. Tourism receipts reached $1.9T in 2025.</div>
+  </div>
+</div>
+
+<div class="insight">
+  <h3>Key Takeaway for CBR</h3>
+  <p>Every segment is growing, but at very different rates. <strong>Digital nomad services</strong> (21.3% CAGR) and <strong>solo travel</strong> (14.3% CAGR) are accelerating fastest. <strong>Bleisure</strong> (12.7%) offers the longest length of stay. <strong>Honeymoon</strong> (6.8%) is slower-growing but high-value per booking. <strong>Family travel</strong> is the volume king — 47% of all trips. The strategic play for CBR is to layer these segments: couples/honeymoon as premium core in high season, families for volume, and digital nomads + bleisure for low-season occupancy stabilization. The global trend toward <strong>fewer, longer trips</strong> and <strong>experience-led booking</strong> directly benefits a beachfront pool villa resort with wellness positioning.</p>
+</div>
+
+<div class="source-box">
+  <strong>Data Sources & Methodology:</strong> Market size estimates compiled from Grand View Research, Fortune Business Insights, Market.us, Verified Market Reports, MBO Partners, Statista, UN Tourism, FTA/NYU SPS, Cloudbeds, Phocuswright, McKinsey. Where exact annual data was unavailable, values were interpolated using published CAGR rates and base-year figures. Projections use the midpoint of published CAGR ranges. Digital nomad population data from MBO Partners (US) and extrapolated globally from A Brother Abroad, Nomad List, and Global Citizen Solutions. Family spending is US-only (FTA survey). All figures in USD unless otherwise noted.
+</div>
+
+</div>
+
+<script>
+Chart.defaults.font.family = "'DM Sans','Segoe UI',sans-serif";
+Chart.defaults.font.size = 11;
+
+const years = ['2020','2021','2022','2023','2024','2025','2026','2027','2028','2029','2030','2031'];
+const histLen = 6; // 2020-2025 = historical
+
+function pointed(arr, histCount) {
+  return arr.map((v,i) => i < histCount ? 4 : 3);
+}
+function dashed(arr, histCount) {
+  return { segment: { borderDash: ctx => ctx.p1DataIndex >= histCount - 1 ? [6,4] : [] } };
+}
+
+function makeChart(id, datasets, yLabel, yCallback) {
+  const ctx = document.getElementById(id);
+  new Chart(ctx, {
+    type: 'line',
+    data: { labels: years, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { intersect: false, mode: 'index' },
+      plugins: {
+        legend: { display: true, position: 'bottom', labels: { padding: 16, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } } },
+        tooltip: {
+          backgroundColor: '#0B1D3A', titleFont: { weight: 700 }, bodyFont: { size: 12 },
+          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${yCallback ? yCallback(ctx.raw) : ctx.raw}` }
+        },
+        annotation: {
+          annotations: {
+            divider: { type: 'line', xMin: 5, xMax: 5, borderColor: '#cbd5e1', borderWidth: 1, borderDash: [4,4],
+              label: { display: true, content: '← Historical | Projected →', position: 'start', font: { size: 9, weight: 400 }, color: '#94a3b8', backgroundColor: 'transparent' }
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11, weight: ctx => ctx.tick.label === '2025' ? 700 : 400 } } },
+        y: { grid: { color: '#f0f0f0' }, ticks: { callback: yCallback || (v => v), font: { size: 10 } }, title: { display: !!yLabel, text: yLabel, font: { size: 11 } } }
+      }
+    }
+  });
+}
+
+// --- CHART 1: All segments market size ---
+makeChart('chart-all', [
+  { label: 'Solo Travel', data: [180,210,290,380,482,548,625,713,813,927,1070,1200], borderColor: '#D4A853', backgroundColor: 'rgba(212,168,83,0.06)', fill: false, tension: 0.35, borderWidth: 2.5, pointRadius: pointed(years,histLen), segment: { borderDash: ctx => ctx.p1DataIndex >= 5 ? [6,4] : [] } },
+  { label: 'Bleisure', data: [280,350,450,560,680,762,858,967,1090,1228,1384,1560], borderColor: '#8B5CF6', backgroundColor: 'rgba(139,92,246,0.06)', fill: false, tension: 0.35, borderWidth: 2.5, pointRadius: pointed(years,histLen), segment: { borderDash: ctx => ctx.p1DataIndex >= 5 ? [6,4] : [] } },
+  { label: 'Honeymoon', data: [45,58,78,100,132,142,152,162,173,185,197,211], borderColor: '#E8654A', backgroundColor: 'rgba(232,101,74,0.06)', fill: false, tension: 0.35, borderWidth: 2.5, pointRadius: pointed(years,histLen), segment: { borderDash: ctx => ctx.p1DataIndex >= 5 ? [6,4] : [] } },
+  { label: 'DN Services', data: [8,12,17,24,34,41,50,61,74,90,109,132], borderColor: '#38BDF8', backgroundColor: 'rgba(56,189,248,0.06)', fill: false, tension: 0.35, borderWidth: 2.5, pointRadius: pointed(years,histLen), segment: { borderDash: ctx => ctx.p1DataIndex >= 5 ? [6,4] : [] } },
+  { label: 'Wellness Tourism', data: [436,500,680,868,1030,1120,1218,1325,1441,1567,1704,1853], borderColor: '#0D9488', backgroundColor: 'rgba(13,148,136,0.06)', fill: false, tension: 0.35, borderWidth: 2.5, pointRadius: pointed(years,histLen), segment: { borderDash: ctx => ctx.p1DataIndex >= 5 ? [6,4] : [] } },
+], 'USD Billions', v => '$' + v + 'B');
+
+// --- CHART 2: Digital Nomad Population ---
+makeChart('chart-dn', [
+  { label: 'US Digital Nomads (M)', data: [10.9,15.5,16.9,17.3,18.1,18.5,19.5,20.6,21.8,23.0,24.3,25.7], borderColor: '#38BDF8', backgroundColor: 'rgba(56,189,248,0.08)', fill: true, tension: 0.35, borderWidth: 2.5, pointRadius: pointed(years,histLen), segment: { borderDash: ctx => ctx.p1DataIndex >= 5 ? [6,4] : [] } },
+  { label: 'Global Digital Nomads (M)', data: [20,25,30,35,40,44,49,54,60,67,74,82], borderColor: '#0B1D3A', backgroundColor: 'rgba(11,29,58,0.06)', fill: true, tension: 0.35, borderWidth: 2.5, pointRadius: pointed(years,histLen), segment: { borderDash: ctx => ctx.p1DataIndex >= 5 ? [6,4] : [] } },
+], 'Millions of People', v => v + 'M');
+
+// --- CHART 3: CAGR Comparison ---
+(function() {
+  const ctx = document.getElementById('chart-cagr');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['DN Services\n(2025-34)', 'Solo Travel\n(2025-30)', 'Bleisure\n(2025-34)', 'Wellness\n(2022-27)', 'Honeymoon\n(2025-30)', 'Global Tourism\n(2025-26)'],
+      datasets: [{ data: [21.3, 14.3, 12.7, 8.7, 6.8, 4.0], backgroundColor: ['#38BDF8','#D4A853','#8B5CF6','#0D9488','#E8654A','#64748B'], borderRadius: 6, barThickness: 36 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.raw + '% CAGR' } } },
+      scales: {
+        x: { grid: { color: '#f0f0f0' }, ticks: { callback: v => v + '%', font: { size: 11 } } },
+        y: { grid: { display: false }, ticks: { font: { size: 11, weight: 600 } } }
+      }
+    }
+  });
+})();
+
+// --- CHART 4: Solo Travel ---
+makeChart('chart-solo', [
+  { label: 'Solo Travel Market', data: [180,210,290,380,482,548,625,713,813,927,1070,1200], borderColor: '#D4A853', backgroundColor: 'rgba(212,168,83,0.1)', fill: true, tension: 0.35, borderWidth: 3, pointRadius: pointed(years,histLen), segment: { borderDash: ctx => ctx.p1DataIndex >= 5 ? [6,4] : [] } },
+], 'USD Billions', v => '$' + v + 'B');
+
+// --- CHART 5: Bleisure ---
+makeChart('chart-bleis', [
+  { label: 'Bleisure Market', data: [280,350,450,560,680,762,858,967,1090,1228,1384,1560], borderColor: '#8B5CF6', backgroundColor: 'rgba(139,92,246,0.1)', fill: true, tension: 0.35, borderWidth: 3, pointRadius: pointed(years,histLen), segment: { borderDash: ctx => ctx.p1DataIndex >= 5 ? [6,4] : [] } },
+], 'USD Billions', v => '$' + v + 'B');
+
+// --- CHART 6: Honeymoon ---
+makeChart('chart-honey', [
+  { label: 'Honeymoon Tourism', data: [45,58,78,100,132,142,152,162,173,185,197,211], borderColor: '#E8654A', backgroundColor: 'rgba(232,101,74,0.1)', fill: true, tension: 0.35, borderWidth: 3, pointRadius: pointed(years,histLen), segment: { borderDash: ctx => ctx.p1DataIndex >= 5 ? [6,4] : [] } },
+], 'USD Billions', v => '$' + v + 'B');
+
+// --- CHART 7: Family Spending ---
+makeChart('chart-family', [
+  { label: 'Avg Family Travel Spend (US)', data: [3200,4500,5500,6700,8052,8855,9741,10715,11786,12965,14261,15687], borderColor: '#0D9488', backgroundColor: 'rgba(13,148,136,0.1)', fill: true, tension: 0.35, borderWidth: 3, pointRadius: pointed(years,histLen), segment: { borderDash: ctx => ctx.p1DataIndex >= 5 ? [6,4] : [] } },
+], 'USD per Family', v => '$' + v.toLocaleString());
+
+// --- CHART 8: Global Arrivals ---
+makeChart('chart-arrivals', [
+  { label: 'Intl Tourist Arrivals', data: [0.40,0.46,0.96,1.29,1.46,1.52,1.57,1.62,1.68,1.74,1.80,1.87], borderColor: '#0B1D3A', backgroundColor: 'rgba(11,29,58,0.08)', fill: true, tension: 0.35, borderWidth: 3, pointRadius: pointed(years,histLen), segment: { borderDash: ctx => ctx.p1DataIndex >= 5 ? [6,4] : [] } },
+], 'Billions', v => v + 'B');
+
+</script>
+</body>
+</html>
