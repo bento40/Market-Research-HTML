@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chaweng Buri Resort - Guest Review Analytics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --primary: #1a365d;
+    --primary-light: #2c5282;
+    --accent: #ed8936;
+    --accent2: #48bb78;
+    --accent3: #e53e3e;
+    --bg: #f7fafc;
+    --card: #ffffff;
+    --text: #2d3748;
+    --text-muted: #718096;
+    --border: #e2e8f0;
+    --shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+  .header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white; padding: 40px 0; text-align: center;
+  }
+  .header h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 8px; }
+  .header p { font-size: 1rem; opacity: 0.85; }
+  .header .badge { display: inline-block; background: rgba(255,255,255,0.15); padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; margin-top: 12px; }
+
+  .container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+
+  /* Navigation tabs */
+  .nav-tabs {
+    display: flex; gap: 0; background: white; border-radius: 12px; overflow: hidden;
+    box-shadow: var(--shadow); margin: -24px auto 32px; max-width: 900px; position: relative; z-index: 10;
+  }
+  .nav-tab {
+    flex: 1; padding: 16px 12px; text-align: center; cursor: pointer; font-weight: 600;
+    font-size: 0.85rem; color: var(--text-muted); border-bottom: 3px solid transparent;
+    transition: all 0.3s;
+  }
+  .nav-tab:hover { background: #f0f4f8; color: var(--primary); }
+  .nav-tab.active { color: var(--primary); border-bottom-color: var(--accent); background: #f0f4f8; }
+  .nav-tab .tab-icon { display: block; font-size: 1.3rem; margin-bottom: 4px; }
+
+  /* Sections */
+  .section { display: none; animation: fadeIn 0.4s ease; }
+  .section.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .section-title {
+    font-size: 1.6rem; font-weight: 700; color: var(--primary); margin-bottom: 8px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-subtitle { color: var(--text-muted); margin-bottom: 28px; font-size: 0.95rem; }
+
+  /* Cards */
+  .card {
+    background: var(--card); border-radius: 12px; padding: 28px; box-shadow: var(--shadow);
+    margin-bottom: 24px; border: 1px solid var(--border);
+  }
+  .card h3 { font-size: 1.15rem; color: var(--primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+  /* KPI row */
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+  .kpi-card {
+    background: white; border-radius: 12px; padding: 20px; text-align: center;
+    box-shadow: var(--shadow); border: 1px solid var(--border);
+  }
+  .kpi-card .kpi-value { font-size: 2rem; font-weight: 800; color: var(--primary); }
+  .kpi-card .kpi-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+  .kpi-card.highlight { border-left: 4px solid var(--accent); }
+  .kpi-card.good { border-left: 4px solid var(--accent2); }
+  .kpi-card.warn { border-left: 4px solid var(--accent3); }
+
+  /* Grids */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+  @media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  /* Bars */
+  .theme-bar { margin-bottom: 14px; }
+  .theme-bar .bar-header { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem; }
+  .theme-bar .bar-track { height: 28px; background: #edf2f7; border-radius: 14px; overflow: hidden; position: relative; }
+  .theme-bar .bar-fill { height: 100%; border-radius: 14px; display: flex; align-items: center; padding-left: 12px; color: white; font-weight: 600; font-size: 0.8rem; transition: width 1s ease; }
+  .bar-green { background: linear-gradient(90deg, #48bb78, #38a169); }
+  .bar-blue { background: linear-gradient(90deg, #4299e1, #3182ce); }
+  .bar-orange { background: linear-gradient(90deg, #ed8936, #dd6b20); }
+  .bar-red { background: linear-gradient(90deg, #fc8181, #e53e3e); }
+  .bar-purple { background: linear-gradient(90deg, #9f7aea, #805ad5); }
+  .bar-teal { background: linear-gradient(90deg, #38b2ac, #319795); }
+
+  /* Quote */
+  .quote-box {
+    background: #f7fafc; border-left: 4px solid var(--accent); padding: 14px 18px;
+    margin: 10px 0; border-radius: 0 8px 8px 0; font-style: italic; color: #4a5568; font-size: 0.9rem;
+  }
+  .quote-box.negative { border-left-color: var(--accent3); background: #fff5f5; }
+  .quote-box .quote-tag {
+    display: inline-block; font-size: 0.7rem; font-style: normal; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px; margin-bottom: 6px;
+  }
+  .tag-positive { background: #c6f6d5; color: #276749; }
+  .tag-negative { background: #fed7d7; color: #9b2c2c; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th { background: var(--primary); color: white; padding: 12px 16px; text-align: left; font-weight: 600; }
+  td { padding: 11px 16px; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: #f7fafc; }
+
+  /* Perception gauge */
+  .perception-meter { display: flex; align-items: center; gap: 0; margin: 20px 0; border-radius: 30px; overflow: hidden; height: 40px; }
+  .perception-meter .seg { height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.75rem; }
+
+  /* Insight callout */
+  .insight-box {
+    background: linear-gradient(135deg, #ebf8ff, #f0fff4); border: 1px solid #bee3f8;
+    border-radius: 12px; padding: 20px 24px; margin: 20px 0;
+  }
+  .insight-box h4 { color: var(--primary); margin-bottom: 8px; font-size: 1rem; }
+  .insight-box p { font-size: 0.9rem; color: #4a5568; }
+
+  /* Competitor cards */
+  .comp-card {
+    background: white; border-radius: 12px; padding: 20px; border: 1px solid var(--border);
+    box-shadow: var(--shadow); text-align: center;
+  }
+  .comp-card .comp-name { font-weight: 700; color: var(--primary); font-size: 1rem; margin-bottom: 4px; }
+  .comp-card .comp-stars { color: var(--accent); font-size: 1.1rem; }
+  .comp-card .comp-price { font-size: 1.5rem; font-weight: 800; color: var(--primary); margin: 8px 0; }
+  .comp-card .comp-rating { font-size: 0.85rem; color: var(--text-muted); }
+  .comp-card.self { border: 2px solid var(--accent); background: #fffaf0; }
+
+  /* Charts */
+  .chart-container { position: relative; width: 100%; max-height: 350px; }
+  canvas { max-height: 350px; }
+
+  /* Donut center label */
+  .donut-wrap { position: relative; display: flex; justify-content: center; }
+
+  .footer { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 0.8rem; border-top: 1px solid var(--border); margin-top: 40px; }
+
+  /* Print */
+  @media print { .nav-tabs { display: none; } .section { display: block !important; page-break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="container">
+    <h1>Chaweng Buri Resort</h1>
+    <p>Guest Review Analytics Dashboard</p>
+    <div class="badge">787 Reviews &bull; May 2024 &ndash; Mar 2026 &bull; Booking.com</div>
+  </div>
+</div>
+
+<!-- NAVIGATION -->
+<div class="container">
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="showSection('why')"><span class="tab-icon">1</span>Why Guests Choose Us</div>
+    <div class="nav-tab" onclick="showSection('strengths')"><span class="tab-icon">2</span>Strengths</div>
+    <div class="nav-tab" onclick="showSection('weaknesses')"><span class="tab-icon">3</span>Weaknesses</div>
+    <div class="nav-tab" onclick="showSection('perception')"><span class="tab-icon">4</span>Hotel Perception</div>
+    <div class="nav-tab" onclick="showSection('competitors')"><span class="tab-icon">5</span>Competitor Comparison</div>
+    <div class="nav-tab" onclick="showSection('purpose')"><span class="tab-icon">6</span>Travel Purpose</div>
+    <div class="nav-tab" onclick="showSection('activities')"><span class="tab-icon">7</span>Guest Activities</div>
+    <div class="nav-tab" onclick="showSection('bestact')"><span class="tab-icon">8</span>Best Activities</div>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 1: WHY GUESTS CHOOSE CHAWENG BURI     -->
+<!-- ============================================== -->
+<div class="container">
+<div id="why" class="section active">
+  <h2 class="section-title">Why Guests Choose to Stay at Chaweng Buri</h2>
+  <p class="section-subtitle">Analysis of 453 positive reviews identifying the top reasons guests select this property</p>
+
+  <div class="kpi-row">
+    <div class="kpi-card highlight"><div class="kpi-value">82.1%</div><div class="kpi-label">Mention Location</div></div>
+    <div class="kpi-card good"><div class="kpi-value">43.0%</div><div class="kpi-label">Mention Staff</div></div>
+    <div class="kpi-card highlight"><div class="kpi-value">37.5%</div><div class="kpi-label">Mention Room/Villa</div></div>
+    <div class="kpi-card good"><div class="kpi-value">27.4%</div><div class="kpi-label">Mention Pool</div></div>
+    <div class="kpi-card highlight"><div class="kpi-value">21.2%</div><div class="kpi-label">Mention Breakfast</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Top Reasons Guests Choose Chaweng Buri</h3>
+      <div class="chart-container"><canvas id="whyChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Location Score: 9.24/10 &mdash; The #1 Draw</h3>
+      <p style="font-size:0.9rem; color:#4a5568; margin-bottom:16px;">
+        The overwhelming reason guests choose Chaweng Buri is its <strong>prime beachfront location</strong> in the heart of Chaweng. Situated directly on the beach and across from Central Samui shopping mall, it offers the rare combination of:
+      </p>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;">
+        <span style="background:#ebf8ff; color:#2b6cb0; padding:6px 14px; border-radius:20px; font-size:0.85rem; font-weight:600;">Direct Beach Access</span>
+        <span style="background:#f0fff4; color:#276749; padding:6px 14px; border-radius:20px; font-size:0.85rem; font-weight:600;">Central Chaweng</span>
+        <span style="background:#faf5ff; color:#553c9a; padding:6px 14px; border-radius:20px; font-size:0.85rem; font-weight:600;">Near Shopping &amp; Dining</span>
+        <span style="background:#fffaf0; color:#9c4221; padding:6px 14px; border-radius:20px; font-size:0.85rem; font-weight:600;">Peaceful Despite Central</span>
+      </div>
+
+      <div class="quote-box">
+        <div class="quote-tag tag-positive">Guest Review</div>
+        "The location is great, close to the action, but quiet at the same time. Central Samui and plenty of cafes and shops are just across the road."
+      </div>
+      <div class="quote-box">
+        <div class="quote-tag tag-positive">Guest Review</div>
+        "Conveniently located in the heart of Chaweng, close to shopping malls, shops, and restaurants. The rooms are clean and beachfront."
+      </div>
+      <div class="quote-box">
+        <div class="quote-tag tag-positive">Guest Review</div>
+        "The best location on the nicest part of the beach, across the road from Central Samui Mall and far enough from the Ark Bar to be a peaceful oasis."
+      </div>
+    </div>
+  </div>
+
+  <div class="insight-box">
+    <h4>Key Insight</h4>
+    <p><strong>Location is the undeniable #1 driver</strong> &mdash; mentioned in 82% of positive reviews. This is Chaweng Buri's strongest asset and competitive moat. Guests specifically value the "best of both worlds" positioning: beachfront tranquility with urban convenience steps away. The friendly staff (43%), spacious rooms/villas (37.5%), and large pool (27.4%) round out the core value proposition.</p>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 2: STRENGTHS                           -->
+<!-- ============================================== -->
+<div id="strengths" class="section">
+  <h2 class="section-title">Strengths &amp; Positives</h2>
+  <p class="section-subtitle">Category scores and guest-praised attributes from 787 reviews</p>
+
+  <div class="kpi-row">
+    <div class="kpi-card good"><div class="kpi-value">9.24</div><div class="kpi-label">Location</div></div>
+    <div class="kpi-card good"><div class="kpi-value">8.67</div><div class="kpi-label">Staff</div></div>
+    <div class="kpi-card highlight"><div class="kpi-value">8.13</div><div class="kpi-label">Cleanliness</div></div>
+    <div class="kpi-card highlight"><div class="kpi-value">8.05</div><div class="kpi-label">Comfort</div></div>
+    <div class="kpi-card highlight"><div class="kpi-value">7.62</div><div class="kpi-label">Facilities</div></div>
+    <div class="kpi-card warn"><div class="kpi-value">7.55</div><div class="kpi-label">Value for Money</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Category Performance Radar</h3>
+      <div class="chart-container"><canvas id="radarChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Score Distribution (787 Reviews)</h3>
+      <div class="chart-container"><canvas id="distChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Top 6 Strengths Identified from Reviews</h3>
+    <div class="grid-2" style="gap:16px;">
+      <div>
+        <div class="theme-bar">
+          <div class="bar-header"><span><strong>1. Prime Beachfront Location</strong></span><span>9.24/10</span></div>
+          <div class="bar-track"><div class="bar-fill bar-green" style="width:92.4%">92%</div></div>
+        </div>
+        <p style="font-size:0.85rem; color:#4a5568; margin-bottom:16px;">Directly on Chaweng Beach, across from Central Samui Mall. Guests love the "central yet peaceful" atmosphere with walking access to nightlife, dining, and shopping.</p>
+
+        <div class="theme-bar">
+          <div class="bar-header"><span><strong>2. Warm & Friendly Staff</strong></span><span>8.67/10</span></div>
+          <div class="bar-track"><div class="bar-fill bar-blue" style="width:86.7%">87%</div></div>
+        </div>
+        <p style="font-size:0.85rem; color:#4a5568; margin-bottom:16px;">Staff mentioned in 43% of positive reviews. Guests frequently name specific team members (especially "Ben") for going above and beyond with courteous, helpful service.</p>
+
+        <div class="theme-bar">
+          <div class="bar-header"><span><strong>3. Spacious Villas & Rooms</strong></span><span>8.05/10</span></div>
+          <div class="bar-track"><div class="bar-fill bar-teal" style="width:80.5%">81%</div></div>
+        </div>
+        <p style="font-size:0.85rem; color:#4a5568;">The traditional Thai-style bungalows and villas are praised for being spacious, clean, and offering a unique "home-like" feel with tropical garden settings.</p>
+      </div>
+      <div>
+        <div class="theme-bar">
+          <div class="bar-header"><span><strong>4. Large Swimming Pool</strong></span><span>Mentioned in 27% of positives</span></div>
+          <div class="bar-track"><div class="bar-fill bar-purple" style="width:70%">27%</div></div>
+        </div>
+        <p style="font-size:0.85rem; color:#4a5568; margin-bottom:16px;">The pool area is consistently praised for its size and tropical surroundings. Guests appreciate having both pool and beach access.</p>
+
+        <div class="theme-bar">
+          <div class="bar-header"><span><strong>5. Beautiful Beach</strong></span><span>Part of Location 9.24</span></div>
+          <div class="bar-track"><div class="bar-fill bar-orange" style="width:85%">85%</div></div>
+        </div>
+        <p style="font-size:0.85rem; color:#4a5568; margin-bottom:16px;">Guests describe the beach as "superb" and "magnificent" with natural shade from large trees &mdash; a distinct advantage over nearby properties.</p>
+
+        <div class="theme-bar">
+          <div class="bar-header"><span><strong>6. Lush Tropical Setting</strong></span><span>Ambiance</span></div>
+          <div class="bar-track"><div class="bar-fill bar-green" style="width:65%">Unique</div></div>
+        </div>
+        <p style="font-size:0.85rem; color:#4a5568;">The garden setting with tropical plants creates a secluded, peaceful feel that guests describe as a "hidden gem" or "oasis" despite being in central Chaweng.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Guest Voices &mdash; What They Love</h3>
+    <div class="quote-box">
+      <div class="quote-tag tag-positive">Location + Ambiance</div>
+      "An absolute gem of a place. Located in the heart of Chaweng but just on the edge of the really busy and noisy part, so it was perfect for us."
+    </div>
+    <div class="quote-box">
+      <div class="quote-tag tag-positive">Staff Excellence</div>
+      "Authentic, charming, spotlessly clean and so incredibly welcoming, we arrived as guests and left feeling like family."
+    </div>
+    <div class="quote-box">
+      <div class="quote-tag tag-positive">Overall Value</div>
+      "Wonderful resort for a 3-star place! Best so far in Chaweng &mdash; position, swimming pool, beach facilities, bungalow condition, breakfast excellent for a 3-star, staff service and support."
+    </div>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 3: WEAKNESSES                          -->
+<!-- ============================================== -->
+<div id="weaknesses" class="section">
+  <h2 class="section-title">Weaknesses &amp; Negatives</h2>
+  <p class="section-subtitle">Analysis of 360 negative reviews and 11 complaint themes</p>
+
+  <div class="kpi-row">
+    <div class="kpi-card warn"><div class="kpi-value">62</div><div class="kpi-label">Poor Reviews (&lt;5)</div></div>
+    <div class="kpi-card warn"><div class="kpi-value">12%</div><div class="kpi-label">Reply Rate</div></div>
+    <div class="kpi-card warn"><div class="kpi-value">7.34</div><div class="kpi-label">Score Q1 2026</div></div>
+    <div class="kpi-card warn"><div class="kpi-value">-1.06</div><div class="kpi-label">Score Drop vs Peak</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Top Complaint Themes (from Negative Reviews)</h3>
+      <div class="chart-container"><canvas id="complaintChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Complaint Impact vs Frequency</h3>
+      <div class="chart-container"><canvas id="bubbleChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Detailed Complaint Breakdown</h3>
+    <table>
+      <thead>
+        <tr><th>#</th><th>Issue</th><th>Count</th><th>% of Neg Reviews</th><th>Department</th><th>Priority</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>Facilities &amp; Maintenance</td><td>157</td><td>43.6%</td><td>Engineering</td><td style="color:#e53e3e; font-weight:700;">URGENT</td></tr>
+        <tr><td>2</td><td>Room Quality (Dated/Worn)</td><td>121</td><td>33.6%</td><td>Housekeeping</td><td style="color:#e53e3e; font-weight:700;">URGENT</td></tr>
+        <tr><td>3</td><td>Breakfast &amp; Food</td><td>105</td><td>29.2%</td><td>F&amp;B</td><td style="color:#e53e3e; font-weight:700;">URGENT</td></tr>
+        <tr><td>4</td><td>Renovation / Outdated</td><td>99</td><td>27.5%</td><td>Management</td><td style="color:#ed8936; font-weight:700;">HIGH</td></tr>
+        <tr><td>5</td><td>Cleanliness Issues</td><td>54</td><td>15.0%</td><td>Housekeeping</td><td style="color:#ed8936; font-weight:700;">HIGH</td></tr>
+        <tr><td>6</td><td>Pool Condition</td><td>52</td><td>14.4%</td><td>Facilities</td><td style="color:#ed8936; font-weight:700;">HIGH</td></tr>
+        <tr><td>7</td><td>Value for Money</td><td>49</td><td>13.6%</td><td>Management</td><td style="color:#ed8936; font-weight:700;">HIGH</td></tr>
+        <tr><td>8</td><td>Staff &amp; Service Gaps</td><td>48</td><td>13.3%</td><td>HR</td><td style="color:#ecc94b; font-weight:700;">MEDIUM</td></tr>
+        <tr><td>9</td><td>Noise (Ark Bar / Flights)</td><td>33</td><td>9.2%</td><td>Operations</td><td style="color:#ecc94b; font-weight:700;">MEDIUM</td></tr>
+        <tr><td>10</td><td>WiFi / Internet</td><td>12</td><td>3.3%</td><td>Engineering</td><td style="color:#ecc94b; font-weight:700;">MEDIUM</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Monthly Score Trend &mdash; Declining Performance Alert</h3>
+    <div class="chart-container" style="max-height:300px;"><canvas id="trendChart"></canvas></div>
+    <div class="insight-box" style="margin-top:16px;">
+      <h4>Critical Trend Alert</h4>
+      <p>Average score <strong>dropped from 9.04 (Nov 2025) to 7.10 (Feb 2026)</strong> &mdash; a 1.94-point decline. Jan-Mar 2026 averages only 7.34 compared to 8.40 for Aug-Nov 2025. This suggests deteriorating guest experience likely related to facilities aging, incomplete renovations, and F&amp;B quality decline.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Guest Voices &mdash; What They Criticise</h3>
+    <div class="quote-box negative">
+      <div class="quote-tag tag-negative">Facilities &amp; Maintenance</div>
+      "This place is run down and very dangerous. We booked on Booking.com as the pictures were amazing. This is not what you get."
+    </div>
+    <div class="quote-box negative">
+      <div class="quote-tag tag-negative">Value for Money</div>
+      "Very overpriced for basic facilities. Lack of maintenance &mdash; the overall impression is disappointing. Not worth the price."
+    </div>
+    <div class="quote-box negative">
+      <div class="quote-tag tag-negative">Breakfast &amp; AC</div>
+      "Breakfast was a disaster. The Wi-Fi doesn't work in the rooms. Air conditioner started making loud noise in the middle of the night and dripping water."
+    </div>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 4: HOTEL PERCEPTION                    -->
+<!-- ============================================== -->
+<div id="perception" class="section">
+  <h2 class="section-title">How Guests Perceive Chaweng Buri</h2>
+  <p class="section-subtitle">Mapping guest language to hotel positioning &mdash; what type of hotel do they think this is?</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Hotel Type Mentions in Reviews</h3>
+      <div class="chart-container"><canvas id="perceptionChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Guest Perception Summary</h3>
+
+      <div style="margin-bottom:20px;">
+        <div style="font-weight:700; color:var(--primary); font-size:1.1rem; margin-bottom:12px;">Guests perceive Chaweng Buri as a:</div>
+        <div style="background:linear-gradient(135deg, #ebf8ff, #e6fffa); border-radius:12px; padding:20px; text-align:center; margin-bottom:16px;">
+          <div style="font-size:2rem; font-weight:800; color:var(--primary);">Midscale 3-Star Resort</div>
+          <div style="font-size:1rem; color:#4a5568; margin-top:4px;">with boutique charm and budget-level maintenance</div>
+        </div>
+      </div>
+
+      <p style="font-size:0.9rem; color:#4a5568; margin-bottom:12px;"><strong>Official Classification:</strong> 3-star Superior Tourist Class beach resort (Booking.com). Prices range $58&ndash;$162/night, averaging $137/night &mdash; which is 24% below Koh Samui average.</p>
+
+      <p style="font-size:0.9rem; color:#4a5568; margin-bottom:12px;"><strong>Guest Reality:</strong> The word "resort" appears in 10.1% of reviews, but guests mostly use it as the property name rather than aspirational positioning. The strongest perception signals are "basic" and "simple" (3.3% of all reviews), followed by "standard/3-star" (2.6%). Only 0.7% describe it as "boutique."</p>
+
+      <p style="font-size:0.9rem; color:#4a5568;"><strong>The Gap:</strong> Guests expect 3-star resort quality but frequently encounter maintenance issues that feel more like a budget property. Those who embrace its "old-school Thai charm" love it; those expecting modern facilities are disappointed.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Perception Spectrum &mdash; Where Guests Place Chaweng Buri</h3>
+    <div style="position:relative; margin:20px 0 10px;">
+      <div class="perception-meter">
+        <div class="seg" style="width:15%; background:#e53e3e;">Budget</div>
+        <div class="seg" style="width:25%; background:#ed8936;">Economy</div>
+        <div class="seg" style="width:30%; background:#ecc94b; color:#744210;">Midscale</div>
+        <div class="seg" style="width:20%; background:#48bb78;">Upper Mid</div>
+        <div class="seg" style="width:10%; background:#4299e1;">Upscale</div>
+      </div>
+      <div style="position:relative; height:30px;">
+        <div style="position:absolute; left:38%; transform:translateX(-50%); text-align:center;">
+          <div style="width:0; height:0; border-left:10px solid transparent; border-right:10px solid transparent; border-bottom:10px solid var(--primary); margin:0 auto;"></div>
+          <div style="font-weight:800; color:var(--primary); font-size:0.85rem;">Chaweng Buri</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-3" style="margin-top:24px;">
+      <div style="background:#fff5f5; border-radius:10px; padding:16px; border:1px solid #fed7d7;">
+        <div style="font-weight:700; color:#9b2c2c; margin-bottom:6px;">Budget Perception (3.3%)</div>
+        <p style="font-size:0.85rem; color:#4a5568;">Guests who see it as basic/budget focus on: outdated furnishings, missing amenities, worn fixtures. They feel they're paying 3-star prices for 2-star upkeep.</p>
+      </div>
+      <div style="background:#fffff0; border-radius:10px; padding:16px; border:1px solid #fefcbf;">
+        <div style="font-weight:700; color:#744210; margin-bottom:6px;">Midscale Perception (2.6%)</div>
+        <p style="font-size:0.85rem; color:#4a5568;">Most guests accurately see it as a solid 3-star resort. They acknowledge the excellent location and staff while accepting facility limitations as normal for the tier.</p>
+      </div>
+      <div style="background:#f0fff4; border-radius:10px; padding:16px; border:1px solid #c6f6d5;">
+        <div style="font-weight:700; color:#276749; margin-bottom:6px;">Boutique/Charming (0.7%)</div>
+        <p style="font-size:0.85rem; color:#4a5568;">A small passionate segment sees the resort as having "character" &mdash; appreciating the old-school Thai style, lush gardens, and authentic local feel that chain hotels lack.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Guest Voices &mdash; How They Describe the Property</h3>
+    <div class="quote-box">
+      <div class="quote-tag tag-positive">Midscale Appreciation</div>
+      "Wonderful resort for a 3-star place! Best so far in Chaweng &mdash; position, swimming pool, beach facilities, bungalow condition, breakfast excellent for a 3-star."
+    </div>
+    <div class="quote-box">
+      <div class="quote-tag tag-positive">Boutique Charm</div>
+      "Old-school, simple Thai-style hotel &mdash; feels like Thailand 15 years ago when I first came here. Rooms are clean and bright. The pool is great."
+    </div>
+    <div class="quote-box negative">
+      <div class="quote-tag tag-negative">Budget Reality</div>
+      "The price we paid was definitely too high. Facilities are outdated, no service, no staff to help with luggage."
+    </div>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 5: COMPETITOR COMPARISON               -->
+<!-- ============================================== -->
+<div id="competitors" class="section">
+  <h2 class="section-title">Competitor &amp; Price Comparison</h2>
+  <p class="section-subtitle">How Chaweng Buri stacks up against nearby Chaweng Beach hotels</p>
+
+  <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:16px; margin-bottom:28px;">
+    <div class="comp-card self">
+      <div class="comp-name">Chaweng Buri Resort</div>
+      <div class="comp-stars">&#9733;&#9733;&#9733;</div>
+      <div class="comp-price">$137</div>
+      <div class="comp-rating">Booking.com: 7.9/10</div>
+      <div style="font-size:0.75rem; color:var(--accent); font-weight:700; margin-top:4px;">YOUR PROPERTY</div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-name">Ark Bar Beach Resort</div>
+      <div class="comp-stars">&#9733;&#9733;&#9733;</div>
+      <div class="comp-price">$76</div>
+      <div class="comp-rating">Booking.com: ~7.5/10</div>
+      <div style="font-size:0.75rem; color:#48bb78; font-weight:700; margin-top:4px;">45% CHEAPER</div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-name">Cosi Samui Chaweng</div>
+      <div class="comp-stars">&#9733;&#9733;&#9733;</div>
+      <div class="comp-price">$33+</div>
+      <div class="comp-rating">Booking.com: 8.2/10</div>
+      <div style="font-size:0.75rem; color:#48bb78; font-weight:700; margin-top:4px;">76% CHEAPER</div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-name">Novotel Samui</div>
+      <div class="comp-stars">&#9733;&#9733;&#9733;&#9733;</div>
+      <div class="comp-price">$120+</div>
+      <div class="comp-rating">Booking.com: ~8.3/10</div>
+      <div style="font-size:0.75rem; color:#ecc94b; font-weight:700; margin-top:4px;">SIMILAR PRICE</div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-name">Centara Reserve</div>
+      <div class="comp-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+      <div class="comp-price">$300+</div>
+      <div class="comp-rating">Booking.com: ~8.8/10</div>
+      <div style="font-size:0.75rem; color:#e53e3e; font-weight:700; margin-top:4px;">119% MORE</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Price vs Rating Comparison</h3>
+      <div class="chart-container"><canvas id="compChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Guest Price Perception</h3>
+      <div class="chart-container" style="max-height:250px;"><canvas id="pricePerceptionChart"></canvas></div>
+
+      <div class="insight-box" style="margin-top:16px;">
+        <h4>Price Verdict from Reviews</h4>
+        <p>Of guests who mentioned pricing, <strong>65% (28 reviews) said Chaweng Buri is overpriced</strong>, while 35% (15 reviews) found it good value. The "overpriced" sentiment specifically links to the gap between the room rate ($137 avg) and the dated facilities/maintenance level. At $137/night, Chaweng Buri is priced 24% below Koh Samui average but is <strong>80% more expensive than comparable 3-star competitors</strong> like Ark Bar ($76).</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Competitive Position Analysis</h3>
+    <table>
+      <thead>
+        <tr><th>Factor</th><th>Chaweng Buri</th><th>vs Competitors</th><th>Assessment</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Location</strong></td>
+          <td>9.24/10 &mdash; beachfront + Central Samui</td>
+          <td>Top tier in Chaweng area</td>
+          <td style="color:#276749; font-weight:700;">Strong Advantage</td>
+        </tr>
+        <tr>
+          <td><strong>Price Point</strong></td>
+          <td>$137/night avg (3-star)</td>
+          <td>More expensive than similar 3-star hotels</td>
+          <td style="color:#e53e3e; font-weight:700;">Disadvantage</td>
+        </tr>
+        <tr>
+          <td><strong>Facilities</strong></td>
+          <td>7.62/10 &mdash; aging infrastructure</td>
+          <td>Below newer competitors (Cosi: 8.2 overall)</td>
+          <td style="color:#e53e3e; font-weight:700;">Disadvantage</td>
+        </tr>
+        <tr>
+          <td><strong>Staff</strong></td>
+          <td>8.67/10 &mdash; warm, friendly</td>
+          <td>Competitive with 4-star properties</td>
+          <td style="color:#276749; font-weight:700;">Strong Advantage</td>
+        </tr>
+        <tr>
+          <td><strong>Beach Quality</strong></td>
+          <td>Superb with natural shade</td>
+          <td>Among the best beach sections in Chaweng</td>
+          <td style="color:#276749; font-weight:700;">Strong Advantage</td>
+        </tr>
+        <tr>
+          <td><strong>Value Perception</strong></td>
+          <td>7.55/10 &mdash; lowest category score</td>
+          <td>Guests feel overcharged for condition</td>
+          <td style="color:#e53e3e; font-weight:700;">Critical Gap</td>
+        </tr>
+        <tr>
+          <td><strong>Review Score Trend</strong></td>
+          <td>Declining (7.34 in Q1 2026)</td>
+          <td>Competitors stable or improving</td>
+          <td style="color:#e53e3e; font-weight:700;">At Risk</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Guest Voices &mdash; Competitor Comparisons</h3>
+    <div class="quote-box">
+      <div class="quote-tag tag-positive">Favorable Position</div>
+      "Very convenient location, everything you need is nearby, including the Ark Bar on the beach and the Central shopping center."
+    </div>
+    <div class="quote-box negative">
+      <div class="quote-tag tag-negative">Price Concern</div>
+      "You can find restaurants nearby in next-door hotels. Some parts still under renovation &mdash; no restaurant at the property yet."
+    </div>
+    <div class="quote-box">
+      <div class="quote-tag tag-positive">Competitive Edge</div>
+      "The best location on the nicest part of the beach, across the road from Central Samui Mall and far enough from the Ark Bar to be a peaceful oasis."
+    </div>
+  </div>
+
+  <div class="insight-box">
+    <h4>Strategic Conclusion</h4>
+    <p>Chaweng Buri occupies a <strong>precarious competitive position</strong>: it charges premium 3-star prices ($137) justified primarily by an unbeatable location, but the deteriorating facilities and declining scores are eroding that value proposition. Guests increasingly feel they're paying for location alone. Meanwhile, competitors like Cosi Samui offer better-maintained properties at lower prices with comparable or higher ratings. The path forward requires <strong>urgent facility upgrades</strong> to match the pricing, or a <strong>rate adjustment</strong> to match the current facility condition &mdash; the current gap is unsustainable and accelerating the score decline.</p>
+  </div>
+</div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 6: PURPOSE OF TRAVEL                   -->
+<!-- ============================================== -->
+<div id="purpose" class="section">
+  <h2 class="section-title">Purpose of Travel for Chaweng Buri Guests</h2>
+  <p class="section-subtitle">Analysis of 787 guest reviews cross-referenced with Koh Samui tourism data (2024&ndash;2026)</p>
+
+  <div class="kpi-row">
+    <div class="kpi-card highlight"><div class="kpi-value">82%</div><div class="kpi-label">Leisure / Beach</div></div>
+    <div class="kpi-card good"><div class="kpi-value">56%</div><div class="kpi-label">European Guests</div></div>
+    <div class="kpi-card highlight"><div class="kpi-value">2.8M</div><div class="kpi-label">KS Arrivals 2024</div></div>
+    <div class="kpi-card good"><div class="kpi-value">+21%</div><div class="kpi-label">YoY Growth</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Travel Purpose Distribution (from Reviews)</h3>
+      <div class="chart-container"><canvas id="purposeChart"></canvas></div>
+      <p style="font-size:0.75rem; color:var(--text-muted); margin-top:10px;">Source: NLP analysis of 787 Booking.com reviews (May 2024&ndash;Mar 2026)</p>
+    </div>
+    <div class="card">
+      <h3>Koh Samui Visitor Demographics</h3>
+      <div class="chart-container" style="max-height:200px;"><canvas id="demoChart"></canvas></div>
+      <div style="margin-top:16px;">
+        <div class="theme-bar">
+          <div class="bar-header"><span><strong>35&ndash;54 years</strong></span><span>37%</span></div>
+          <div class="bar-track"><div class="bar-fill bar-blue" style="width:37%">37%</div></div>
+        </div>
+        <div class="theme-bar">
+          <div class="bar-header"><span><strong>18&ndash;34 years</strong></span><span>33%</span></div>
+          <div class="bar-track"><div class="bar-fill bar-green" style="width:33%">33%</div></div>
+        </div>
+        <div class="theme-bar">
+          <div class="bar-header"><span><strong>55+ years</strong></span><span>20%</span></div>
+          <div class="bar-track"><div class="bar-fill bar-purple" style="width:20%">20%</div></div>
+        </div>
+        <div class="theme-bar">
+          <div class="bar-header"><span><strong>0&ndash;17 years (with family)</strong></span><span>10%</span></div>
+          <div class="bar-track"><div class="bar-fill bar-orange" style="width:10%">10%</div></div>
+        </div>
+      </div>
+      <p style="font-size:0.75rem; color:var(--text-muted); margin-top:8px;">Source: <a href="https://sunwayestates.com/blog/post/koh-samui-on-the-rise-tourism-and-real-estate-in-numbers" target="_blank">SunwayEstates Koh Samui Tourism Report 2024</a></p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Detailed Travel Purpose Analysis</h3>
+    <table>
+      <thead>
+        <tr><th>Purpose</th><th>Review Mentions</th><th>% of Reviews</th><th>Sentiment</th><th>Key Insight</th><th>Data Source</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Beach &amp; Relaxation</strong></td><td>290</td><td>18.5%</td>
+          <td style="color:#276749; font-weight:700;">76.6% positive</td>
+          <td>Dominant purpose &mdash; guests seek beachfront tranquility combined with urban convenience</td>
+          <td>Booking.com review NLP</td>
+        </tr>
+        <tr>
+          <td><strong>Couples / Romance</strong></td><td>9</td><td>0.6%</td>
+          <td style="color:#ecc94b; font-weight:700;">55.6% positive</td>
+          <td>Honeymoon/anniversary guests &mdash; some disappointed by dated rooms vs. expectations</td>
+          <td>Booking.com review NLP</td>
+        </tr>
+        <tr>
+          <td><strong>Family Holiday</strong></td><td>21</td><td>1.3%</td>
+          <td style="color:#276749; font-weight:700;">66.7% positive</td>
+          <td>Families value spacious villas, beach safety, and proximity to Central Samui</td>
+          <td>Booking.com review NLP</td>
+        </tr>
+        <tr>
+          <td><strong>Party / Nightlife</strong></td><td>26</td><td>1.7%</td>
+          <td style="color:#276749; font-weight:700;">65.4% positive</td>
+          <td>Proximity to Ark Bar and Soi Green Mango is a draw, but noise is a complaint</td>
+          <td>Booking.com review NLP</td>
+        </tr>
+        <tr>
+          <td><strong>Business Travel</strong></td><td>23</td><td>1.5%</td>
+          <td style="color:#e53e3e; font-weight:700;">30.4% positive</td>
+          <td>Worst satisfaction segment &mdash; WiFi issues and power outages are critical failures</td>
+          <td>Booking.com review NLP</td>
+        </tr>
+        <tr>
+          <td><strong>Budget / Backpacking</strong></td><td>6</td><td>0.4%</td>
+          <td style="color:#276749; font-weight:700;">83.3% positive</td>
+          <td>Budget travelers appreciate value; find Chaweng Buri a good base for island exploring</td>
+          <td>Booking.com review NLP</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Broader Context: Why Tourists Choose Koh Samui</h3>
+    <div class="grid-2" style="gap:16px;">
+      <div>
+        <p style="font-size:0.9rem; color:#4a5568; margin-bottom:12px;">According to tourism data, Koh Samui attracted <strong>2.8 million arrivals in 2024</strong> (21% YoY growth), with Jan&ndash;Apr 2025 showing 1.12 million arrivals (9% further growth). The island's appeal centres on:</p>
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;">
+          <span style="background:#ebf8ff; color:#2b6cb0; padding:6px 14px; border-radius:20px; font-size:0.85rem; font-weight:600;">Beach &amp; Ocean</span>
+          <span style="background:#f0fff4; color:#276749; padding:6px 14px; border-radius:20px; font-size:0.85rem; font-weight:600;">Nightlife Hub</span>
+          <span style="background:#faf5ff; color:#553c9a; padding:6px 14px; border-radius:20px; font-size:0.85rem; font-weight:600;">Wellness &amp; Spa</span>
+          <span style="background:#fffaf0; color:#9c4221; padding:6px 14px; border-radius:20px; font-size:0.85rem; font-weight:600;">Island Adventures</span>
+          <span style="background:#fff5f5; color:#9b2c2c; padding:6px 14px; border-radius:20px; font-size:0.85rem; font-weight:600;">Culture &amp; Temples</span>
+          <span style="background:#e6fffa; color:#285e61; padding:6px 14px; border-radius:20px; font-size:0.85rem; font-weight:600;">Culinary Experiences</span>
+        </div>
+        <p style="font-size:0.9rem; color:#4a5568;">European visitors dominate at <strong>56% of international arrivals</strong> (led by Germany, UK, France), with Asian visitors at 31% (China leading at 7%). The 35&ndash;54 age bracket is the largest segment at 37%.</p>
+      </div>
+      <div>
+        <div class="quote-box">
+          <div class="quote-tag tag-positive">Relaxation Traveler</div>
+          "The location is great, close to the action, but quiet at the same time. Central Samui and plenty of cafes and shops are just across the road."
+        </div>
+        <div class="quote-box">
+          <div class="quote-tag tag-positive">Family Traveler</div>
+          "This resort is bang in the middle of town and only a short drive from the airport. To have an idyllic beach on one side and shopping on the other is perfection."
+        </div>
+        <div class="quote-box negative">
+          <div class="quote-tag tag-negative">Business Traveler</div>
+          "WiFi wasn't working. Successive power outages. No hot showers for the last three days. Staff don't speak English."
+        </div>
+      </div>
+    </div>
+    <p style="font-size:0.75rem; color:var(--text-muted); margin-top:12px;">
+      Sources:
+      <a href="https://www.thekohsamuiguide.com/post/koh-samui-tourism-statistics" target="_blank">KohSamuiGuide Tourism Stats</a> |
+      <a href="https://sunwayestates.com/blog/post/koh-samui-on-the-rise-tourism-and-real-estate-in-numbers" target="_blank">SunwayEstates Report</a> |
+      <a href="https://medium.com/@harithaeme1986/tourism-in-koh-samui-continues-to-soar-data-and-statistics-reveal-encouraging-growth-193e6a201089" target="_blank">Medium Tourism Analysis</a> |
+      <a href="https://c9hotelworks.com/wp-content/uploads/2025/06/Samui-Hotel-Tourism-Market-Review_June-2025.pdf" target="_blank">C9 Hotelworks Market Review</a>
+    </p>
+  </div>
+
+  <div class="insight-box">
+    <h4>Key Insight</h4>
+    <p>Chaweng Buri is overwhelmingly a <strong>leisure/beach destination</strong>. The vast majority of guests come for relaxation and beach access. However, the resort is <strong>underperforming for business travelers</strong> (only 30% satisfaction) and <strong>missing the wellness segment</strong> entirely, despite wellness being an emerging high-value traveler category for Koh Samui. Improving WiFi and adding spa/wellness programming could unlock two underserved segments.</p>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 7: GUEST ACTIVITIES                    -->
+<!-- ============================================== -->
+<div id="activities" class="section">
+  <h2 class="section-title">What Activities Do Guests Spend Time On?</h2>
+  <p class="section-subtitle">Tracking how guests spend their time &mdash; at the resort and beyond</p>
+
+  <div class="kpi-row">
+    <div class="kpi-card highlight"><div class="kpi-value">290</div><div class="kpi-label">Beach Mentions</div></div>
+    <div class="kpi-card good"><div class="kpi-value">176</div><div class="kpi-label">Dining Mentions</div></div>
+    <div class="kpi-card highlight"><div class="kpi-value">172</div><div class="kpi-label">Pool Mentions</div></div>
+    <div class="kpi-card good"><div class="kpi-value">135</div><div class="kpi-label">Resort Relaxation</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Activity Mentions in Guest Reviews</h3>
+      <div class="chart-container"><canvas id="activityChart"></canvas></div>
+      <p style="font-size:0.75rem; color:var(--text-muted); margin-top:10px;">Source: NLP analysis of 787 Booking.com reviews</p>
+    </div>
+    <div class="card">
+      <h3>Activity Sentiment Score (% Positive)</h3>
+      <div class="chart-container"><canvas id="sentimentChart"></canvas></div>
+      <p style="font-size:0.75rem; color:var(--text-muted); margin-top:10px;">Source: Booking.com review sentiment analysis</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Detailed Activity Breakdown</h3>
+    <table>
+      <thead>
+        <tr><th>#</th><th>Activity</th><th>Mentions</th><th>% Positive</th><th>Type</th><th>Notable Insight</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td><strong>Beach Activities</strong></td><td>290</td><td style="color:#276749; font-weight:700;">76.2%</td><td>On-site</td><td>Swimming, sunbathing, lounging on beach chairs; direct access is the #1 draw</td></tr>
+        <tr><td>2</td><td><strong>Dining / Breakfast</strong></td><td>176</td><td style="color:#e53e3e; font-weight:700;">39.2%</td><td>On &amp; Off-site</td><td>Most mentioned yet lowest sentiment &mdash; breakfast is the critical pain point</td></tr>
+        <tr><td>3</td><td><strong>Pool Lounging</strong></td><td>172</td><td style="color:#276749; font-weight:700;">70.3%</td><td>On-site</td><td>Large pool praised; complaints about cleanliness and pool bar service</td></tr>
+        <tr><td>4</td><td><strong>Relaxing at Resort</strong></td><td>135</td><td style="color:#276749; font-weight:700;">76.3%</td><td>On-site</td><td>Guests value the peaceful tropical garden atmosphere</td></tr>
+        <tr><td>5</td><td><strong>Walking Chaweng</strong></td><td>115</td><td style="color:#276749; font-weight:700;">78.3%</td><td>Off-site</td><td>Exploring shops, restaurants, and nightlife on foot &mdash; location advantage</td></tr>
+        <tr><td>6</td><td><strong>Nightlife / Bars</strong></td><td>78</td><td style="color:#ecc94b; font-weight:700;">56.4%</td><td>Off-site</td><td>Ark Bar, Green Mango, bars &mdash; proximity is valued but noise is complained about</td></tr>
+        <tr><td>7</td><td><strong>Shopping</strong></td><td>61</td><td style="color:#276749; font-weight:700;">100%</td><td>Off-site</td><td>Central Samui Mall across the road &mdash; universally positive, zero complaints</td></tr>
+        <tr><td>8</td><td><strong>Fitness / Gym</strong></td><td>49</td><td style="color:#276749; font-weight:700;">77.6%</td><td>On-site</td><td>Outdoor gym with equipment, protein shakes, ice baths mentioned positively</td></tr>
+        <tr><td>9</td><td><strong>Spa / Massage</strong></td><td>22</td><td style="color:#276749; font-weight:700;">72.7%</td><td>On &amp; Off-site</td><td>Low mention count suggests the resort spa is undermarketed or underdeveloped</td></tr>
+        <tr><td>10</td><td><strong>Excursions / Tours</strong></td><td>15</td><td style="color:#276749; font-weight:700;">73.3%</td><td>Off-site</td><td>Ang Thong Marine Park, island tours, snorkeling trips mentioned occasionally</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>On-Site vs Off-Site Activity Split</h3>
+      <div class="chart-container" style="max-height:250px;"><canvas id="onsiteChart"></canvas></div>
+      <p style="font-size:0.85rem; color:#4a5568; margin-top:12px;">Guests spend roughly <strong>57% of their mentioned activity time on-site</strong> (beach, pool, resort relaxation, gym) and <strong>43% off-site</strong> (walking Chaweng, shopping, nightlife, excursions). This aligns with the resort's "central yet peaceful" positioning.</p>
+      <p style="font-size:0.75rem; color:var(--text-muted); margin-top:8px;">Source: Booking.com review analysis</p>
+    </div>
+    <div class="card">
+      <h3>Available Activities Near Chaweng Buri</h3>
+      <p style="font-size:0.9rem; color:#4a5568; margin-bottom:12px;">Based on TripAdvisor and travel guide research, these activities are available within walking or short driving distance:</p>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div style="background:#ebf8ff; border-radius:10px; padding:14px;">
+          <div style="font-weight:700; color:#2b6cb0; margin-bottom:6px;">Water Sports</div>
+          <p style="font-size:0.82rem; color:#4a5568;">Jet-skiing, parasailing, banana boats, kayaking, SUP, snorkeling, windsurfing</p>
+        </div>
+        <div style="background:#f0fff4; border-radius:10px; padding:14px;">
+          <div style="font-weight:700; color:#276749; margin-bottom:6px;">Shopping &amp; Markets</div>
+          <p style="font-size:0.82rem; color:#4a5568;">Central Festival Samui, Chaweng Walking Street Night Market, Beach Road shops</p>
+        </div>
+        <div style="background:#faf5ff; border-radius:10px; padding:14px;">
+          <div style="font-weight:700; color:#553c9a; margin-bottom:6px;">Nightlife</div>
+          <p style="font-size:0.82rem; color:#4a5568;">Ark Bar Beach Club, Green Mango Club, SEEN Beach Club, Starz Cabaret, Soi bars</p>
+        </div>
+        <div style="background:#fffaf0; border-radius:10px; padding:14px;">
+          <div style="font-weight:700; color:#9c4221; margin-bottom:6px;">Wellness &amp; Spa</div>
+          <p style="font-size:0.82rem; color:#4a5568;">SALA Spa Chaweng, Eranda Herbal Spa, Thai massage parlours, yoga studios</p>
+        </div>
+        <div style="background:#e6fffa; border-radius:10px; padding:14px;">
+          <div style="font-weight:700; color:#285e61; margin-bottom:6px;">Cultural / Classes</div>
+          <p style="font-size:0.82rem; color:#4a5568;">Thai cooking classes, Muay Thai training, temple visits, cultural shows</p>
+        </div>
+        <div style="background:#fff5f5; border-radius:10px; padding:14px;">
+          <div style="font-weight:700; color:#9b2c2c; margin-bottom:6px;">Day Trips</div>
+          <p style="font-size:0.82rem; color:#4a5568;">Ang Thong Marine National Park, ATV jungle tours, deep sea fishing, island hopping</p>
+        </div>
+      </div>
+      <p style="font-size:0.75rem; color:var(--text-muted); margin-top:12px;">
+        Sources:
+        <a href="https://www.tripadvisor.com/Attractions-g676072-Activities-Chaweng_Bophut_Ko_Samui_Surat_Thani_Province.html" target="_blank">TripAdvisor Chaweng</a> |
+        <a href="https://homeiswhereyourbagis.com/en/chaweng-beach-things-to-do/" target="_blank">HomeIsWhereYourBagIs</a> |
+        <a href="https://chawengregent.com/blog/chaweng-beach/" target="_blank">Chaweng Regent Guide</a>
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Guest Voices &mdash; Activity Experiences</h3>
+    <div class="quote-box">
+      <div class="quote-tag tag-positive">Beach + Shopping</div>
+      "Conveniently located in the heart of Chaweng, close to shopping malls, shops, and restaurants. The rooms are clean, beachfront, and feel like home."
+    </div>
+    <div class="quote-box">
+      <div class="quote-tag tag-positive">Fitness</div>
+      "Best beach location, Beach-Gym and pool. Couldn't have expected more: beachfront, gym, pool, and friendly staff."
+    </div>
+    <div class="quote-box negative">
+      <div class="quote-tag tag-negative">Dining</div>
+      "Breakfast was a disaster. No program at the hotel &mdash; yoga, children's entertainment, evening show, etc."
+    </div>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- SECTION 8: BEST / MOST LIKED ACTIVITIES        -->
+<!-- ============================================== -->
+<div id="bestact" class="section">
+  <h2 class="section-title">Most Liked &amp; Best Activities for Guests</h2>
+  <p class="section-subtitle">Ranking activities by guest satisfaction, combining review sentiment with regional tourism data</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Activity Ranking by Satisfaction Score</h3>
+      <div class="chart-container"><canvas id="bestChart"></canvas></div>
+      <p style="font-size:0.75rem; color:var(--text-muted); margin-top:10px;">Source: Booking.com review sentiment + mention volume analysis</p>
+    </div>
+    <div class="card">
+      <h3>The Gold Standard: Top 3 Best Activities</h3>
+
+      <div style="background:linear-gradient(135deg, #fffff0, #fefcbf); border-radius:12px; padding:20px; margin-bottom:16px; border:2px solid #ecc94b;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+          <div style="background:#ecc94b; color:white; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.2rem;">#1</div>
+          <div>
+            <div style="font-weight:800; color:var(--primary); font-size:1.1rem;">Shopping at Central Samui</div>
+            <div style="font-size:0.85rem; color:#744210;">100% positive &bull; 61 mentions &bull; Zero complaints</div>
+          </div>
+        </div>
+        <p style="font-size:0.88rem; color:#4a5568;">The adjacent Central Festival Samui shopping mall is the undisputed winner. Every single guest who mentioned shopping had only positive things to say. The proximity (directly across the road) makes this a unique, effortless convenience no other Chaweng resort matches.</p>
+        <p style="font-size:0.75rem; color:var(--text-muted); margin-top:6px;">Source: Booking.com review analysis (61/61 positive mentions)</p>
+      </div>
+
+      <div style="background:linear-gradient(135deg, #f7fafc, #edf2f7); border-radius:12px; padding:20px; margin-bottom:16px; border:2px solid #a0aec0;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+          <div style="background:#a0aec0; color:white; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.2rem;">#2</div>
+          <div>
+            <div style="font-weight:800; color:var(--primary); font-size:1.1rem;">Walking &amp; Exploring Chaweng</div>
+            <div style="font-size:0.85rem; color:#718096;">78.3% positive &bull; 115 mentions &bull; High volume</div>
+          </div>
+        </div>
+        <p style="font-size:0.88rem; color:#4a5568;">Guests love strolling through Chaweng's streets, discovering restaurants, markets, and street life. The resort's central position makes this an effortless daily activity for most guests.</p>
+        <p style="font-size:0.75rem; color:var(--text-muted); margin-top:6px;">Source: Booking.com review analysis (90/115 positive mentions)</p>
+      </div>
+
+      <div style="background:linear-gradient(135deg, #fffff0, #fefcbf); border-radius:12px; padding:20px; border:2px solid #c69c6d;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+          <div style="background:#c69c6d; color:white; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.2rem;">#3</div>
+          <div>
+            <div style="font-weight:800; color:var(--primary); font-size:1.1rem;">Fitness &amp; Outdoor Gym</div>
+            <div style="font-size:0.85rem; color:#9c4221;">77.6% positive &bull; 49 mentions &bull; Hidden gem</div>
+          </div>
+        </div>
+        <p style="font-size:0.88rem; color:#4a5568;">A surprise performer &mdash; the outdoor beachside gym with protein shakes and ice baths earns high satisfaction from those who use it. This is an undermarketed asset that appeals to the growing wellness travel segment.</p>
+        <p style="font-size:0.75rem; color:var(--text-muted); margin-top:6px;">Source: Booking.com review analysis (38/49 positive mentions)</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Complete Activity Satisfaction Ranking</h3>
+    <table>
+      <thead>
+        <tr><th>Rank</th><th>Activity</th><th>Satisfaction</th><th>Mentions</th><th>Type</th><th>Opportunity</th><th>Reference</th></tr>
+      </thead>
+      <tbody>
+        <tr style="background:#fffff0;"><td><strong>1</strong></td><td><strong>Shopping (Central Samui)</strong></td><td style="color:#276749; font-weight:700;">100%</td><td>61</td><td>Off-site</td><td>Leverage in marketing &mdash; "Shop &amp; Stay" packages</td><td>Review NLP</td></tr>
+        <tr><td><strong>2</strong></td><td><strong>Walking / Exploring Chaweng</strong></td><td style="color:#276749; font-weight:700;">78.3%</td><td>115</td><td>Off-site</td><td>Create walking maps; partner with local restaurants</td><td>Review NLP</td></tr>
+        <tr><td><strong>3</strong></td><td><strong>Fitness / Gym</strong></td><td style="color:#276749; font-weight:700;">77.6%</td><td>49</td><td>On-site</td><td>Expand wellness offerings; market beach gym more</td><td>Review NLP</td></tr>
+        <tr><td><strong>4</strong></td><td><strong>Beach Activities</strong></td><td style="color:#276749; font-weight:700;">76.2%</td><td>290</td><td>On-site</td><td>Add water sports rental desk; beach service staff</td><td>Review NLP</td></tr>
+        <tr><td><strong>5</strong></td><td><strong>Relaxing at Resort</strong></td><td style="color:#276749; font-weight:700;">76.3%</td><td>135</td><td>On-site</td><td>Maintain gardens; improve lounging areas</td><td>Review NLP</td></tr>
+        <tr><td><strong>6</strong></td><td><strong>Excursions / Tours</strong></td><td style="color:#276749; font-weight:700;">73.3%</td><td>15</td><td>Off-site</td><td>Set up tour desk; Ang Thong &amp; snorkeling packages</td><td>Review NLP + <a href="https://www.tripadvisor.com/Attractions-g676072-Activities-Chaweng_Bophut_Ko_Samui_Surat_Thani_Province.html" target="_blank">TripAdvisor</a></td></tr>
+        <tr><td><strong>7</strong></td><td><strong>Spa / Massage</strong></td><td style="color:#276749; font-weight:700;">72.7%</td><td>22</td><td>On &amp; Off</td><td>Major untapped potential; <a href="https://c9hotelworks.com/wp-content/uploads/2025/06/Samui-Hotel-Tourism-Market-Review_June-2025.pdf" target="_blank">C9 report</a> identifies wellness as emerging segment</td><td>Review NLP + C9 Hotelworks</td></tr>
+        <tr><td><strong>8</strong></td><td><strong>Pool Lounging</strong></td><td style="color:#276749; font-weight:700;">70.3%</td><td>172</td><td>On-site</td><td>Improve pool cleanliness; restore pool bar service</td><td>Review NLP</td></tr>
+        <tr><td><strong>9</strong></td><td><strong>Nightlife / Bars</strong></td><td style="color:#ecc94b; font-weight:700;">56.4%</td><td>78</td><td>Off-site</td><td>Balance proximity marketing with noise management</td><td>Review NLP + <a href="https://thetripguru.com/destination/place/chaweng-beach/" target="_blank">TripGuru</a></td></tr>
+        <tr style="background:#fff5f5;"><td><strong>10</strong></td><td><strong>Dining / Breakfast</strong></td><td style="color:#e53e3e; font-weight:700;">39.2%</td><td>176</td><td>On-site</td><td>CRITICAL: Most mentioned, worst rated &mdash; urgent fix needed</td><td>Review NLP</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Regional Context: Top Chaweng Activities</h3>
+      <p style="font-size:0.9rem; color:#4a5568; margin-bottom:12px;">Based on TripAdvisor rankings and travel guides, the most popular activities in the Chaweng area that Chaweng Buri guests can access include:</p>
+      <div style="counter-reset: item;">
+        <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:12px;">
+          <div style="background:var(--accent); color:white; min-width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem;">1</div>
+          <div><strong>Ang Thong Marine National Park</strong> &mdash; Full-day kayaking and snorkeling trip through 42 islands. The #1 day trip from Koh Samui.</div>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:12px;">
+          <div style="background:var(--accent); color:white; min-width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem;">2</div>
+          <div><strong>Thai Cooking Classes</strong> &mdash; Island Organics Samui and others offer hands-on curry paste and recipe experiences.</div>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:12px;">
+          <div style="background:var(--accent); color:white; min-width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem;">3</div>
+          <div><strong>Muay Thai Classes &amp; Fights</strong> &mdash; Training for all levels; live stadium fights Mon/Wed/Sat.</div>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:12px;">
+          <div style="background:var(--accent); color:white; min-width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem;">4</div>
+          <div><strong>SALA Spa &amp; Eranda Herbal Spa</strong> &mdash; Premium wellness experiences with natural skincare in tropical garden settings.</div>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:12px;">
+          <div style="background:var(--accent); color:white; min-width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem;">5</div>
+          <div><strong>Water Sports</strong> &mdash; Jet-skiing, parasailing, banana boats, SUP, and snorkeling available on the beach.</div>
+        </div>
+      </div>
+      <p style="font-size:0.75rem; color:var(--text-muted); margin-top:8px;">
+        Sources:
+        <a href="https://www.tripadvisor.com/Attractions-g676072-Activities-Chaweng_Bophut_Ko_Samui_Surat_Thani_Province.html" target="_blank">TripAdvisor</a> |
+        <a href="https://homeiswhereyourbagis.com/en/chaweng-beach-things-to-do/" target="_blank">Travel Guide</a> |
+        <a href="https://kohplanner.com/places-to-visit/surat-thani/koh-samui/beaches/chaweng-beach/" target="_blank">KohPlanner</a>
+      </p>
+    </div>
+    <div class="card">
+      <h3>Opportunity Gap Analysis</h3>
+      <div class="insight-box">
+        <h4>Biggest Missed Opportunity: Wellness &amp; Spa</h4>
+        <p>Only <strong>22 out of 787 reviews mention spa/massage</strong> despite Koh Samui being a wellness destination. The C9 Hotelworks 2025 report identifies wellness-focused travelers as an emerging high-value segment with longer stays and year-round visitation. Chaweng Buri's gym already scores 77.6% satisfaction &mdash; expanding into yoga, spa packages, and wellness programs could tap this growing market.</p>
+      </div>
+      <div class="insight-box">
+        <h4>Revenue Risk: Dining at 39.2% Satisfaction</h4>
+        <p>Dining is mentioned in <strong>176 reviews</strong> (2nd most mentioned activity) but has the <strong>lowest satisfaction at 39.2%</strong>. This is not just a quality issue &mdash; it's a revenue issue. Guests who are dissatisfied with on-site dining spend their F&amp;B budget at nearby restaurants instead. Fixing breakfast alone could shift the overall score by +0.3&ndash;0.5 points.</p>
+      </div>
+      <div class="insight-box">
+        <h4>Untapped Excursion Revenue</h4>
+        <p>Only <strong>15 reviews mention excursions/tours</strong>, yet Ang Thong Marine National Park is the #1 rated Koh Samui activity on TripAdvisor. Setting up a professional tour desk could generate commission revenue while improving guest experience scores.</p>
+      </div>
+      <p style="font-size:0.75rem; color:var(--text-muted); margin-top:8px;">
+        Sources:
+        <a href="https://c9hotelworks.com/wp-content/uploads/2025/06/Samui-Hotel-Tourism-Market-Review_June-2025.pdf" target="_blank">C9 Hotelworks 2025</a> |
+        <a href="https://www.tripadvisor.com/Attractions-g676072-Activities-Chaweng_Bophut_Ko_Samui_Surat_Thani_Province.html" target="_blank">TripAdvisor Rankings</a> |
+        <a href="https://www.thekohsamuiguide.com/post/koh-samui-tourism-statistics" target="_blank">KS Tourism Stats</a>
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Guest Voices &mdash; Best Activity Experiences</h3>
+    <div class="quote-box">
+      <div class="quote-tag tag-positive">Shopping (100% satisfaction)</div>
+      "Conveniently located in the heart of Chaweng, close to shopping malls, shops, and restaurants. Central Samui is just across the road."
+    </div>
+    <div class="quote-box">
+      <div class="quote-tag tag-positive">Beach + Walking (Top rated)</div>
+      "An absolute gem. Located in the heart of Chaweng but on the edge of the really busy part, so it was perfect. The beach is magnificent."
+    </div>
+    <div class="quote-box">
+      <div class="quote-tag tag-positive">Fitness (Hidden gem)</div>
+      "Best beach of location, Beach-Gym and pool. Couldn't have expected more: beachfront, gym, pool, and friendly staff."
+    </div>
+    <div class="quote-box negative">
+      <div class="quote-tag tag-negative">Dining (Worst rated)</div>
+      "No program at the hotel &mdash; yoga, children's entertainment, evening show, etc. Breakfast was overpriced at 400 baht."
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="container">
+    <p>Chaweng Buri Resort &mdash; Guest Review Analytics Dashboard</p>
+    <p>Data Source: Booking.com Export (787 Reviews, May 2024 &ndash; Mar 2026) &bull; Web Research: KAYAK, TripAdvisor, Agoda</p>
+    <p>Generated April 2026</p>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- CHARTS                                          -->
+<!-- ============================================== -->
+<script>
+const palette = {
+  blue: '#4299e1', green: '#48bb78', orange: '#ed8936', red: '#fc8181',
+  purple: '#9f7aea', teal: '#38b2ac', yellow: '#ecc94b', pink: '#ed64a6',
+  indigo: '#667eea', cyan: '#0bc5ea'
+};
+
+// Tab navigation
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  window.scrollTo({top: 200, behavior: 'smooth'});
+}
+
+// Chart 1: Why Guests Choose (Horizontal Bar)
+new Chart(document.getElementById('whyChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Location / Beach', 'Staff / Service', 'Room / Villa', 'Pool', 'Breakfast / Food', 'Value / Price'],
+    datasets: [{
+      label: '% of Positive Reviews',
+      data: [82.1, 43.0, 37.5, 27.4, 21.2, 6.2],
+      backgroundColor: [palette.blue, palette.green, palette.teal, palette.purple, palette.orange, palette.yellow],
+      borderRadius: 6, borderSkipped: false
+    }]
+  },
+  options: {
+    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { max: 100, ticks: { callback: v => v + '%' }, grid: { color: '#edf2f7' } },
+      y: { grid: { display: false } }
+    }
+  }
+});
+
+// Chart 2: Radar
+new Chart(document.getElementById('radarChart'), {
+  type: 'radar',
+  data: {
+    labels: ['Location', 'Staff', 'Cleanliness', 'Comfort', 'Facilities', 'Value/Money'],
+    datasets: [{
+      label: 'Average Score',
+      data: [9.24, 8.67, 8.13, 8.05, 7.62, 7.55],
+      backgroundColor: 'rgba(66, 153, 225, 0.15)',
+      borderColor: palette.blue, borderWidth: 2, pointBackgroundColor: palette.blue
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    scales: { r: { min: 5, max: 10, ticks: { stepSize: 1 } } },
+    plugins: { legend: { display: false } }
+  }
+});
+
+// Chart 3: Score Distribution (Doughnut)
+new Chart(document.getElementById('distChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Excellent (9-10): 364', 'Good (7-8): 274', 'Average (5-6): 87', 'Poor (<5): 62'],
+    datasets: [{
+      data: [364, 274, 87, 62],
+      backgroundColor: [palette.green, palette.blue, palette.yellow, palette.red],
+      borderWidth: 2, borderColor: '#fff'
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '55%',
+    plugins: {
+      legend: { position: 'bottom', labels: { padding: 16, font: { size: 12 } } }
+    }
+  }
+});
+
+// Chart 4: Complaint themes (Bar)
+new Chart(document.getElementById('complaintChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Facilities', 'Room Quality', 'Breakfast/Food', 'Renovation', 'Cleanliness', 'Pool', 'Value/Money', 'Staff Gaps', 'Noise', 'WiFi'],
+    datasets: [{
+      label: 'Mentions in Negative Reviews',
+      data: [157, 121, 105, 99, 54, 52, 49, 48, 33, 12],
+      backgroundColor: [
+        palette.red, palette.red, palette.orange, palette.orange,
+        palette.yellow, palette.yellow, palette.yellow, palette.blue,
+        palette.blue, palette.teal
+      ],
+      borderRadius: 4
+    }]
+  },
+  options: {
+    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: '#edf2f7' } },
+      y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+// Chart 5: Bubble (Impact vs Frequency)
+new Chart(document.getElementById('bubbleChart'), {
+  type: 'bubble',
+  data: {
+    datasets: [
+      { label: 'Breakfast & Food', data: [{x:55, y:0.748, r:14}], backgroundColor: 'rgba(237,137,54,0.7)' },
+      { label: 'Facilities', data: [{x:37, y:0.721, r:12}], backgroundColor: 'rgba(252,129,129,0.7)' },
+      { label: 'Pool', data: [{x:32, y:0.72, r:10}], backgroundColor: 'rgba(66,153,225,0.7)' },
+      { label: 'Staff', data: [{x:25, y:0.632, r:9}], backgroundColor: 'rgba(72,187,120,0.7)' },
+      { label: 'Cleanliness', data: [{x:22, y:0.682, r:8}], backgroundColor: 'rgba(159,122,234,0.7)' },
+      { label: 'Value/Money', data: [{x:17, y:0.748, r:10}], backgroundColor: 'rgba(236,201,75,0.7)' },
+      { label: 'WiFi', data: [{x:12, y:0.5, r:6}], backgroundColor: 'rgba(56,178,172,0.7)' },
+      { label: 'Noise', data: [{x:10, y:0.45, r:5}], backgroundColor: 'rgba(237,100,166,0.7)' }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    scales: {
+      x: { title: { display: true, text: 'Complaint Count' }, grid: { color: '#edf2f7' } },
+      y: { title: { display: true, text: 'Impact on Overall Score' }, min: 0.3, max: 0.85, grid: { color: '#edf2f7' } }
+    },
+    plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 10 } } }
+  }
+});
+
+// Chart 6: Monthly trend
+new Chart(document.getElementById('trendChart'), {
+  type: 'line',
+  data: {
+    labels: ['May-24','Jun-24','Jul-24','Aug-24','Sep-24','Oct-24','Nov-24','Dec-24','Jan-25','Feb-25','Mar-25','Apr-25','May-25','Jun-25','Jul-25','Aug-25','Sep-25','Oct-25','Nov-25','Dec-25','Jan-26','Feb-26','Mar-26'],
+    datasets: [
+      {
+        label: 'Avg Score',
+        data: [8.0,9.0,6.86,7.05,8.22,7.11,8.55,7.25,8.2,7.77,8.05,8.3,8.44,8.43,8.14,8.52,8.36,8.3,9.04,8.32,7.57,7.10,7.50],
+        borderColor: palette.blue, backgroundColor: 'rgba(66,153,225,0.1)',
+        fill: true, tension: 0.3, borderWidth: 2.5, pointRadius: 4
+      },
+      {
+        label: 'Value/Money',
+        data: [7.5,8.0,6.79,6.64,8.61,7.5,8.86,7.5,7.71,7.24,7.38,7.88,8.33,8.39,7.76,8.04,8.18,8.25,9.13,8.35,6.98,6.20,6.25],
+        borderColor: palette.orange, borderDash: [5,3],
+        tension: 0.3, borderWidth: 2, pointRadius: 3
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom' } },
+    scales: {
+      y: { min: 5, max: 10, grid: { color: '#edf2f7' } },
+      x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 45 } }
+    }
+  }
+});
+
+// Chart 7: Perception pie
+new Chart(document.getElementById('perceptionChart'), {
+  type: 'pie',
+  data: {
+    labels: ['Resort (name usage) - 82', 'Budget/Basic - 27', 'Midscale/3-Star - 21', 'Boutique/Charming - 6'],
+    datasets: [{
+      data: [82, 27, 21, 6],
+      backgroundColor: [palette.blue, palette.red, palette.yellow, palette.green],
+      borderWidth: 2, borderColor: '#fff'
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom', labels: { padding: 14, font: { size: 12 } } } }
+  }
+});
+
+// Chart 8: Competitor scatter
+new Chart(document.getElementById('compChart'), {
+  type: 'scatter',
+  data: {
+    datasets: [
+      { label: 'Chaweng Buri', data: [{x:137, y:7.9}], backgroundColor: palette.orange, pointRadius: 14, pointStyle: 'star' },
+      { label: 'Ark Bar', data: [{x:76, y:7.5}], backgroundColor: palette.blue, pointRadius: 10 },
+      { label: 'Cosi Samui', data: [{x:33, y:8.2}], backgroundColor: palette.green, pointRadius: 10 },
+      { label: 'Novotel (4*)', data: [{x:120, y:8.3}], backgroundColor: palette.purple, pointRadius: 10 },
+      { label: 'Centara Reserve (5*)', data: [{x:300, y:8.8}], backgroundColor: palette.pink, pointRadius: 10 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    scales: {
+      x: { title: { display: true, text: 'Average Price ($/night)' }, min: 0, max: 350, grid: { color: '#edf2f7' } },
+      y: { title: { display: true, text: 'Guest Rating (/10)' }, min: 7, max: 9.5, grid: { color: '#edf2f7' } }
+    },
+    plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 12 } } }
+  }
+});
+
+// Chart 9: Price perception doughnut
+new Chart(document.getElementById('pricePerceptionChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Overpriced / Expensive (28)', 'Good Value / Affordable (15)'],
+    datasets: [{
+      data: [28, 15],
+      backgroundColor: [palette.red, palette.green],
+      borderWidth: 2, borderColor: '#fff'
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '60%',
+    plugins: { legend: { position: 'bottom', labels: { padding: 14, font: { size: 12 } } } }
+  }
+});
+
+// ====== NEW CHARTS FOR SECTIONS 6-8 ======
+
+// Chart 10: Travel Purpose (Doughnut)
+new Chart(document.getElementById('purposeChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Beach & Relaxation (290)', 'Party / Nightlife (26)', 'Business (23)', 'Family Holiday (21)', 'Romance / Honeymoon (9)', 'Backpacking (6)'],
+    datasets: [{
+      data: [290, 26, 23, 21, 9, 6],
+      backgroundColor: [palette.blue, palette.purple, palette.orange, palette.green, palette.pink, palette.teal],
+      borderWidth: 2, borderColor: '#fff'
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '50%',
+    plugins: { legend: { position: 'bottom', labels: { padding: 12, font: { size: 11 } } } }
+  }
+});
+
+// Chart 11: Demographics (Horizontal Bar)
+new Chart(document.getElementById('demoChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Europe (56%)', 'Asia (31%)', 'Others (13%)'],
+    datasets: [{
+      data: [56, 31, 13],
+      backgroundColor: [palette.blue, palette.orange, palette.teal],
+      borderWidth: 2, borderColor: '#fff'
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '55%',
+    plugins: { legend: { position: 'bottom', labels: { padding: 10, font: { size: 11 } } } }
+  }
+});
+
+// Chart 12: Activity Mentions (Horizontal Bar)
+new Chart(document.getElementById('activityChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Beach Activities', 'Dining / Breakfast', 'Pool Lounging', 'Resort Relaxation', 'Walking Chaweng', 'Nightlife / Bars', 'Shopping', 'Fitness / Gym', 'Spa / Massage', 'Excursions'],
+    datasets: [
+      {
+        label: 'Positive Mentions',
+        data: [221, 69, 121, 103, 90, 44, 61, 38, 16, 11],
+        backgroundColor: palette.green, borderRadius: 4
+      },
+      {
+        label: 'Negative Mentions',
+        data: [69, 107, 51, 32, 25, 34, 0, 11, 6, 4],
+        backgroundColor: palette.red, borderRadius: 4
+      }
+    ]
+  },
+  options: {
+    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom' } },
+    scales: {
+      x: { stacked: true, grid: { color: '#edf2f7' } },
+      y: { stacked: true, grid: { display: false }, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+// Chart 13: Activity Sentiment (Horizontal Bar)
+new Chart(document.getElementById('sentimentChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Shopping', 'Walking Chaweng', 'Fitness / Gym', 'Beach Activities', 'Resort Relaxation', 'Excursions', 'Spa / Massage', 'Pool Lounging', 'Nightlife', 'Dining / Breakfast'],
+    datasets: [{
+      label: '% Positive Sentiment',
+      data: [100, 78.3, 77.6, 76.2, 76.3, 73.3, 72.7, 70.3, 56.4, 39.2],
+      backgroundColor: function(ctx) {
+        const v = ctx.raw;
+        if (v >= 75) return palette.green;
+        if (v >= 60) return palette.yellow;
+        if (v >= 50) return palette.orange;
+        return palette.red;
+      },
+      borderRadius: 4
+    }]
+  },
+  options: {
+    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { min: 0, max: 100, ticks: { callback: v => v + '%' }, grid: { color: '#edf2f7' } },
+      y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+// Chart 14: On-site vs Off-site
+new Chart(document.getElementById('onsiteChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['On-Site Activities (646 mentions)', 'Off-Site Activities (269 mentions)'],
+    datasets: [{
+      data: [646, 269],
+      backgroundColor: [palette.blue, palette.orange],
+      borderWidth: 3, borderColor: '#fff'
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '55%',
+    plugins: { legend: { position: 'bottom', labels: { padding: 16, font: { size: 12 } } } }
+  }
+});
+
+// Chart 15: Best Activities Ranking (Combined score)
+new Chart(document.getElementById('bestChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Shopping', 'Walking Chaweng', 'Fitness/Gym', 'Resort Relaxation', 'Beach Activities', 'Excursions', 'Spa/Massage', 'Pool Lounging', 'Nightlife', 'Dining'],
+    datasets: [
+      {
+        label: 'Satisfaction %',
+        data: [100, 78.3, 77.6, 76.3, 76.2, 73.3, 72.7, 70.3, 56.4, 39.2],
+        backgroundColor: [palette.green, palette.green, palette.green, palette.green, palette.green, palette.blue, palette.blue, palette.yellow, palette.orange, palette.red],
+        borderRadius: 6, borderSkipped: false, yAxisID: 'y'
+      },
+      {
+        label: 'Mention Volume',
+        data: [61, 115, 49, 135, 290, 15, 22, 172, 78, 176],
+        type: 'line', borderColor: palette.purple, backgroundColor: 'rgba(159,122,234,0.1)',
+        tension: 0.3, borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: palette.purple,
+        yAxisID: 'y1'
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom' } },
+    scales: {
+      y: { position: 'left', min: 0, max: 100, title: { display: true, text: 'Satisfaction %' }, grid: { color: '#edf2f7' } },
+      y1: { position: 'right', min: 0, max: 350, title: { display: true, text: 'Mentions' }, grid: { display: false } },
+      x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 45 } }
+    }
+  }
+});
+</script>
+
+</body>
+</html>
