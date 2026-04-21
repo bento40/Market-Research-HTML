@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Chaweng Buri Resort — Revenue Dashboard</title>
+
+<!-- Tailwind (Play CDN) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Chart.js from cdnjs (most reliable) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+<style>
+  body { font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:#f8fafc; color:#0f172a; }
+  .card { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:18px; box-shadow:0 1px 2px rgba(16,24,40,.04); }
+  .kpi-label { font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:#6b7280; font-weight:600; }
+  .kpi-value { font-size:1.55rem; font-weight:700; color:#111827; margin-top:4px; line-height:1.15; }
+  .kpi-sub   { font-size:.72rem; color:#6b7280; margin-top:2px; }
+  .chart-title { font-size:.95rem; font-weight:600; color:#111827; margin-bottom:6px; }
+  .chart-subtitle { font-size:.72rem; color:#6b7280; margin-bottom:12px; }
+  .chart-wrap { position:relative; width:100%; }
+  .chart-sm  { height:260px; }
+  .chart-md  { height:320px; }
+  .heatcell  { font-size:.68rem; text-align:center; padding:5px 4px; border:1px solid #fff; color:#111827; min-width:44px; }
+  .scrollx   { overflow-x:auto; }
+  .tbl { width:100%; font-size:.82rem; border-collapse:collapse; }
+  .tbl th { text-align:left; background:#f9fafb; color:#6b7280; font-weight:600; text-transform:uppercase; letter-spacing:.03em; font-size:.68rem; padding:8px 10px; border-bottom:1px solid #e5e7eb; }
+  .tbl td { padding:8px 10px; border-bottom:1px solid #f3f4f6; }
+  .tbl tr:hover td { background:#f9fafb; }
+  .pill { display:inline-block; padding:2px 8px; border-radius:999px; font-size:.7rem; font-weight:500; }
+  .pill-green { background:#dcfce7; color:#15803d; }
+  .pill-amber { background:#fef3c7; color:#92400e; }
+  .pill-red   { background:#fee2e2; color:#b91c1c; }
+  .pill-blue  { background:#dbeafe; color:#1d4ed8; }
+  .badge-type { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.7rem; background:#f3f4f6; color:#374151; padding:2px 6px; border-radius:4px; }
+  #errBox { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; padding:10px 14px; font-size:.85rem; }
+</style>
+</head>
+<body>
+
+<div id="errBox" style="display:none; margin:16px;"></div>
+
+<header class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white">
+  <div class="max-w-[1600px] mx-auto px-6 py-6">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded bg-amber-500/20 border border-amber-400/40 flex items-center justify-center">
+            <span class="text-amber-300 text-xl">◆</span>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold tracking-tight">Chaweng Buri Resort</h1>
+            <p class="text-slate-300 text-sm">Koh Samui · Revenue & Operations Dashboard</p>
+          </div>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-6 text-sm text-slate-300">
+        <div><span class="block text-xs uppercase tracking-wide text-slate-400">Property</span><span id="hdrProp" class="text-white font-medium">—</span></div>
+        <div><span class="block text-xs uppercase tracking-wide text-slate-400">Data range</span><span id="hdrRange" class="text-white font-medium">—</span></div>
+        <div><span class="block text-xs uppercase tracking-wide text-slate-400">As of</span><span id="hdrAsOf" class="text-white font-medium">—</span></div>
+        <div><span class="block text-xs uppercase tracking-wide text-slate-400">PMS · Channel</span><span id="hdrPMS" class="text-white font-medium">—</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="bg-white border-b border-slate-200 sticky top-0 z-10">
+  <div class="max-w-[1600px] mx-auto px-6 py-3 flex flex-wrap items-center gap-3">
+    <span class="text-sm font-medium text-slate-700">Filters:</span>
+    <div class="flex items-center gap-2">
+      <label class="text-xs text-slate-600">Year</label>
+      <select id="fYear" class="border border-slate-300 rounded px-2 py-1 text-sm"></select>
+    </div>
+    <div class="flex items-center gap-2">
+      <label class="text-xs text-slate-600">Room type</label>
+      <select id="fType" class="border border-slate-300 rounded px-2 py-1 text-sm"></select>
+    </div>
+    <button id="fReset" class="ml-2 text-xs text-slate-600 hover:text-slate-900 underline">Reset</button>
+    <div id="fSummary" class="ml-auto text-xs text-slate-500"></div>
+  </div>
+</div>
+
+<div class="max-w-[1600px] mx-auto px-6 pt-6">
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div class="card"><div class="kpi-label">Accommodation Revenue</div><div class="kpi-value" id="kpiRev">—</div><div class="kpi-sub">VAT incl: <span id="kpiRevVat">—</span> ฿</div></div>
+    <div class="card"><div class="kpi-label">Occupancy</div><div class="kpi-value" id="kpiOcc">—</div><div class="kpi-sub"><span id="kpiOccSub">—</span></div></div>
+    <div class="card"><div class="kpi-label">ADR</div><div class="kpi-value" id="kpiAdr">—</div><div class="kpi-sub">Average Daily Rate</div></div>
+    <div class="card"><div class="kpi-label">RevPAR</div><div class="kpi-value" id="kpiRevpar">—</div><div class="kpi-sub">Revenue per Available Room</div></div>
+    <div class="card"><div class="kpi-label">Cancellation Rate</div><div class="kpi-value" id="kpiCxlRate">—</div><div class="kpi-sub"><span id="kpiCxlSub">—</span></div></div>
+    <div class="card"><div class="kpi-label">Lost Revenue</div><div class="kpi-value text-red-600" id="kpiLost">—</div><div class="kpi-sub">from cancelled bookings</div></div>
+  </div>
+</div>
+
+<div class="max-w-[1600px] mx-auto px-6 pt-4">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="card"><div class="chart-title">Monthly Revenue & Cancellation Lost</div><div class="chart-subtitle">Revenue by arrival month (THB); red = lost revenue from cancellations.</div><div class="chart-wrap chart-md"><canvas id="chartRevenue"></canvas></div></div>
+    <div class="card"><div class="chart-title">Monthly Occupancy %</div><div class="chart-subtitle">Nights sold ÷ (116 rooms × days in month).</div><div class="chart-wrap chart-md"><canvas id="chartOccupancy"></canvas></div></div>
+  </div>
+</div>
+
+<div class="max-w-[1600px] mx-auto px-6 pt-4">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="card"><div class="chart-title">ADR — monthly</div><div class="chart-subtitle">Revenue ÷ nights sold. Future months without recorded revenue show 0.</div><div class="chart-wrap chart-md"><canvas id="chartADR"></canvas></div></div>
+    <div class="card"><div class="chart-title">RevPAR — monthly</div><div class="chart-subtitle">Revenue per available room-night.</div><div class="chart-wrap chart-md"><canvas id="chartRevPAR"></canvas></div></div>
+  </div>
+</div>
+
+<div class="max-w-[1600px] mx-auto px-6 pt-4">
+  <div class="card">
+    <div class="chart-title">Room Type Performance</div>
+    <div class="chart-subtitle">Revenue, occupancy, and ADR by villa type over the full data range.</div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-2">
+      <div class="chart-wrap chart-sm"><canvas id="chartTypeRevenue"></canvas></div>
+      <div class="chart-wrap chart-sm"><canvas id="chartTypeOccupancy"></canvas></div>
+      <div class="chart-wrap chart-sm"><canvas id="chartTypeADR"></canvas></div>
+    </div>
+    <div class="mt-5 scrollx">
+      <table class="tbl" id="tblTypes">
+        <thead><tr>
+          <th>Type</th><th>Name</th><th class="text-right">Rooms</th>
+          <th class="text-right">Nights Sold</th><th class="text-right">Available</th>
+          <th class="text-right">Occupancy</th><th class="text-right">ADR (฿)</th>
+          <th class="text-right">RevPAR (฿)</th><th class="text-right">Revenue (฿)</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="max-w-[1600px] mx-auto px-6 pt-4">
+  <div class="card">
+    <div class="chart-title">Occupancy Heatmap — Month × Room Type</div>
+    <div class="chart-subtitle">Darker blue = higher occupancy that month.</div>
+    <div class="scrollx"><div id="heatmapBody"></div></div>
+  </div>
+</div>
+
+<div class="max-w-[1600px] mx-auto px-6 pt-4">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="card"><div class="chart-title">Market Segment — Revenue Mix</div><div class="chart-subtitle">Top segments by revenue.</div><div class="chart-wrap chart-md"><canvas id="chartSegments"></canvas></div></div>
+    <div class="card"><div class="chart-title">Top Rate Codes</div><div class="chart-subtitle">Rate plans driving revenue.</div><div class="chart-wrap chart-md"><canvas id="chartRateCodes"></canvas></div></div>
+  </div>
+</div>
+
+<div class="max-w-[1600px] mx-auto px-6 pt-4">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="card"><div class="chart-title">Top Agents / Channels</div><div class="chart-subtitle">Booking sources by revenue.</div><div class="chart-wrap chart-md"><canvas id="chartAgents"></canvas></div></div>
+    <div class="card"><div class="chart-title">Top Price Lists</div><div class="chart-subtitle">Rate plans by nights sold.</div><div class="chart-wrap chart-md"><canvas id="chartPricelist"></canvas></div></div>
+  </div>
+</div>
+
+<div class="max-w-[1600px] mx-auto px-6 pt-4">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="card"><div class="chart-title">Cancellation Reasons</div><div class="chart-subtitle">Count & lost revenue by reason.</div><div class="chart-wrap chart-md"><canvas id="chartCxlReasons"></canvas></div></div>
+    <div class="card"><div class="chart-title">Cancellations — Monthly</div><div class="chart-subtitle">Lost bookings and lost revenue by arrival month.</div><div class="chart-wrap chart-md"><canvas id="chartCxlMonthly"></canvas></div></div>
+  </div>
+</div>
+
+<div class="max-w-[1600px] mx-auto px-6 pt-4">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="card"><div class="chart-title">Booking Lead Time</div><div class="chart-subtitle">Days between reservation and arrival.</div><div class="chart-wrap chart-md"><canvas id="chartLead"></canvas></div></div>
+    <div class="card"><div class="chart-title">Day of Week Performance</div><div class="chart-subtitle">Occupancy (bars) and ADR (line) by weekday.</div><div class="chart-wrap chart-md"><canvas id="chartDOW"></canvas></div></div>
+  </div>
+</div>
+
+<div class="max-w-[1600px] mx-auto px-6 pt-4 pb-8">
+  <div class="card">
+    <div class="chart-title">Top 20 Reservations by Revenue</div>
+    <div class="chart-subtitle">Largest single reservations across all rooms.</div>
+    <div class="scrollx">
+      <table class="tbl" id="tblTop">
+        <thead><tr>
+          <th>Res #</th><th>Arrival</th><th class="text-right">Nights</th>
+          <th class="text-right">Rooms</th><th>Guest</th><th>Segment</th>
+          <th>Agent</th><th>Rate Code</th><th class="text-right">Revenue (฿)</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<footer class="max-w-[1600px] mx-auto px-6 pb-6 text-xs text-slate-500 border-t border-slate-200 pt-4">
+  Chaweng Buri Resort · Data: Hoteltime PMS (reservations, revenue), STAAH (channel manager), cleaned cancellation log · Generated from <code>Reservations_Revenue_Cancellations_Master 180426.xlsx</code>.
+</footer>
+
+<script>
+const DATA = {"property": {"name": "Chaweng Buri Resort, Koh Samui", "pms": "Hoteltime", "channel_manager": "STAAH", "currency": "THB", "rooms_by_type": {"SGV": {"name": "Superior Garden Villa", "rooms": 33}, "DGV": {"name": "Deluxe Garden Villa", "rooms": 22}, "DPV": {"name": "Deluxe Pool Villa", "rooms": 29}, "DSV": {"name": "Deluxe Seaview Villa", "rooms": 12}, "FPV": {"name": "Family Pool Villa", "rooms": 15}, "GFV": {"name": "Grand Family Pool Villa", "rooms": 2}, "DBV": {"name": "Deluxe Beach Front Villa", "rooms": 1}, "BSV": {"name": "Beach Front Suite Villa", "rooms": 1}, "HPV": {"name": "Honeymoon Pool Villa", "rooms": 1}}, "total_rooms": 116}, "data_range": {"arrival_min": "2024-06-04", "arrival_max": "2027-04-09", "as_of": "2026-04-18"}, "kpis": {"total_reservations_active": 7871, "total_reservations_cancelled": 1695, "total_nights_sold": 34905, "total_available_nights": 123424, "total_revenue": 146769331.18, "total_revenue_vat": 240665244.4, "total_lost_revenue": 45539702.9, "overall_occupancy_pct": 28.28, "overall_adr": 4204.82, "overall_revpar": 1189.15, "cancellation_rate_pct": 17.72}, "monthly": [{"month": "2024-06", "nights_sold": 224, "revenue": 578275.0518571428, "revenue_vat": 742683.0125714286, "capacity": 3480, "occupancy_pct": 6.44, "adr": 2581.59, "revpar": 166.17, "cancelled_bookings": 16, "lost_revenue": 228623.89}, {"month": "2024-07", "nights_sold": 919, "revenue": 3195561.814359423, "revenue_vat": 5514795.992946516, "capacity": 3596, "occupancy_pct": 25.56, "adr": 3477.22, "revpar": 888.64, "cancelled_bookings": 74, "lost_revenue": 1703592.4}, {"month": "2024-08", "nights_sold": 1112, "revenue": 4195310.27936785, "revenue_vat": 6763612.816689848, "capacity": 3596, "occupancy_pct": 30.92, "adr": 3772.76, "revpar": 1166.66, "cancelled_bookings": 126, "lost_revenue": 2935304.54}, {"month": "2024-09", "nights_sold": 357, "revenue": 818533.9258441558, "revenue_vat": 1065775.6093753616, "capacity": 3480, "occupancy_pct": 10.26, "adr": 2292.81, "revpar": 235.21, "cancelled_bookings": 17, "lost_revenue": 297741.25}, {"month": "2024-10", "nights_sold": 455, "revenue": 1059770.8682857142, "revenue_vat": 1713164.828131132, "capacity": 3596, "occupancy_pct": 12.65, "adr": 2329.17, "revpar": 294.71, "cancelled_bookings": 11, "lost_revenue": 198538.03}, {"month": "2024-11", "nights_sold": 359, "revenue": 826898.0173260074, "revenue_vat": 1139416.3333577532, "capacity": 3480, "occupancy_pct": 10.32, "adr": 2303.34, "revpar": 237.61, "cancelled_bookings": 17, "lost_revenue": 71621.92}, {"month": "2024-12", "nights_sold": 1245, "revenue": 4959542.613280053, "revenue_vat": 7723108.567965517, "capacity": 3596, "occupancy_pct": 34.62, "adr": 3983.57, "revpar": 1379.18, "cancelled_bookings": 89, "lost_revenue": 2805602.94}, {"month": "2025-01", "nights_sold": 2484, "revenue": 11463175.073951472, "revenue_vat": 17149464.43731634, "capacity": 3596, "occupancy_pct": 69.08, "adr": 4614.8, "revpar": 3187.76, "cancelled_bookings": 229, "lost_revenue": 3542886.4}, {"month": "2025-02", "nights_sold": 2634, "revenue": 12096541.192079674, "revenue_vat": 18655968.630527582, "capacity": 3248, "occupancy_pct": 81.1, "adr": 4592.46, "revpar": 3724.3, "cancelled_bookings": 179, "lost_revenue": 4703233.97}, {"month": "2025-03", "nights_sold": 1767, "revenue": 8328710.227893939, "revenue_vat": 12568876.507473463, "capacity": 3596, "occupancy_pct": 49.14, "adr": 4713.47, "revpar": 2316.1, "cancelled_bookings": 51, "lost_revenue": 1239433.86}, {"month": "2025-04", "nights_sold": 1316, "revenue": 5227025.817459835, "revenue_vat": 7972885.148358985, "capacity": 3480, "occupancy_pct": 37.82, "adr": 3971.9, "revpar": 1502.02, "cancelled_bookings": 39, "lost_revenue": 769254.27}, {"month": "2025-05", "nights_sold": 645, "revenue": 2109386.3498531748, "revenue_vat": 2893602.5049397545, "capacity": 3596, "occupancy_pct": 17.94, "adr": 3270.37, "revpar": 586.59, "cancelled_bookings": 15, "lost_revenue": 240980.57}, {"month": "2025-06", "nights_sold": 879, "revenue": 2541511.812798701, "revenue_vat": 6616740.680489178, "capacity": 3480, "occupancy_pct": 25.26, "adr": 2891.37, "revpar": 730.32, "cancelled_bookings": 26, "lost_revenue": 555121.81}, {"month": "2025-07", "nights_sold": 1835, "revenue": 7899944.0554229515, "revenue_vat": 15527051.908111187, "capacity": 3596, "occupancy_pct": 51.03, "adr": 4305.15, "revpar": 2196.87, "cancelled_bookings": 40, "lost_revenue": 1409012.46}, {"month": "2025-08", "nights_sold": 2340, "revenue": 11370239.04597403, "revenue_vat": 20236983.03063195, "capacity": 3596, "occupancy_pct": 65.07, "adr": 4859.08, "revpar": 3161.91, "cancelled_bookings": 125, "lost_revenue": 3977942.56}, {"month": "2025-09", "nights_sold": 1472, "revenue": 4855940.776745877, "revenue_vat": 7437643.716947342, "capacity": 3480, "occupancy_pct": 42.3, "adr": 3298.87, "revpar": 1395.39, "cancelled_bookings": 39, "lost_revenue": 553050.86}, {"month": "2025-10", "nights_sold": 891, "revenue": 2704891.3983571427, "revenue_vat": 5512024.136452381, "capacity": 3596, "occupancy_pct": 24.78, "adr": 3035.79, "revpar": 752.19, "cancelled_bookings": 24, "lost_revenue": 319002.76}, {"month": "2025-11", "nights_sold": 894, "revenue": 2581703.791214286, "revenue_vat": 4916215.600315335, "capacity": 3480, "occupancy_pct": 25.69, "adr": 2887.81, "revpar": 741.87, "cancelled_bookings": 26, "lost_revenue": 527291.87}, {"month": "2025-12", "nights_sold": 2288, "revenue": 10081662.856671052, "revenue_vat": 18182074.185041845, "capacity": 3596, "occupancy_pct": 63.63, "adr": 4406.32, "revpar": 2803.58, "cancelled_bookings": 124, "lost_revenue": 4362491.48}, {"month": "2026-01", "nights_sold": 2887, "revenue": 17999239.632077616, "revenue_vat": 30006277.08393683, "capacity": 3596, "occupancy_pct": 80.28, "adr": 6234.58, "revpar": 5005.35, "cancelled_bookings": 86, "lost_revenue": 4110637.36}, {"month": "2026-02", "nights_sold": 2811, "revenue": 16768481.521172605, "revenue_vat": 25722426.95893445, "capacity": 3248, "occupancy_pct": 86.55, "adr": 5965.31, "revpar": 5162.71, "cancelled_bookings": 128, "lost_revenue": 4429988.93}, {"month": "2026-03", "nights_sold": 2152, "revenue": 10294155.401665032, "revenue_vat": 15140452.477995662, "capacity": 3596, "occupancy_pct": 59.84, "adr": 4783.53, "revpar": 2862.67, "cancelled_bookings": 140, "lost_revenue": 4667895.46}, {"month": "2026-04", "nights_sold": 1522, "revenue": 4753823.5563422665, "revenue_vat": 7404662.832741762, "capacity": 3480, "occupancy_pct": 43.74, "adr": 3123.41, "revpar": 1366.04, "cancelled_bookings": 73, "lost_revenue": 1885610.73}, {"month": "2026-05", "nights_sold": 320, "revenue": 59006.1, "revenue_vat": 59337.398748403575, "capacity": 3596, "occupancy_pct": 8.9, "adr": 184.39, "revpar": 16.41, "cancelled_bookings": 0, "lost_revenue": 0.0}, {"month": "2026-06", "nights_sold": 168, "revenue": 0.0, "revenue_vat": 0.0, "capacity": 3480, "occupancy_pct": 4.83, "adr": 0.0, "revpar": 0.0, "cancelled_bookings": 0, "lost_revenue": 0.0}, {"month": "2026-07", "nights_sold": 416, "revenue": 0.0, "revenue_vat": 0.0, "capacity": 3596, "occupancy_pct": 11.57, "adr": 0.0, "revpar": 0.0, "cancelled_bookings": 0, "lost_revenue": 0.0}, {"month": "2026-08", "nights_sold": 322, "revenue": 0.0, "revenue_vat": 0.0, "capacity": 3596, "occupancy_pct": 8.95, "adr": 0.0, "revpar": 0.0, "cancelled_bookings": 0, "lost_revenue": 0.0}, {"month": "2026-09", "nights_sold": 55, "revenue": 0.0, "revenue_vat": 0.0, "capacity": 3480, "occupancy_pct": 1.58, "adr": 0.0, "revpar": 0.0, "cancelled_bookings": 0, "lost_revenue": 0.0}, {"month": "2026-10", "nights_sold": 11, "revenue": 0.0, "revenue_vat": 0.0, "capacity": 3596, "occupancy_pct": 0.31, "adr": 0.0, "revpar": 0.0, "cancelled_bookings": 0, "lost_revenue": 0.0}, {"month": "2026-11", "nights_sold": 6, "revenue": 0.0, "revenue_vat": 0.0, "capacity": 3480, "occupancy_pct": 0.17, "adr": 0.0, "revpar": 0.0, "cancelled_bookings": 0, "lost_revenue": 0.0}, {"month": "2026-12", "nights_sold": 60, "revenue": 0.0, "revenue_vat": 0.0, "capacity": 3596, "occupancy_pct": 1.67, "adr": 0.0, "revpar": 0.0, "cancelled_bookings": 0, "lost_revenue": 0.0}, {"month": "2027-01", "nights_sold": 31, "revenue": 0.0, "revenue_vat": 0.0, "capacity": 3596, "occupancy_pct": 0.86, "adr": 0.0, "revpar": 0.0, "cancelled_bookings": 0, "lost_revenue": 0.0}, {"month": "2027-02", "nights_sold": 9, "revenue": 0.0, "revenue_vat": 0.0, "capacity": 3248, "occupancy_pct": 0.28, "adr": 0.0, "revpar": 0.0, "cancelled_bookings": 0, "lost_revenue": 0.0}, {"month": "2027-03", "nights_sold": 5, "revenue": 0.0, "revenue_vat": 0.0, "capacity": 3596, "occupancy_pct": 0.14, "adr": 0.0, "revpar": 0.0, "cancelled_bookings": 0, "lost_revenue": 0.0}, {"month": "2027-04", "nights_sold": 14, "revenue": 0.0, "revenue_vat": 0.0, "capacity": 3480, "occupancy_pct": 0.4, "adr": 0.0, "revpar": 0.0, "cancelled_bookings": 0, "lost_revenue": 0.0}], "by_room_type": [{"type": "SGV", "nights_sold": 11702, "revenue": 39822663.86, "rooms": 33, "name": "Superior Garden Villa", "capacity_nights": 35112, "occupancy_pct": 33.33, "adr": 3403.06, "revpar": 1134.16}, {"type": "DPV", "nights_sold": 6844, "revenue": 35263046.78, "rooms": 29, "name": "Deluxe Pool Villa", "capacity_nights": 30856, "occupancy_pct": 22.18, "adr": 5152.4, "revpar": 1142.83}, {"type": "DGV", "nights_sold": 9033, "revenue": 34257481.15, "rooms": 22, "name": "Deluxe Garden Villa", "capacity_nights": 23408, "occupancy_pct": 38.59, "adr": 3792.48, "revpar": 1463.49}, {"type": "DSV", "nights_sold": 4183, "revenue": 20421077.83, "rooms": 12, "name": "Deluxe Seaview Villa", "capacity_nights": 12768, "occupancy_pct": 32.76, "adr": 4881.92, "revpar": 1599.4}, {"type": "FPV", "nights_sold": 2039, "revenue": 10986364.63, "rooms": 15, "name": "Family Pool Villa", "capacity_nights": 15960, "occupancy_pct": 12.78, "adr": 5388.11, "revpar": 688.37}, {"type": "GFV", "nights_sold": 620, "revenue": 3054337.78, "rooms": 2, "name": "Grand Family Pool Villa", "capacity_nights": 2128, "occupancy_pct": 29.14, "adr": 4926.35, "revpar": 1435.31}, {"type": "DBV", "nights_sold": 198, "revenue": 1303938.9, "rooms": 1, "name": "Deluxe Beach Front Villa", "capacity_nights": 1064, "occupancy_pct": 18.61, "adr": 6585.55, "revpar": 1225.51}, {"type": "BSV", "nights_sold": 176, "revenue": 1142753.17, "rooms": 1, "name": "Beach Front Suite Villa", "capacity_nights": 1064, "occupancy_pct": 16.54, "adr": 6492.92, "revpar": 1074.02}, {"type": "HPV", "nights_sold": 110, "revenue": 517667.08, "rooms": 1, "name": "Honeymoon Pool Villa", "capacity_nights": 1064, "occupancy_pct": 10.34, "adr": 4706.06, "revpar": 486.53}], "by_segment": [{"segment": "ฺฺฺBooking.com", "nights": 18352, "revenue": 87878935.45, "bookings": 3251}, {"segment": "OTA", "nights": 8636, "revenue": 35765064.64, "bookings": 1726}, {"segment": "F.I.T. - Promotion", "nights": 3475, "revenue": 13019191.72, "bookings": 504}, {"segment": "F.I.T. - Full Price", "nights": 883, "revenue": 4100236.33, "bookings": 162}, {"segment": "Xcaliber", "nights": 954, "revenue": 2380372.8, "bookings": 158}, {"segment": "Expedia", "nights": 550, "revenue": 2379409.72, "bookings": 116}, {"segment": "Trip.com", "nights": 120, "revenue": 484230.97, "bookings": 36}, {"segment": "Group", "nights": 110, "revenue": 314836.7, "bookings": 10}, {"segment": "F.I.T. - Longstay", "nights": 48, "revenue": 155530.14, "bookings": 2}, {"segment": "Group - Others", "nights": 24, "revenue": 103713.91, "bookings": 2}], "by_agent": [{"agent": "BOOKING.COM", "nights": 18369, "revenue": 87991509.16, "bookings": 3252}, {"agent": "*** NO-AGENT (DIRECT) ***", "nights": 5040, "revenue": 18645324.61, "bookings": 817}, {"agent": "Expedia", "nights": 3191, "revenue": 13171349.72, "bookings": 672}, {"agent": "Xcaliber", "nights": 3154, "revenue": 13132903.41, "bookings": 439}, {"agent": "Trip / CTrip", "nights": 2791, "revenue": 11346685.48, "bookings": 654}, {"agent": "Tiket.com", "nights": 644, "revenue": 2396545.4, "bookings": 143}, {"agent": "Traveloka", "nights": 26, "revenue": 85013.4, "bookings": 5}], "by_ratecode": [{"rate_code": "OTA Rates Room Only", "nights": 16739, "revenue": 73876892.24, "bookings": 3490}, {"rate_code": "OTA Rates incl. BF", "nights": 7576, "revenue": 38708275.6, "bookings": 1307}, {"rate_code": "BAR Room Only", "nights": 3006, "revenue": 12883916.23, "bookings": 445}, {"rate_code": "Walk-In ROOM ONLY", "nights": 2006, "revenue": 8206566.03, "bookings": 402}, {"rate_code": "Walk-In INCLUDING breakfast", "nights": 965, "revenue": 4211179.3, "bookings": 119}, {"rate_code": "Little Rain Promotion (Room Only)", "nights": 1123, "revenue": 2909098.96, "bookings": 287}, {"rate_code": "Last minute DPV 2025 Promotion", "nights": 283, "revenue": 1024177.42, "bookings": 66}, {"rate_code": "Little Rain Promotion (incl. breakfast)", "nights": 199, "revenue": 697156.85, "bookings": 31}, {"rate_code": "Stay longer Save more 7 Days", "nights": 194, "revenue": 577565.34, "bookings": 18}, {"rate_code": "Last minute DPV Breakfast Promotion", "nights": 154, "revenue": 472894.81, "bookings": 23}, {"rate_code": "Reopening Rate - with breakfast", "nights": 94, "revenue": 370935.56, "bookings": 4}, {"rate_code": "Book Early Save More 60 Days", "nights": 120, "revenue": 338305.5, "bookings": 5}], "by_pricelist": [{"price_list": "OTA Rates Room Only", "nights": 17887, "revenue": 75343323.07, "bookings": 3574}, {"price_list": "OTA Rates incl. BF", "nights": 8210, "revenue": 38644452.48, "bookings": 1352}, {"price_list": "BAR Room Only", "nights": 3164, "revenue": 12776494.28, "bookings": 416}, {"price_list": "Walk-In ROOM ONLY", "nights": 1835, "revenue": 7399555.57, "bookings": 355}, {"price_list": "Walk-In INCLUDING breakfast", "nights": 899, "revenue": 4069395.41, "bookings": 96}, {"price_list": "Little Rain Promotion (Room Only)", "nights": 1030, "revenue": 2645112.15, "bookings": 225}, {"price_list": "Last minute DPV 2025 Promotion", "nights": 258, "revenue": 950027.45, "bookings": 47}, {"price_list": "Stay longer Save more 7 Days", "nights": 202, "revenue": 676268.45, "bookings": 18}, {"price_list": "Little Rain Promotion (incl. breakfast)", "nights": 190, "revenue": 653509.93, "bookings": 24}, {"price_list": "Last minute DPV Breakfast Promotion", "nights": 168, "revenue": 509540.6, "bookings": 19}, {"price_list": "Reopening Rate - with breakfast", "nights": 94, "revenue": 370935.56, "bookings": 4}, {"price_list": "Book Early Save More 60 Days", "nights": 120, "revenue": 338305.5, "bookings": 5}], "cancellation_reasons": [{"reason": "Cancaled by client", "count": 1525, "lost_revenue": 42176606.65}, {"reason": "P/U before LIVE", "count": 76, "lost_revenue": 792994.02}, {"reason": "Date changed", "count": 37, "lost_revenue": 1072720.72}, {"reason": "Option expired", "count": 31, "lost_revenue": 1020565.79}, {"reason": "No show", "count": 16, "lost_revenue": 302105.45}, {"reason": "Rate", "count": 7, "lost_revenue": 119236.01}, {"reason": "No-Show", "count": 2, "lost_revenue": 52590.63}, {"reason": "Destination", "count": 1, "lost_revenue": 2883.63}], "lead_time_distribution": [{"bucket": "Same day", "count": 1269}, {"bucket": "1-3 days", "count": 1944}, {"bucket": "4-7 days", "count": 632}, {"bucket": "8-14 days", "count": 636}, {"bucket": "15-30 days", "count": 1111}, {"bucket": "31-60 days", "count": 1013}, {"bucket": "61-90 days", "count": 522}, {"bucket": "91-180 days", "count": 573}, {"bucket": "181-365 days", "count": 168}, {"bucket": "1+ year", "count": 2}], "dow": [{"day": "Mon", "nights_sold": 4977, "capacity": 17400, "occupancy_pct": 28.6, "adr": 4201.02}, {"day": "Tue", "nights_sold": 5097, "capacity": 17516, "occupancy_pct": 29.1, "adr": 4188.45}, {"day": "Wed", "nights_sold": 5032, "capacity": 17516, "occupancy_pct": 28.73, "adr": 4155.24}, {"day": "Thu", "nights_sold": 5059, "capacity": 17516, "occupancy_pct": 28.88, "adr": 4190.92}, {"day": "Fri", "nights_sold": 4927, "capacity": 17400, "occupancy_pct": 28.32, "adr": 4225.58}, {"day": "Sat", "nights_sold": 4910, "capacity": 17400, "occupancy_pct": 28.22, "adr": 4253.37}, {"day": "Sun", "nights_sold": 4903, "capacity": 17400, "occupancy_pct": 28.18, "adr": 4221.46}], "top_reservations": [{"Reservation number": 601645343, "arrival": "28/12/2025", "nights": 30, "guest": "Gorashko Emily Elizabeth, Gorashko Timothy Robert", "segment": "ฺฺฺBooking.com", "agent": "BOOKING.COM", "rate_code": "OTA Rates Room Only", "revenue": 421883.85, "rooms": 6}, {"Reservation number": 600527079, "arrival": "18/01/2025", "nights": 116, "guest": "Amanbayeva Amanzhan, Shmuratko Alexandr", "segment": "ฺฺฺBooking.com", "agent": "BOOKING.COM", "rate_code": "OTA Rates Room Only", "revenue": 304472.04, "rooms": 4}, {"Reservation number": 601049129, "arrival": "30/06/2025", "nights": 73, "guest": "Hjelm Maja Furland, Lindo Christian Rafoss", "segment": "F.I.T. - Full Price", "agent": "*** NO-AGENT (DIRECT) ***", "rate_code": "Walk-In ROOM ONLY", "revenue": 295814.65, "rooms": 5}, {"Reservation number": 601847551, "arrival": "19/01/2026", "nights": 60, "guest": "Mclauchlan Julian Brodie", "segment": "ฺฺฺBooking.com", "agent": "BOOKING.COM", "rate_code": "OTA Rates Room Only", "revenue": 290465.55, "rooms": 5}, {"Reservation number": 601040959, "arrival": "23/12/2025", "nights": 60, "guest": "Kriegler Maria Susanna, Kriegler Wouter Jacobus", "segment": "F.I.T. - Full Price", "agent": "*** NO-AGENT (DIRECT) ***", "rate_code": "Walk-In INCLUDING breakfast", "revenue": 278560.85, "rooms": 4}, {"Reservation number": 602190253, "arrival": "06/02/2026", "nights": 36, "guest": "Damian Jesus", "segment": "ฺฺฺBooking.com", "agent": "BOOKING.COM", "rate_code": "OTA Rates Room Only", "revenue": 265605.72, "rooms": 3}, {"Reservation number": 601978228, "arrival": "24/01/2026", "nights": 39, "guest": "Rau Thomas", "segment": "ฺฺฺBooking.com", "agent": "BOOKING.COM", "rate_code": "OTA Rates Room Only", "revenue": 262882.98, "rooms": 3}, {"Reservation number": 601370209, "arrival": "16/06/2025", "nights": 71, "guest": "Nissan Sigal, Roi Nissan", "segment": "F.I.T. - Promotion", "agent": "*** NO-AGENT (DIRECT) ***", "rate_code": "Last minute DPV Breakfast Promotion", "revenue": 232110.0, "rooms": 15}, {"Reservation number": 602149629, "arrival": "07/01/2026", "nights": 46, "guest": "Janiec Andrzej Grzegorz, Rotnicka Janiec Ewa Krystyna", "segment": "OTA", "agent": "Xcaliber", "rate_code": "BAR Room Only", "revenue": 227929.0, "rooms": 3}, {"Reservation number": 602016624, "arrival": "04/02/2026", "nights": 40, "guest": "KOKVIK GERD KARIN", "segment": "ฺฺฺBooking.com", "agent": "BOOKING.COM", "rate_code": "OTA Rates Room Only", "revenue": 221099.76, "rooms": 2}, {"Reservation number": 602353760, "arrival": "23/02/2026", "nights": 36, "guest": "Kehr Andreas", "segment": "ฺฺฺBooking.com", "agent": "BOOKING.COM", "rate_code": "OTA Rates incl. BF", "revenue": 219932.2, "rooms": 2}, {"Reservation number": 600838896, "arrival": "01/07/2025", "nights": 89, "guest": "brys bryan narin, Roel brys", "segment": "ฺฺฺBooking.com", "agent": "BOOKING.COM", "rate_code": "OTA Rates Room Only", "revenue": 208572.48, "rooms": 3}, {"Reservation number": 600389102, "arrival": "16/01/2025", "nights": 60, "guest": "Mikus Milan, Mikusova Jana", "segment": "ฺฺฺBooking.com", "agent": "BOOKING.COM", "rate_code": "OTA Rates incl. BF", "revenue": 208166.4, "rooms": 5}, {"Reservation number": 601772915, "arrival": "26/12/2025", "nights": 24, "guest": "HEUSSER LINDA LENA, HEUSSER MANUELA", "segment": "ฺฺฺBooking.com", "agent": "BOOKING.COM", "rate_code": "OTA Rates incl. BF", "revenue": 207578.4, "rooms": 3}, {"Reservation number": 601942100, "arrival": "12/02/2026", "nights": 24, "guest": "Brecht Kathrin, Brecht Thomas Adolf Andreas", "segment": "ฺฺฺBooking.com", "agent": "BOOKING.COM", "rate_code": "OTA Rates Room Only", "revenue": 198040.88, "rooms": 2}, {"Reservation number": 601324586, "arrival": "10/08/2025", "nights": 30, "guest": "Assulin Ohad Haviv, Assulin Ron", "segment": "F.I.T. - Promotion", "agent": "*** NO-AGENT (DIRECT) ***", "rate_code": "Walk-In ROOM ONLY", "revenue": 197600.0, "rooms": 5}, {"Reservation number": 600343841, "arrival": "27/12/2024", "nights": 28, "guest": "Reincke, Reincke", "segment": "ฺฺฺBooking.com", "agent": "BOOKING.COM", "rate_code": "OTA Rates Room Only", "revenue": 195360.72, "rooms": 2}, {"Reservation number": 602046236, "arrival": "12/01/2026", "nights": 30, "guest": "Anette Vollmer, Nielsen Michael Brandt", "segment": "ฺฺฺBooking.com", "agent": "BOOKING.COM", "rate_code": "OTA Rates incl. BF", "revenue": 192472.2, "rooms": 4}, {"Reservation number": 600602836, "arrival": "27/01/2025", "nights": 56, "guest": "J?rgens Paul, Vent Markus", "segment": "ฺฺฺBooking.com", "agent": "BOOKING.COM", "rate_code": "OTA Rates Room Only", "revenue": 187152.84, "rooms": 7}, {"Reservation number": 602288792, "arrival": "02/02/2026", "nights": 28, "guest": "Gal Eilon", "segment": "ฺฺฺBooking.com", "agent": "BOOKING.COM", "rate_code": "OTA Rates incl. BF", "revenue": 186928.58, "rooms": 8}], "heatmap": [{"month": "2024-06", "type": "SGV", "nights_sold": 133, "occupancy_pct": 13.4}, {"month": "2024-06", "type": "DGV", "nights_sold": 55, "occupancy_pct": 8.3}, {"month": "2024-06", "type": "DPV", "nights_sold": 9, "occupancy_pct": 1.0}, {"month": "2024-06", "type": "DSV", "nights_sold": 23, "occupancy_pct": 6.4}, {"month": "2024-06", "type": "FPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2024-06", "type": "GFV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2024-06", "type": "DBV", "nights_sold": 4, "occupancy_pct": 13.3}, {"month": "2024-06", "type": "BSV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2024-06", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2024-07", "type": "SGV", "nights_sold": 297, "occupancy_pct": 29.0}, {"month": "2024-07", "type": "DGV", "nights_sold": 423, "occupancy_pct": 62.0}, {"month": "2024-07", "type": "DPV", "nights_sold": 15, "occupancy_pct": 1.7}, {"month": "2024-07", "type": "DSV", "nights_sold": 179, "occupancy_pct": 48.1}, {"month": "2024-07", "type": "FPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2024-07", "type": "GFV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2024-07", "type": "DBV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2024-07", "type": "BSV", "nights_sold": 5, "occupancy_pct": 16.1}, {"month": "2024-07", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2024-08", "type": "SGV", "nights_sold": 424, "occupancy_pct": 41.4}, {"month": "2024-08", "type": "DGV", "nights_sold": 452, "occupancy_pct": 66.3}, {"month": "2024-08", "type": "DPV", "nights_sold": 67, "occupancy_pct": 7.5}, {"month": "2024-08", "type": "DSV", "nights_sold": 154, "occupancy_pct": 41.4}, {"month": "2024-08", "type": "FPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2024-08", "type": "GFV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2024-08", "type": "DBV", "nights_sold": 5, "occupancy_pct": 16.1}, {"month": "2024-08", "type": "BSV", "nights_sold": 10, "occupancy_pct": 32.3}, {"month": "2024-08", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2024-09", "type": "SGV", "nights_sold": 173, "occupancy_pct": 17.5}, {"month": "2024-09", "type": "DGV", "nights_sold": 121, "occupancy_pct": 18.3}, {"month": "2024-09", "type": "DPV", "nights_sold": 29, "occupancy_pct": 3.3}, {"month": "2024-09", "type": "DSV", "nights_sold": 17, "occupancy_pct": 4.7}, {"month": "2024-09", "type": "FPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2024-09", "type": "GFV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2024-09", "type": "DBV", "nights_sold": 17, "occupancy_pct": 56.7}, {"month": "2024-09", "type": "BSV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2024-09", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2024-10", "type": "SGV", "nights_sold": 219, "occupancy_pct": 21.4}, {"month": "2024-10", "type": "DGV", "nights_sold": 98, "occupancy_pct": 14.4}, {"month": "2024-10", "type": "DPV", "nights_sold": 85, "occupancy_pct": 9.5}, {"month": "2024-10", "type": "DSV", "nights_sold": 47, "occupancy_pct": 12.6}, {"month": "2024-10", "type": "FPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2024-10", "type": "GFV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2024-10", "type": "DBV", "nights_sold": 5, "occupancy_pct": 16.1}, {"month": "2024-10", "type": "BSV", "nights_sold": 1, "occupancy_pct": 3.2}, {"month": "2024-10", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2024-11", "type": "SGV", "nights_sold": 185, "occupancy_pct": 18.7}, {"month": "2024-11", "type": "DGV", "nights_sold": 78, "occupancy_pct": 11.8}, {"month": "2024-11", "type": "DPV", "nights_sold": 72, "occupancy_pct": 8.3}, {"month": "2024-11", "type": "DSV", "nights_sold": 22, "occupancy_pct": 6.1}, {"month": "2024-11", "type": "FPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2024-11", "type": "GFV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2024-11", "type": "DBV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2024-11", "type": "BSV", "nights_sold": 2, "occupancy_pct": 6.7}, {"month": "2024-11", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2024-12", "type": "SGV", "nights_sold": 427, "occupancy_pct": 41.7}, {"month": "2024-12", "type": "DGV", "nights_sold": 445, "occupancy_pct": 65.2}, {"month": "2024-12", "type": "DPV", "nights_sold": 237, "occupancy_pct": 26.4}, {"month": "2024-12", "type": "DSV", "nights_sold": 126, "occupancy_pct": 33.9}, {"month": "2024-12", "type": "FPV", "nights_sold": 2, "occupancy_pct": 0.4}, {"month": "2024-12", "type": "GFV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2024-12", "type": "DBV", "nights_sold": 6, "occupancy_pct": 19.4}, {"month": "2024-12", "type": "BSV", "nights_sold": 2, "occupancy_pct": 6.5}, {"month": "2024-12", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2025-01", "type": "SGV", "nights_sold": 737, "occupancy_pct": 72.0}, {"month": "2025-01", "type": "DGV", "nights_sold": 672, "occupancy_pct": 98.5}, {"month": "2025-01", "type": "DPV", "nights_sold": 576, "occupancy_pct": 64.1}, {"month": "2025-01", "type": "DSV", "nights_sold": 329, "occupancy_pct": 88.4}, {"month": "2025-01", "type": "FPV", "nights_sold": 137, "occupancy_pct": 29.5}, {"month": "2025-01", "type": "GFV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2025-01", "type": "DBV", "nights_sold": 28, "occupancy_pct": 90.3}, {"month": "2025-01", "type": "BSV", "nights_sold": 5, "occupancy_pct": 16.1}, {"month": "2025-01", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2025-02", "type": "SGV", "nights_sold": 807, "occupancy_pct": 87.3}, {"month": "2025-02", "type": "DGV", "nights_sold": 636, "occupancy_pct": 103.2}, {"month": "2025-02", "type": "DPV", "nights_sold": 616, "occupancy_pct": 75.9}, {"month": "2025-02", "type": "DSV", "nights_sold": 308, "occupancy_pct": 91.7}, {"month": "2025-02", "type": "FPV", "nights_sold": 219, "occupancy_pct": 52.1}, {"month": "2025-02", "type": "GFV", "nights_sold": 12, "occupancy_pct": 21.4}, {"month": "2025-02", "type": "DBV", "nights_sold": 21, "occupancy_pct": 75.0}, {"month": "2025-02", "type": "BSV", "nights_sold": 6, "occupancy_pct": 21.4}, {"month": "2025-02", "type": "HPV", "nights_sold": 9, "occupancy_pct": 32.1}, {"month": "2025-03", "type": "SGV", "nights_sold": 536, "occupancy_pct": 52.4}, {"month": "2025-03", "type": "DGV", "nights_sold": 503, "occupancy_pct": 73.8}, {"month": "2025-03", "type": "DPV", "nights_sold": 346, "occupancy_pct": 38.5}, {"month": "2025-03", "type": "DSV", "nights_sold": 278, "occupancy_pct": 74.7}, {"month": "2025-03", "type": "FPV", "nights_sold": 76, "occupancy_pct": 16.3}, {"month": "2025-03", "type": "GFV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2025-03", "type": "DBV", "nights_sold": 8, "occupancy_pct": 25.8}, {"month": "2025-03", "type": "BSV", "nights_sold": 20, "occupancy_pct": 64.5}, {"month": "2025-03", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2025-04", "type": "SGV", "nights_sold": 255, "occupancy_pct": 25.8}, {"month": "2025-04", "type": "DGV", "nights_sold": 476, "occupancy_pct": 72.1}, {"month": "2025-04", "type": "DPV", "nights_sold": 263, "occupancy_pct": 30.2}, {"month": "2025-04", "type": "DSV", "nights_sold": 206, "occupancy_pct": 57.2}, {"month": "2025-04", "type": "FPV", "nights_sold": 76, "occupancy_pct": 16.9}, {"month": "2025-04", "type": "GFV", "nights_sold": 18, "occupancy_pct": 30.0}, {"month": "2025-04", "type": "DBV", "nights_sold": 13, "occupancy_pct": 43.3}, {"month": "2025-04", "type": "BSV", "nights_sold": 9, "occupancy_pct": 30.0}, {"month": "2025-04", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2025-05", "type": "SGV", "nights_sold": 74, "occupancy_pct": 7.2}, {"month": "2025-05", "type": "DGV", "nights_sold": 276, "occupancy_pct": 40.5}, {"month": "2025-05", "type": "DPV", "nights_sold": 141, "occupancy_pct": 15.7}, {"month": "2025-05", "type": "DSV", "nights_sold": 119, "occupancy_pct": 32.0}, {"month": "2025-05", "type": "FPV", "nights_sold": 26, "occupancy_pct": 5.6}, {"month": "2025-05", "type": "GFV", "nights_sold": 6, "occupancy_pct": 9.7}, {"month": "2025-05", "type": "DBV", "nights_sold": 3, "occupancy_pct": 9.7}, {"month": "2025-05", "type": "BSV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2025-05", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2025-06", "type": "SGV", "nights_sold": 389, "occupancy_pct": 39.3}, {"month": "2025-06", "type": "DGV", "nights_sold": 230, "occupancy_pct": 34.8}, {"month": "2025-06", "type": "DPV", "nights_sold": 138, "occupancy_pct": 15.9}, {"month": "2025-06", "type": "DSV", "nights_sold": 79, "occupancy_pct": 21.9}, {"month": "2025-06", "type": "FPV", "nights_sold": 30, "occupancy_pct": 6.7}, {"month": "2025-06", "type": "GFV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2025-06", "type": "DBV", "nights_sold": 13, "occupancy_pct": 43.3}, {"month": "2025-06", "type": "BSV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2025-06", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2025-07", "type": "SGV", "nights_sold": 729, "occupancy_pct": 71.3}, {"month": "2025-07", "type": "DGV", "nights_sold": 523, "occupancy_pct": 76.7}, {"month": "2025-07", "type": "DPV", "nights_sold": 228, "occupancy_pct": 25.4}, {"month": "2025-07", "type": "DSV", "nights_sold": 206, "occupancy_pct": 55.4}, {"month": "2025-07", "type": "FPV", "nights_sold": 89, "occupancy_pct": 19.1}, {"month": "2025-07", "type": "GFV", "nights_sold": 34, "occupancy_pct": 54.8}, {"month": "2025-07", "type": "DBV", "nights_sold": 20, "occupancy_pct": 64.5}, {"month": "2025-07", "type": "BSV", "nights_sold": 6, "occupancy_pct": 19.4}, {"month": "2025-07", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2025-08", "type": "SGV", "nights_sold": 756, "occupancy_pct": 73.9}, {"month": "2025-08", "type": "DGV", "nights_sold": 562, "occupancy_pct": 82.4}, {"month": "2025-08", "type": "DPV", "nights_sold": 480, "occupancy_pct": 53.4}, {"month": "2025-08", "type": "DSV", "nights_sold": 293, "occupancy_pct": 78.8}, {"month": "2025-08", "type": "FPV", "nights_sold": 177, "occupancy_pct": 38.1}, {"month": "2025-08", "type": "GFV", "nights_sold": 31, "occupancy_pct": 50.0}, {"month": "2025-08", "type": "DBV", "nights_sold": 21, "occupancy_pct": 67.7}, {"month": "2025-08", "type": "BSV", "nights_sold": 5, "occupancy_pct": 16.1}, {"month": "2025-08", "type": "HPV", "nights_sold": 15, "occupancy_pct": 48.4}, {"month": "2025-09", "type": "SGV", "nights_sold": 534, "occupancy_pct": 53.9}, {"month": "2025-09", "type": "DGV", "nights_sold": 321, "occupancy_pct": 48.6}, {"month": "2025-09", "type": "DPV", "nights_sold": 299, "occupancy_pct": 34.4}, {"month": "2025-09", "type": "DSV", "nights_sold": 200, "occupancy_pct": 55.6}, {"month": "2025-09", "type": "FPV", "nights_sold": 56, "occupancy_pct": 12.4}, {"month": "2025-09", "type": "GFV", "nights_sold": 47, "occupancy_pct": 78.3}, {"month": "2025-09", "type": "DBV", "nights_sold": 15, "occupancy_pct": 50.0}, {"month": "2025-09", "type": "BSV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2025-09", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2025-10", "type": "SGV", "nights_sold": 283, "occupancy_pct": 27.7}, {"month": "2025-10", "type": "DGV", "nights_sold": 145, "occupancy_pct": 21.3}, {"month": "2025-10", "type": "DPV", "nights_sold": 140, "occupancy_pct": 15.6}, {"month": "2025-10", "type": "DSV", "nights_sold": 186, "occupancy_pct": 50.0}, {"month": "2025-10", "type": "FPV", "nights_sold": 78, "occupancy_pct": 16.8}, {"month": "2025-10", "type": "GFV", "nights_sold": 25, "occupancy_pct": 40.3}, {"month": "2025-10", "type": "DBV", "nights_sold": 13, "occupancy_pct": 41.9}, {"month": "2025-10", "type": "BSV", "nights_sold": 6, "occupancy_pct": 19.4}, {"month": "2025-10", "type": "HPV", "nights_sold": 15, "occupancy_pct": 48.4}, {"month": "2025-11", "type": "SGV", "nights_sold": 399, "occupancy_pct": 40.3}, {"month": "2025-11", "type": "DGV", "nights_sold": 179, "occupancy_pct": 27.1}, {"month": "2025-11", "type": "DPV", "nights_sold": 140, "occupancy_pct": 16.1}, {"month": "2025-11", "type": "DSV", "nights_sold": 97, "occupancy_pct": 26.9}, {"month": "2025-11", "type": "FPV", "nights_sold": 20, "occupancy_pct": 4.4}, {"month": "2025-11", "type": "GFV", "nights_sold": 39, "occupancy_pct": 65.0}, {"month": "2025-11", "type": "DBV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2025-11", "type": "BSV", "nights_sold": 14, "occupancy_pct": 46.7}, {"month": "2025-11", "type": "HPV", "nights_sold": 6, "occupancy_pct": 20.0}, {"month": "2025-12", "type": "SGV", "nights_sold": 759, "occupancy_pct": 74.2}, {"month": "2025-12", "type": "DGV", "nights_sold": 566, "occupancy_pct": 83.0}, {"month": "2025-12", "type": "DPV", "nights_sold": 525, "occupancy_pct": 58.4}, {"month": "2025-12", "type": "DSV", "nights_sold": 248, "occupancy_pct": 66.7}, {"month": "2025-12", "type": "FPV", "nights_sold": 121, "occupancy_pct": 26.0}, {"month": "2025-12", "type": "GFV", "nights_sold": 41, "occupancy_pct": 66.1}, {"month": "2025-12", "type": "DBV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2025-12", "type": "BSV", "nights_sold": 28, "occupancy_pct": 90.3}, {"month": "2025-12", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-01", "type": "SGV", "nights_sold": 960, "occupancy_pct": 93.8}, {"month": "2026-01", "type": "DGV", "nights_sold": 746, "occupancy_pct": 109.4}, {"month": "2026-01", "type": "DPV", "nights_sold": 663, "occupancy_pct": 73.7}, {"month": "2026-01", "type": "DSV", "nights_sold": 309, "occupancy_pct": 83.1}, {"month": "2026-01", "type": "FPV", "nights_sold": 137, "occupancy_pct": 29.5}, {"month": "2026-01", "type": "GFV", "nights_sold": 32, "occupancy_pct": 51.6}, {"month": "2026-01", "type": "DBV", "nights_sold": 6, "occupancy_pct": 19.4}, {"month": "2026-01", "type": "BSV", "nights_sold": 19, "occupancy_pct": 61.3}, {"month": "2026-01", "type": "HPV", "nights_sold": 15, "occupancy_pct": 48.4}, {"month": "2026-02", "type": "SGV", "nights_sold": 842, "occupancy_pct": 91.1}, {"month": "2026-02", "type": "DGV", "nights_sold": 600, "occupancy_pct": 97.4}, {"month": "2026-02", "type": "DPV", "nights_sold": 699, "occupancy_pct": 86.1}, {"month": "2026-02", "type": "DSV", "nights_sold": 279, "occupancy_pct": 83.0}, {"month": "2026-02", "type": "FPV", "nights_sold": 295, "occupancy_pct": 70.2}, {"month": "2026-02", "type": "GFV", "nights_sold": 44, "occupancy_pct": 78.6}, {"month": "2026-02", "type": "DBV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-02", "type": "BSV", "nights_sold": 16, "occupancy_pct": 57.1}, {"month": "2026-02", "type": "HPV", "nights_sold": 36, "occupancy_pct": 128.6}, {"month": "2026-03", "type": "SGV", "nights_sold": 818, "occupancy_pct": 80.0}, {"month": "2026-03", "type": "DGV", "nights_sold": 459, "occupancy_pct": 67.3}, {"month": "2026-03", "type": "DPV", "nights_sold": 514, "occupancy_pct": 57.2}, {"month": "2026-03", "type": "DSV", "nights_sold": 193, "occupancy_pct": 51.9}, {"month": "2026-03", "type": "FPV", "nights_sold": 116, "occupancy_pct": 24.9}, {"month": "2026-03", "type": "GFV", "nights_sold": 39, "occupancy_pct": 62.9}, {"month": "2026-03", "type": "DBV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-03", "type": "BSV", "nights_sold": 13, "occupancy_pct": 41.9}, {"month": "2026-03", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-04", "type": "SGV", "nights_sold": 589, "occupancy_pct": 59.5}, {"month": "2026-04", "type": "DGV", "nights_sold": 229, "occupancy_pct": 34.7}, {"month": "2026-04", "type": "DPV", "nights_sold": 350, "occupancy_pct": 40.2}, {"month": "2026-04", "type": "DSV", "nights_sold": 131, "occupancy_pct": 36.4}, {"month": "2026-04", "type": "FPV", "nights_sold": 152, "occupancy_pct": 33.8}, {"month": "2026-04", "type": "GFV", "nights_sold": 69, "occupancy_pct": 115.0}, {"month": "2026-04", "type": "DBV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-04", "type": "BSV", "nights_sold": 2, "occupancy_pct": 6.7}, {"month": "2026-04", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-05", "type": "SGV", "nights_sold": 93, "occupancy_pct": 9.1}, {"month": "2026-05", "type": "DGV", "nights_sold": 58, "occupancy_pct": 8.5}, {"month": "2026-05", "type": "DPV", "nights_sold": 70, "occupancy_pct": 7.8}, {"month": "2026-05", "type": "DSV", "nights_sold": 50, "occupancy_pct": 13.4}, {"month": "2026-05", "type": "FPV", "nights_sold": 17, "occupancy_pct": 3.7}, {"month": "2026-05", "type": "GFV", "nights_sold": 32, "occupancy_pct": 51.6}, {"month": "2026-05", "type": "DBV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-05", "type": "BSV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-05", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-06", "type": "SGV", "nights_sold": 51, "occupancy_pct": 5.2}, {"month": "2026-06", "type": "DGV", "nights_sold": 35, "occupancy_pct": 5.3}, {"month": "2026-06", "type": "DPV", "nights_sold": 36, "occupancy_pct": 4.1}, {"month": "2026-06", "type": "DSV", "nights_sold": 15, "occupancy_pct": 4.2}, {"month": "2026-06", "type": "FPV", "nights_sold": 11, "occupancy_pct": 2.4}, {"month": "2026-06", "type": "GFV", "nights_sold": 19, "occupancy_pct": 31.7}, {"month": "2026-06", "type": "DBV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-06", "type": "BSV", "nights_sold": 1, "occupancy_pct": 3.3}, {"month": "2026-06", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-07", "type": "SGV", "nights_sold": 93, "occupancy_pct": 9.1}, {"month": "2026-07", "type": "DGV", "nights_sold": 72, "occupancy_pct": 10.6}, {"month": "2026-07", "type": "DPV", "nights_sold": 51, "occupancy_pct": 5.7}, {"month": "2026-07", "type": "DSV", "nights_sold": 29, "occupancy_pct": 7.8}, {"month": "2026-07", "type": "FPV", "nights_sold": 105, "occupancy_pct": 22.6}, {"month": "2026-07", "type": "GFV", "nights_sold": 46, "occupancy_pct": 74.2}, {"month": "2026-07", "type": "DBV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-07", "type": "BSV", "nights_sold": 6, "occupancy_pct": 19.4}, {"month": "2026-07", "type": "HPV", "nights_sold": 14, "occupancy_pct": 45.2}, {"month": "2026-08", "type": "SGV", "nights_sold": 73, "occupancy_pct": 7.1}, {"month": "2026-08", "type": "DGV", "nights_sold": 35, "occupancy_pct": 5.1}, {"month": "2026-08", "type": "DPV", "nights_sold": 32, "occupancy_pct": 3.6}, {"month": "2026-08", "type": "DSV", "nights_sold": 57, "occupancy_pct": 15.3}, {"month": "2026-08", "type": "FPV", "nights_sold": 81, "occupancy_pct": 17.4}, {"month": "2026-08", "type": "GFV", "nights_sold": 44, "occupancy_pct": 71.0}, {"month": "2026-08", "type": "DBV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-08", "type": "BSV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-08", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-09", "type": "SGV", "nights_sold": 15, "occupancy_pct": 1.5}, {"month": "2026-09", "type": "DGV", "nights_sold": 14, "occupancy_pct": 2.1}, {"month": "2026-09", "type": "DPV", "nights_sold": 12, "occupancy_pct": 1.4}, {"month": "2026-09", "type": "DSV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-09", "type": "FPV", "nights_sold": 12, "occupancy_pct": 2.7}, {"month": "2026-09", "type": "GFV", "nights_sold": 2, "occupancy_pct": 3.3}, {"month": "2026-09", "type": "DBV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-09", "type": "BSV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-09", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-10", "type": "SGV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-10", "type": "DGV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-10", "type": "DPV", "nights_sold": 4, "occupancy_pct": 0.4}, {"month": "2026-10", "type": "DSV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-10", "type": "FPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-10", "type": "GFV", "nights_sold": 7, "occupancy_pct": 11.3}, {"month": "2026-10", "type": "DBV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-10", "type": "BSV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-10", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-11", "type": "SGV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-11", "type": "DGV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-11", "type": "DPV", "nights_sold": 6, "occupancy_pct": 0.7}, {"month": "2026-11", "type": "DSV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-11", "type": "FPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-11", "type": "GFV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-11", "type": "DBV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-11", "type": "BSV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-11", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-12", "type": "SGV", "nights_sold": 26, "occupancy_pct": 2.5}, {"month": "2026-12", "type": "DGV", "nights_sold": 8, "occupancy_pct": 1.2}, {"month": "2026-12", "type": "DPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-12", "type": "DSV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-12", "type": "FPV", "nights_sold": 6, "occupancy_pct": 1.3}, {"month": "2026-12", "type": "GFV", "nights_sold": 20, "occupancy_pct": 32.3}, {"month": "2026-12", "type": "DBV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-12", "type": "BSV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2026-12", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-01", "type": "SGV", "nights_sold": 26, "occupancy_pct": 2.5}, {"month": "2027-01", "type": "DGV", "nights_sold": 2, "occupancy_pct": 0.3}, {"month": "2027-01", "type": "DPV", "nights_sold": 1, "occupancy_pct": 0.1}, {"month": "2027-01", "type": "DSV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-01", "type": "FPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-01", "type": "GFV", "nights_sold": 2, "occupancy_pct": 3.2}, {"month": "2027-01", "type": "DBV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-01", "type": "BSV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-01", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-02", "type": "SGV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-02", "type": "DGV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-02", "type": "DPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-02", "type": "DSV", "nights_sold": 3, "occupancy_pct": 0.9}, {"month": "2027-02", "type": "FPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-02", "type": "GFV", "nights_sold": 6, "occupancy_pct": 10.7}, {"month": "2027-02", "type": "DBV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-02", "type": "BSV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-02", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-03", "type": "SGV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-03", "type": "DGV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-03", "type": "DPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-03", "type": "DSV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-03", "type": "FPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-03", "type": "GFV", "nights_sold": 5, "occupancy_pct": 8.1}, {"month": "2027-03", "type": "DBV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-03", "type": "BSV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-03", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-04", "type": "SGV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-04", "type": "DGV", "nights_sold": 14, "occupancy_pct": 2.1}, {"month": "2027-04", "type": "DPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-04", "type": "DSV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-04", "type": "FPV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-04", "type": "GFV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-04", "type": "DBV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-04", "type": "BSV", "nights_sold": 0, "occupancy_pct": 0.0}, {"month": "2027-04", "type": "HPV", "nights_sold": 0, "occupancy_pct": 0.0}]};
+
+function numFmt(n){ return new Intl.NumberFormat('en-US').format(Math.round(n||0)); }
+function curFmt(n){ return new Intl.NumberFormat('en-US').format(Math.round(n||0)); }
+function yFormat(v, kind){
+  if (v===null || v===undefined) return '';
+  if (kind==='percent') return (Math.round(v*10)/10)+'%';
+  return new Intl.NumberFormat('en-US').format(Math.round(v));
+}
+function occPill(v){
+  if (v===null||v===undefined||!isFinite(v)) return 'pill pill-red';
+  if (v>=60) return 'pill pill-green';
+  if (v>=30) return 'pill pill-blue';
+  if (v>=10) return 'pill pill-amber';
+  return 'pill pill-red';
+}
+function heatColor(v){
+  if (v===null||v===undefined) return '#f3f4f6';
+  const t = Math.min(Math.max(v/100, 0), 1);
+  const r = Math.round(239 - t*(239-29));
+  const g = Math.round(246 - t*(246-78));
+  const b = Math.round(255 - t*(255-216));
+  return 'rgb('+r+','+g+','+b+')';
+}
+function showError(msg){
+  const box = document.getElementById('errBox');
+  if (!box) return;
+  box.style.display='block';
+  box.textContent = 'Dashboard error: ' + msg;
+  console.error(msg);
+}
+
+function chartOpts(opts){
+  opts = opts || {};
+  const yFmt = opts.yFmt || 'number';
+  const indexAxis = opts.indexAxis || 'x';
+  const hideX = opts.hideX || false;
+  return {
+    responsive:true, maintainAspectRatio:false, indexAxis:indexAxis,
+    scales:{
+      x: indexAxis==='y' ? {
+        beginAtZero:true, display:!hideX,
+        ticks:{ callback:function(v){ return yFormat(v, yFmt); } }
+      } : { ticks:{ maxRotation:60, minRotation:45, font:{size:10} } },
+      y: indexAxis==='y' ? { ticks:{font:{size:10}} } : {
+        beginAtZero:true,
+        ticks:{ callback:function(v){ return yFormat(v, yFmt); }, font:{size:10} }
+      }
+    },
+    plugins:{
+      legend:{ position:'top', labels:{ boxWidth:10, font:{size:11}}},
+      tooltip:{ callbacks:{ label:function(c){
+        const lbl=c.dataset.label||'';
+        const val=c.parsed[indexAxis==='y'?'x':'y'];
+        return lbl+': '+yFormat(val, yFmt);
+      }}}
+    }
+  };
+}
+
+const charts = {};
+const filters = { year:'all', roomType:'all' };
+
+function renderHeader(){
+  document.getElementById('hdrProp').textContent  = DATA.property.total_rooms+' rooms · '+Object.keys(DATA.property.rooms_by_type).length+' villa types';
+  document.getElementById('hdrRange').textContent = DATA.data_range.arrival_min+' → '+DATA.data_range.arrival_max;
+  document.getElementById('hdrAsOf').textContent  = DATA.data_range.as_of;
+  document.getElementById('hdrPMS').textContent   = DATA.property.pms+' · '+DATA.property.channel_manager;
+}
+
+function populateFilters(){
+  const years = Array.from(new Set(DATA.monthly.map(m=>m.month.slice(0,4)))).sort();
+  const fy = document.getElementById('fYear');
+  fy.innerHTML = '<option value="all">All years</option>'+years.map(y=>'<option>'+y+'</option>').join('');
+  fy.addEventListener('change', function(){ filters.year=this.value; applyFilters(); });
+
+  const ft = document.getElementById('fType');
+  ft.innerHTML = '<option value="all">All types</option>'+
+    Object.entries(DATA.property.rooms_by_type).map(function(e){
+      return '<option value="'+e[0]+'">'+e[0]+' — '+e[1].name+' ('+e[1].rooms+')</option>';
+    }).join('');
+  ft.addEventListener('change', function(){ filters.roomType=this.value; applyFilters(); });
+
+  document.getElementById('fReset').addEventListener('click', function(){
+    filters.year='all'; filters.roomType='all';
+    document.getElementById('fYear').value='all';
+    document.getElementById('fType').value='all';
+    applyFilters();
+  });
+}
+
+function getFilteredMonths(){
+  let months = DATA.monthly.slice();
+  if (filters.year !== 'all') months = months.filter(m => m.month.startsWith(filters.year));
+  return months;
+}
+
+function getFilteredTotals(){
+  const months = getFilteredMonths();
+  if (filters.roomType !== 'all'){
+    const typeInfo = DATA.property.rooms_by_type[filters.roomType];
+    const typeRow  = DATA.by_room_type.find(t => t.type === filters.roomType);
+    const hm = DATA.heatmap.filter(h => h.type===filters.roomType && (filters.year==='all'||h.month.startsWith(filters.year)));
+    const ns = hm.reduce((a,b)=>a+b.nights_sold, 0);
+    const cap = hm.reduce(function(acc,h){
+      const p=h.month.split('-').map(Number);
+      return acc + typeInfo.rooms * new Date(p[0], p[1], 0).getDate();
+    }, 0);
+    const adr = typeRow ? typeRow.adr : 0;
+    const rev = ns * adr;
+    return { revenue:rev, revenue_vat:rev*1.12, nights_sold:ns, capacity:cap,
+             occupancy: cap ? (ns/cap*100).toFixed(1) : 0,
+             adr:adr, revpar: cap ? rev/cap : 0 };
+  }
+  const ns  = months.reduce((a,b)=>a+(b.nights_sold||0),0);
+  const cap = months.reduce((a,b)=>a+(b.capacity||0),0);
+  const rev = months.reduce((a,b)=>a+(b.revenue||0),0);
+  const vat = months.reduce((a,b)=>a+(b.revenue_vat||0),0);
+  return { revenue:rev, revenue_vat:vat, nights_sold:ns, capacity:cap,
+           occupancy: cap ? (ns/cap*100).toFixed(1) : 0,
+           adr: ns ? rev/ns : 0, revpar: cap ? rev/cap : 0 };
+}
+
+function renderKPIs(){
+  const t = getFilteredTotals();
+  document.getElementById('kpiRev').textContent    = curFmt(t.revenue)+' ฿';
+  document.getElementById('kpiRevVat').textContent = curFmt(t.revenue_vat);
+  document.getElementById('kpiOcc').textContent    = t.occupancy+'%';
+  document.getElementById('kpiOccSub').textContent = numFmt(t.nights_sold)+' / '+numFmt(t.capacity)+' nights';
+  document.getElementById('kpiAdr').textContent    = curFmt(t.adr)+' ฿';
+  document.getElementById('kpiRevpar').textContent = curFmt(t.revpar)+' ฿';
+  document.getElementById('kpiCxlRate').textContent= DATA.kpis.cancellation_rate_pct+'%';
+  document.getElementById('kpiCxlSub').textContent = numFmt(DATA.kpis.total_reservations_cancelled)+' cancels';
+  document.getElementById('kpiLost').textContent   = curFmt(DATA.kpis.total_lost_revenue)+' ฿';
+  document.getElementById('fSummary').textContent  = getFilteredMonths().length+' months · '+numFmt(t.nights_sold)+' nights · '+curFmt(t.revenue)+' THB';
+}
+
+function renderTypeTable(){
+  const tbody = document.querySelector('#tblTypes tbody');
+  tbody.innerHTML = DATA.by_room_type.map(function(t){
+    const occ = t.occupancy_pct;
+    const occTxt = (occ===null||occ===undefined||!isFinite(occ)) ? '—' : occ.toFixed(1)+'%';
+    const revpar = (t.revpar===null||t.revpar===undefined||!isFinite(t.revpar)) ? '—' : curFmt(t.revpar);
+    return '<tr>'
+      +'<td><span class="badge-type">'+t.type+'</span></td>'
+      +'<td>'+(t.name||'')+'</td>'
+      +'<td class="text-right">'+(t.rooms||0)+'</td>'
+      +'<td class="text-right">'+numFmt(t.nights_sold)+'</td>'
+      +'<td class="text-right">'+numFmt(t.capacity_nights)+'</td>'
+      +'<td class="text-right"><span class="'+occPill(occ)+'">'+occTxt+'</span></td>'
+      +'<td class="text-right">'+curFmt(t.adr)+'</td>'
+      +'<td class="text-right">'+revpar+'</td>'
+      +'<td class="text-right font-medium">'+curFmt(t.revenue)+'</td>'
+      +'</tr>';
+  }).join('');
+}
+
+function renderHeatmap(){
+  const months = Array.from(new Set(DATA.heatmap.map(h=>h.month))).sort();
+  const types  = Object.keys(DATA.property.rooms_by_type);
+  const lookup = {};
+  DATA.heatmap.forEach(function(h){ lookup[h.month+'|'+h.type] = h.occupancy_pct; });
+
+  let html = '<table style="border-collapse:separate; border-spacing:2px;"><thead><tr>'
+    +'<th style="text-align:left; color:#6b7280; font-size:.7rem; padding-right:10px;">Month</th>';
+  types.forEach(function(t){ html+='<th style="color:#6b7280; padding:0 4px;"><span class="badge-type">'+t+'</span></th>'; });
+  html += '</tr></thead><tbody>';
+  months.forEach(function(m){
+    html += '<tr><td style="color:#475569; padding-right:10px; white-space:nowrap; font-size:.72rem;">'+m+'</td>';
+    types.forEach(function(t){
+      const v = lookup[m+'|'+t];
+      const label = (v===null||v===undefined) ? '' : Math.round(v)+'%';
+      html += '<td class="heatcell" style="background:'+heatColor(v)+';">'+label+'</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('heatmapBody').innerHTML = html;
+}
+
+function renderTopTable(){
+  const tbody = document.querySelector('#tblTop tbody');
+  tbody.innerHTML = DATA.top_reservations.map(function(r){
+    return '<tr>'
+      +'<td style="font-family:ui-monospace,Menlo,monospace; font-size:.75rem;">'+r['Reservation number']+'</td>'
+      +'<td>'+(r.arrival||'')+'</td>'
+      +'<td class="text-right">'+(r.nights||0)+'</td>'
+      +'<td class="text-right">'+(r.rooms||0)+'</td>'
+      +'<td>'+(r.guest||'')+'</td>'
+      +'<td>'+(r.segment||'—')+'</td>'
+      +'<td>'+(r.agent||'—')+'</td>'
+      +'<td>'+(r.rate_code||'—')+'</td>'
+      +'<td class="text-right font-medium">'+curFmt(r.revenue)+'</td>'
+      +'</tr>';
+  }).join('');
+}
+
+function destroyChart(id){ if (charts[id]){ charts[id].destroy(); delete charts[id]; } }
+
+function renderAllCharts(){
+  const months = getFilteredMonths();
+  const labels = months.map(m=>m.month);
+
+  destroyChart('chartRevenue');
+  charts.chartRevenue = new Chart(document.getElementById('chartRevenue'), {
+    type:'bar',
+    data:{ labels:labels, datasets:[
+      {label:'Revenue (THB)',    data: months.map(m=>m.revenue),      backgroundColor:'#2563eb', borderRadius:3},
+      {label:'Lost (cancelled)', data: months.map(m=>m.lost_revenue), backgroundColor:'#ef4444', borderRadius:3}
+    ]},
+    options: chartOpts({ yFmt:'currency' })
+  });
+
+  destroyChart('chartOccupancy');
+  charts.chartOccupancy = new Chart(document.getElementById('chartOccupancy'), {
+    type:'line',
+    data:{ labels:labels, datasets:[{
+      label:'Occupancy %', data: months.map(m=>m.occupancy_pct),
+      borderColor:'#059669', backgroundColor:'rgba(5,150,105,.15)', tension:.3, fill:true, pointRadius:3
+    }]},
+    options: chartOpts({ yFmt:'percent' })
+  });
+
+  destroyChart('chartADR');
+  charts.chartADR = new Chart(document.getElementById('chartADR'), {
+    type:'line',
+    data:{ labels:labels, datasets:[{
+      label:'ADR (THB)', data: months.map(m=>m.adr),
+      borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,.18)', tension:.3, fill:true, pointRadius:3
+    }]},
+    options: chartOpts({ yFmt:'currency' })
+  });
+
+  destroyChart('chartRevPAR');
+  charts.chartRevPAR = new Chart(document.getElementById('chartRevPAR'), {
+    type:'bar',
+    data:{ labels:labels, datasets:[{label:'RevPAR (THB)', data: months.map(m=>m.revpar), backgroundColor:'#8b5cf6', borderRadius:3}]},
+    options: chartOpts({ yFmt:'currency' })
+  });
+
+  const rt = DATA.by_room_type;
+  destroyChart('chartTypeRevenue');
+  charts.chartTypeRevenue = new Chart(document.getElementById('chartTypeRevenue'), {
+    type:'bar', data:{ labels: rt.map(t=>t.type), datasets:[{label:'Revenue (THB)', data: rt.map(t=>t.revenue), backgroundColor:'#2563eb', borderRadius:3}]},
+    options: chartOpts({ yFmt:'currency' })
+  });
+  destroyChart('chartTypeOccupancy');
+  charts.chartTypeOccupancy = new Chart(document.getElementById('chartTypeOccupancy'), {
+    type:'bar', data:{ labels: rt.map(t=>t.type), datasets:[{label:'Occupancy %', data: rt.map(t=>t.occupancy_pct||0), backgroundColor:'#059669', borderRadius:3}]},
+    options: chartOpts({ yFmt:'percent' })
+  });
+  destroyChart('chartTypeADR');
+  charts.chartTypeADR = new Chart(document.getElementById('chartTypeADR'), {
+    type:'bar', data:{ labels: rt.map(t=>t.type), datasets:[{label:'ADR (THB)', data: rt.map(t=>t.adr), backgroundColor:'#f59e0b', borderRadius:3}]},
+    options: chartOpts({ yFmt:'currency' })
+  });
+
+  destroyChart('chartSegments');
+  charts.chartSegments = new Chart(document.getElementById('chartSegments'), {
+    type:'doughnut',
+    data:{ labels: DATA.by_segment.map(s=>s.segment||'—'),
+      datasets:[{ data: DATA.by_segment.map(s=>s.revenue),
+        backgroundColor:['#2563eb','#059669','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#84cc16','#f97316','#6366f1']}]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:'right', labels:{boxWidth:10, font:{size:11}}},
+                tooltip:{ callbacks:{ label:function(c){ return c.label+': '+numFmt(c.parsed)+' THB'; } } } } }
+  });
+
+  destroyChart('chartRateCodes');
+  charts.chartRateCodes = new Chart(document.getElementById('chartRateCodes'), {
+    type:'bar', data:{ labels: DATA.by_ratecode.map(r=>r.rate_code||'—'), datasets:[{label:'Revenue (THB)', data: DATA.by_ratecode.map(r=>r.revenue), backgroundColor:'#06b6d4', borderRadius:3}]},
+    options: chartOpts({ indexAxis:'y', yFmt:'currency', hideX:true })
+  });
+
+  destroyChart('chartAgents');
+  charts.chartAgents = new Chart(document.getElementById('chartAgents'), {
+    type:'bar', data:{ labels: DATA.by_agent.map(a=>a.agent||'—'), datasets:[{label:'Revenue (THB)', data: DATA.by_agent.map(a=>a.revenue), backgroundColor:'#8b5cf6', borderRadius:3}]},
+    options: chartOpts({ indexAxis:'y', yFmt:'currency', hideX:true })
+  });
+
+  destroyChart('chartPricelist');
+  charts.chartPricelist = new Chart(document.getElementById('chartPricelist'), {
+    type:'bar', data:{ labels: DATA.by_pricelist.map(p=>p.price_list||'—'), datasets:[{label:'Nights', data: DATA.by_pricelist.map(p=>p.nights), backgroundColor:'#f97316', borderRadius:3}]},
+    options: chartOpts({ indexAxis:'y', yFmt:'number', hideX:true })
+  });
+
+  const cr = DATA.cancellation_reasons;
+  destroyChart('chartCxlReasons');
+  charts.chartCxlReasons = new Chart(document.getElementById('chartCxlReasons'), {
+    type:'bar',
+    data:{ labels: cr.map(r=>r.reason), datasets:[
+      {label:'Bookings',           data: cr.map(r=>r.count),        backgroundColor:'#ef4444', yAxisID:'y',  borderRadius:3},
+      {label:'Lost revenue (THB)', data: cr.map(r=>r.lost_revenue), backgroundColor:'#fca5a5', yAxisID:'y1', borderRadius:3}
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      scales:{ y:{ beginAtZero:true, position:'left',  title:{display:true,text:'Bookings',font:{size:11}} },
+               y1:{ beginAtZero:true, position:'right', grid:{drawOnChartArea:false}, title:{display:true,text:'Lost THB',font:{size:11}}, ticks:{callback:function(v){return numFmt(v);} } } },
+      plugins:{ legend:{ position:'top', labels:{boxWidth:10, font:{size:11}} } }}
+  });
+
+  destroyChart('chartCxlMonthly');
+  charts.chartCxlMonthly = new Chart(document.getElementById('chartCxlMonthly'), {
+    type:'bar',
+    data:{ labels:labels, datasets:[
+      {label:'Cancellations',      data: months.map(m=>m.cancelled_bookings), backgroundColor:'#ef4444', yAxisID:'y',  borderRadius:3},
+      {label:'Lost revenue (THB)', data: months.map(m=>m.lost_revenue),        backgroundColor:'#fca5a5', yAxisID:'y1', borderRadius:3}
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      scales:{ y:{ beginAtZero:true, position:'left',  title:{display:true,text:'Cancellations',font:{size:11}} },
+               y1:{ beginAtZero:true, position:'right', grid:{drawOnChartArea:false}, title:{display:true,text:'Lost THB',font:{size:11}}, ticks:{callback:function(v){return numFmt(v);} } } },
+      plugins:{ legend:{ position:'top', labels:{boxWidth:10, font:{size:11}} } }}
+  });
+
+  destroyChart('chartLead');
+  charts.chartLead = new Chart(document.getElementById('chartLead'), {
+    type:'bar',
+    data:{ labels: DATA.lead_time_distribution.map(x=>x.bucket), datasets:[{label:'Bookings', data: DATA.lead_time_distribution.map(x=>x.count), backgroundColor:'#6366f1', borderRadius:3}]},
+    options: chartOpts({ yFmt:'number' })
+  });
+
+  const dw = DATA.dow;
+  destroyChart('chartDOW');
+  charts.chartDOW = new Chart(document.getElementById('chartDOW'), {
+    data:{ labels: dw.map(x=>x.day), datasets:[
+      {type:'bar',  label:'Occupancy %', data: dw.map(x=>x.occupancy_pct), backgroundColor:'#059669', yAxisID:'y',  borderRadius:3},
+      {type:'line', label:'ADR (THB)',   data: dw.map(x=>x.adr), borderColor:'#f59e0b', backgroundColor:'#f59e0b', yAxisID:'y1', tension:.3, fill:false, pointRadius:3}
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      scales:{ y:{  beginAtZero:true, position:'left',  title:{display:true,text:'Occupancy %',font:{size:11}}, ticks:{callback:function(v){return v+'%';}} },
+               y1:{ beginAtZero:true, position:'right', grid:{drawOnChartArea:false}, title:{display:true,text:'ADR THB',font:{size:11}}, ticks:{callback:function(v){return numFmt(v);}} } },
+      plugins:{ legend:{ position:'top', labels:{boxWidth:10, font:{size:11}} } }}
+  });
+}
+
+function applyFilters(){
+  try { renderKPIs(); renderAllCharts(); }
+  catch(e){ showError(e.message); }
+}
+
+function init(){
+  try {
+    if (typeof Chart === 'undefined') {
+      showError('Chart.js failed to load. Check network access to cdnjs.cloudflare.com.');
+      return;
+    }
+    renderHeader();
+    populateFilters();
+    renderTypeTable();
+    renderHeatmap();
+    renderTopTable();
+    applyFilters();
+  } catch(e){ showError(e.message); }
+}
+
+window.addEventListener('error', function(ev){ showError(ev.message); });
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function(){ setTimeout(init, 50); });
+} else {
+  setTimeout(init, 50);
+}
+</script>
+
+</body>
+</html>
